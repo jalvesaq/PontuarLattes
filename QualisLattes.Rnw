@@ -118,7 +118,7 @@ rm(xx, obter.producao)
 p$ano <- as.numeric(p$ano)
 
 # Especificar o período do relatório
-p <- p[!is.na(p$ano) & p$ano >= 2013 & p$ano <= 2016, ]
+p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
 @
 
 <<mergeQualis>>=
@@ -167,33 +167,33 @@ if(sum(is.na(p$pontos)) > 0){
 
 p$prof <- factor(p$prof)
 
+pontuacao <- as.data.frame(tapply(p$pontos, list(p$prof, p$ano), sum, na.rm = TRUE))
+pontuacao$Professor <- rownames(pontuacao)
+pontuacao <- pontuacao[, c(ncol(pontuacao), 1:length(Inicio:Fim))]
+if(length(Inicio:Fim) > 1){
+    pontuacao$Total <- apply(pontuacao[, 2:ncol(pontuacao)], 1, sum, na.rm = TRUE)
+    pontuacao$Total[is.na(pontuacao$Total)] <- 0
+    pmedia <- round(mean(pontuacao$Total))
+    pmediana <- round(median(pontuacao$Total))
+    pontuacao <- pontuacao[order(pontuacao$Total, decreasing = TRUE), ]
+} else {
+    pmedia <- round(mean(pontuacao[[as.character(Inicio)]]))
+    pmediana <- round(median(pontuacao[[as.character(Inicio)]]))
+    pontuacao <- pontuacao[order(pontuacao[[as.character(Inicio)]], decreasing = TRUE), ]
+}
 
-pontuacao <- cbind(tapply(p$pontos[p$ano == 2013], p$prof[p$ano == 2013], sum),
-                   tapply(p$pontos[p$ano == 2014], p$prof[p$ano == 2014], sum),
-                   tapply(p$pontos[p$ano == 2015], p$prof[p$ano == 2015], sum),
-                   tapply(p$pontos[p$ano == 2016], p$prof[p$ano == 2016], sum))
-pontuacao <- cbind(pontuacao, apply(pontuacao, 1, sum, na.rm = TRUE))
-colnames(pontuacao) <- c("2013", "2014", "2015", "2016", "Total")
-pontuacao <- as.data.frame(pontuacao)
-pontuacao$prof <- rownames(pontuacao)
-pontuacao <- pontuacao[, c("prof", "2013", "2014", "2015", "2016", "Total")]
-names(pontuacao) <- sub("prof", "Professor", names(pontuacao))
-
-pontuacao$Total[is.na(pontuacao$Total)] <- 0
-pmedia <- round(mean(pontuacao$Total))
-pmediana <- round(median(pontuacao$Total))
 
 pTop <- p[p$qualis %in% c("A1", "A2", "B1"), ]
-pontuacaoTop <- cbind(tapply(pTop$pontos[pTop$ano == 2013], pTop$prof[pTop$ano == 2013], sum),
-                      tapply(pTop$pontos[pTop$ano == 2014], pTop$prof[pTop$ano == 2014], sum),
-                      tapply(pTop$pontos[pTop$ano == 2015], pTop$prof[pTop$ano == 2015], sum),
-                      tapply(pTop$pontos[pTop$ano == 2016], pTop$prof[pTop$ano == 2016], sum))
-pontuacaoTop <- cbind(pontuacaoTop, apply(pontuacaoTop, 1, sum, na.rm = TRUE))
-colnames(pontuacaoTop) <- c("2013", "2014", "2015", "2016", "Total")
-pontuacaoTop <- as.data.frame(pontuacaoTop)
-pontuacaoTop$prof <- rownames(pontuacaoTop)
-pontuacaoTop <- pontuacaoTop[, c("prof", "2013", "2014", "2015", "2016", "Total")]
-names(pontuacaoTop) <- sub("prof", "Professor", names(pontuacaoTop))
+pontuacaoTop <- as.data.frame(tapply(pTop$pontos, list(pTop$prof, pTop$ano), sum, na.rm = TRUE))
+pontuacaoTop$Professor <- rownames(pontuacaoTop)
+pontuacaoTop <- pontuacaoTop[, c(ncol(pontuacaoTop), 1:length(Inicio:Fim))]
+if(length(Inicio:Fim) > 1){
+    pontuacaoTop$Total <- apply(pontuacaoTop[, 2:ncol(pontuacaoTop)], 1, sum, na.rm = TRUE)
+    pontuacaoTop$Total[is.na(pontuacaoTop$Total)] <- 0
+    pontuacaoTop <- pontuacaoTop[order(pontuacaoTop$Total, decreasing = TRUE), ]
+} else {
+    pontuacaoTop <- pontuacaoTop[order(pontuacaoTop[[as.character(Inicio)]], decreasing = TRUE), ]
+}
 
 p$um <- 1
 producao <- tapply(p$um, list(p$prof, p$qualis), sum)
@@ -224,34 +224,37 @@ print(xtable(datacur, align = "llc", caption = "Data de atualização dos currí
 @
 
 Seguindo os valores da Tabela \ref{tab:pontos}, a pontuação total média dos
-professores do Programa de Pós-Graduação em \NomeProg{} no período 2013--2016
-foi de \textbf{\Sexpr{pmedia}} pontos e a mediana de
-\textbf{\Sexpr{pmediana}}
-pontos.
+professores do Programa de Pós-Graduação em \NomeProg{} no período
+\Sexpr{Inicio}--\Sexpr{Fim} foi de \textbf{\Sexpr{pmedia}} pontos e a mediana
+de \textbf{\Sexpr{pmediana}} pontos.
+
 <<ppgs_pontos>>=
-print(xtable(pontuacao[order(pontuacao$Total, decreasing = TRUE), ], digits = 0,
+print(xtable(pontuacao, digits = 0,
              caption = "Professores classificados por pontuação total"),
       include.rownames = FALSE)
 @
 
 <<ppgs_pontosTop>>=
-print(xtable(pontuacaoTop[order(pontuacaoTop$Total, decreasing = TRUE), ], digits = 0,
+print(xtable(pontuacaoTop, digits = 0,
              caption = "Professores classificados por pontuação A1, A2 e B1"),
       include.rownames = FALSE)
 @
 
 \begin{landscape}
 
-<<figRanking2, fig.height=5, fig.width=10, fig.pos="H", fig.cap="Pontuação dos professores do PPG --- 2013--2016">>=
+<<figRanking2, fig.height=5, fig.width=10, fig.pos="H", fig.cap=paste0("Pontuação dos professores do PPG --- ", Inicio, "--", Fim)>>=
 par(mfrow=c(1, 2), mar = c(3.4, 2, 2, 2) + 0.1)
 ppp <- pontuacao
-ppp <- ppp[order(ppp$Total, decreasing = TRUE), ]
 ppp$Professor <- sub(" .*", "", ppp$Professor)
+if(length(Inicio:Fim) == 1)
+    ppp$Total <- ppp[[as.character(Inicio)]]
 bx <- barplot(ppp$Total, names = FALSE, col = "lightblue", main = "Pontuação total") + 0.5
 text(bx, -10, labels = ppp$Professor, pos = 2, cex = 0.9, srt = 90, xpd = TRUE)
 
 par(mar = c(3.8, 4, 2, 0) + 0.1)
 ppp <- pontuacaoTop
+if(length(Inicio:Fim) == 1)
+    ppp$Total <- ppp[[as.character(Inicio)]]
 ppp <- ppp[order(ppp$Total, decreasing = TRUE), ]
 ppp$Professor <- sub(" .*", "", ppp$Professor)
 bx <- barplot(ppp$Total, names = FALSE, col = "lightblue",
@@ -375,8 +378,8 @@ if(length(erros) > 0){
     for(e in erros)
         cat(e, "\\\\\n")
     cat("\\end{tabular}\n")
+    rm(e)
 }
-rm(e)
 @
 
 <<printTabProdDet>>=

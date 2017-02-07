@@ -14,6 +14,10 @@ PontosQualis <- c("A1"  = 100,
                   "Org" =  70,
                   "Cap" =  15)
 
+# Especificar período do relatório
+Inicio <- 2013
+Fim <- 2016
+
 q15 <- read.table("qualis/classificacoes_publicadas_sociologia_2016_1481820772627.xls", header = TRUE,
                   encoding = "latin1", sep = "\t", colClasses = "character", stringsAsFactors = FALSE)
 q14 <- read.table("qualis/classificacoes_publicadas_sociologia_2014.xls", header = TRUE,
