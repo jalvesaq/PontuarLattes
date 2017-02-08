@@ -115,10 +115,11 @@ xx <- lapply(dir("lattes_xml", pattern = "*.zip"), obter.producao)
 xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
 rm(xx, obter.producao)
-p$ano <- as.numeric(p$ano)
 
 # Especificar o período do relatório
 p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
+
+p$ano <- factor(as.numeric(p$ano), levels = Inicio:Fim, labels = as.character(Inicio:Fim))
 @
 
 <<mergeQualis>>=
@@ -169,30 +170,30 @@ p$prof <- factor(p$prof)
 
 pontuacao <- as.data.frame(tapply(p$pontos, list(p$prof, p$ano), sum, na.rm = TRUE))
 pontuacao$Professor <- rownames(pontuacao)
-pontuacao <- pontuacao[, c(ncol(pontuacao), 1:length(Inicio:Fim))]
-if(length(Inicio:Fim) > 1){
+pontuacao <- pontuacao[, c(ncol(pontuacao), 1:(ncol(pontuacao)-1))]
+if(ncol(pontuacao) > 2){
     pontuacao$Total <- apply(pontuacao[, 2:ncol(pontuacao)], 1, sum, na.rm = TRUE)
     pontuacao$Total[is.na(pontuacao$Total)] <- 0
     pmedia <- round(mean(pontuacao$Total))
     pmediana <- round(median(pontuacao$Total))
     pontuacao <- pontuacao[order(pontuacao$Total, decreasing = TRUE), ]
 } else {
-    pmedia <- round(mean(pontuacao[[as.character(Inicio)]]))
-    pmediana <- round(median(pontuacao[[as.character(Inicio)]]))
-    pontuacao <- pontuacao[order(pontuacao[[as.character(Inicio)]], decreasing = TRUE), ]
+    pmedia <- round(mean(pontuacao[, 2]))
+    pmediana <- round(median(pontuacao[, 2]))
+    pontuacao <- pontuacao[order(pontuacao[, 2], decreasing = TRUE), ]
 }
 
 
 pTop <- p[p$qualis %in% c("A1", "A2", "B1"), ]
 pontuacaoTop <- as.data.frame(tapply(pTop$pontos, list(pTop$prof, pTop$ano), sum, na.rm = TRUE))
 pontuacaoTop$Professor <- rownames(pontuacaoTop)
-pontuacaoTop <- pontuacaoTop[, c(ncol(pontuacaoTop), 1:length(Inicio:Fim))]
-if(length(Inicio:Fim) > 1){
+pontuacaoTop <- pontuacaoTop[, c(ncol(pontuacaoTop), 1:(ncol(pontuacaoTop)-1))]
+if(ncol(pontuacaoTop) > 2){
     pontuacaoTop$Total <- apply(pontuacaoTop[, 2:ncol(pontuacaoTop)], 1, sum, na.rm = TRUE)
     pontuacaoTop$Total[is.na(pontuacaoTop$Total)] <- 0
     pontuacaoTop <- pontuacaoTop[order(pontuacaoTop$Total, decreasing = TRUE), ]
 } else {
-    pontuacaoTop <- pontuacaoTop[order(pontuacaoTop[[as.character(Inicio)]], decreasing = TRUE), ]
+    pontuacaoTop <- pontuacaoTop[order(pontuacaoTop[, 2], decreasing = TRUE), ]
 }
 
 p$um <- 1
@@ -255,11 +256,13 @@ par(mar = c(3.8, 4, 2, 0) + 0.1)
 ppp <- pontuacaoTop
 if(length(Inicio:Fim) == 1)
     ppp$Total <- ppp[[as.character(Inicio)]]
-ppp <- ppp[order(ppp$Total, decreasing = TRUE), ]
-ppp$Professor <- sub(" .*", "", ppp$Professor)
-bx <- barplot(ppp$Total, names = FALSE, col = "lightblue",
-              main = "Somente A1, A2 e B1") + 0.5
-text(bx, -10, labels = ppp$Professor, pos = 2, cex = 0.9, srt = 90, xpd = TRUE)
+if(sum(is.na(ppp$Total)) < length(ppp$Total)){
+    ppp <- ppp[order(ppp$Total, decreasing = TRUE), ]
+    ppp$Professor <- sub(" .*", "", ppp$Professor)
+    bx <- barplot(ppp$Total, names = FALSE, col = "lightblue",
+                  main = "Somente A1, A2 e B1") + 0.5
+    text(bx, -10, labels = ppp$Professor, pos = 2, cex = 0.9, srt = 90, xpd = TRUE)
+}
 rm(bx, ppp)
 @
 
