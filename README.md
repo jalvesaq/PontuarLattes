@@ -1,6 +1,7 @@
 # PontuarLattes
 
-O processamento do arquivo `QualisLattes.Rnw` gera um PDF com tabelas da
+O processamento do arquivo `QualisLattes.Rnw` gera um PDF com tabelas da com
+informações sobre os professores de um programa de pós-graduação, incluindo a
 produção bibliográfica extraída de currículos Lattes selecionados. Artigos
 publicados em periódicos são pontuados conforme a classificação Qualis dos
 periódicos.
