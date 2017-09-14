@@ -9,8 +9,8 @@ periódicos.
 O código de `QualisLattes.Rnw` é genérico e pode ser usado para calcular a
 pontuação de qualquer programa de pós-graduação de qualquer área, sendo,
 entretanto, necessário baixar os currículos Lattes da Plataforma Lattes,
-baixar a pontuação Qualis da Plataforma Sucupira e ajustar o conteúdo dos
-arquivos `info.tex` e `info.R`, conforme instruções detalhadas a seguir.
+baixar a pontuação Qualis da Plataforma Sucupira e ajustar o conteúdo do
+arquivo `info.R`, conforme instruções detalhadas a seguir.
 
 ## Instruções de uso para Linux e OS X
 
@@ -21,9 +21,9 @@ arquivos `info.tex` e `info.R`, conforme instruções detalhadas a seguir.
      arquivo, mas, neste caso, você terá que copiá-lo novamente sempre que ele
      for atualizado no repositório do github.
 
-  3. Copie os arquivos `exemplo/info.R` e `exemplo/info.tex` para o novo
-     diretório. Não faça links simbólicos desses arquivos porque eles precisam
-     ser editados com informações específicas de cada programa.
+  3. Copie o arquivo `exemplo/info.R` para o novo diretório. Não faça link
+     simbólico desse arquivo porque ele precisa ser editado com informações
+     específicas de cada programa de pós-graduação.
 
   4. No novo diretório, crie os diretórios `qualis` e `lattes_xml`.
 
@@ -44,7 +44,7 @@ arquivos `info.tex` e `info.R`, conforme instruções detalhadas a seguir.
      aparecer um link para um arquivo com extensão `.xls`. Salve os arquivos
      `.xls` de cada *Evento de Classificação* no seu diretório `qualis`. 
 
-  8. Edite as informações do arquivo `info.tex` e o código do `info.R`.
+  8. Edite o código do `info.R`.
 
   9. Gere o PDF a partir do link simbólico `QualisLattes.Rnw` (use XeLaTeX e não
      pdfLaTeX).

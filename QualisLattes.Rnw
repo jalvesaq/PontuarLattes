@@ -18,21 +18,6 @@
   pdfborder={0 0 0},
 ]{hyperref}
 
-\input{info.tex}
-
-\title{\TituloDoc}
-\author{\Autor}
-\date{\today}
-
-
-\begin{document}
-
-\maketitle
-
-\tableofcontents
-
-\clearpage
-
 <<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE>>=
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 library("XML")
@@ -46,6 +31,18 @@ options(xtable.table.placement = "H",
         format.args = list(big.mark = ".", decimal.mark = ","))
 source("info.R")
 @
+
+\title{\Sexpr{TituloDoc}}
+\author{\Sexpr{Autor}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\clearpage
 
 <<lattes>>=
 doutorado <- list()
@@ -84,7 +81,11 @@ obter.producao <- function(arquivo)
         xx <- xl$children$`OUTRA-PRODUCAO`$children$`ORIENTACOES-CONCLUIDAS`$children
         for(ii in 1:length(xx)){
             yy <- xx[[ii]]
-            oriconc[[length(oriconc)+1]] <<- c("Professor" = nomep, yy[[1]]$attributes[c("NATUREZA", "ANO")])
+            oriconc[[length(oriconc)+1]] <<- c("Professor" = nomep,
+                                               yy[[1]]$attributes[c("NATUREZA", "ANO")],
+                                               yy[[2]]$attributes[c("NOME-DA-INSTITUICAO",
+                                                                    "NOME-DO-CURSO",
+                                                                    "NOME-DO-ORIENTADO")])
         }
     }
 
@@ -93,7 +94,8 @@ obter.producao <- function(arquivo)
         for(ii in 1:length(oa))
         oriand[[length(oriand)+1]] <<- c("Professor" = nomep,
                                          oa[[ii]]$children[[1]]$attributes[c("NATUREZA", "ANO")],
-                                         oa[[ii]]$children[[2]]$attributes["NOME-DO-ORIENTANDO"])
+                                         oa[[ii]]$children[[2]]$attributes[c("NOME-DO-ORIENTANDO",
+                                                                             "NOME-INSTITUICAO")])
     }
 
 
@@ -114,7 +116,8 @@ obter.producao <- function(arquivo)
                                                                   "MES-INICIO",
                                                                   "ANO-INICIO",
                                                                   "MES-FIM",
-                                                                  "ANO-FIM")])
+                                                                  "ANO-FIM")],
+                                                 ap[[ii]]$attributes["NOME-INSTITUICAO"])
             }
     }
 
@@ -180,11 +183,6 @@ xx <- lapply(dir("lattes_xml", pattern = "*.zip"), obter.producao)
 xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
 rm(xx, obter.producao)
-
-# Especificar o período do relatório
-p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
-
-p$ano <- factor(as.numeric(p$ano), levels = Inicio:Fim, labels = as.character(Inicio:Fim))
 @
 
 <<mergeQualis>>=
@@ -199,8 +197,13 @@ if(exists("equivalente")){
 
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
-p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
-p$qualis[is.na(p$qualis) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & p$tipo != "Artigo"]
+p$qualis[is.na(p$qualis) & !is.na(p$tipo) & p$tipo == "Artigo"] <- "SQ"
+p$qualis[is.na(p$qualis) & !is.na(p$tipo) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & !is.na(p$tipo) & p$tipo != "Artigo"]
+
+# Organização de dossiês em periódicos:
+idx <- p$tipo != "Artigo" & p$qualis %in% c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C")
+if(sum(idx) > 0)
+    p$qualis[idx] <- "OD"
 
 pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
                               c("Artigo Qualis A2", "A2"),
@@ -216,14 +219,15 @@ pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
                               c("Livro organizado", "Org"),
                               c("Capítulo de livro", "Cap")), stringsAsFactors = FALSE)
 pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis, stringsAsFactors = FALSE))
+
 p <- merge(p, pontos, all.x = TRUE)
 
-# Organização de dossiês em periódicos:
-idx <- p$tipo != "Artigo" & p$qualis %in% c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C")
-if(length(idx) > 0){
-    p$qualis[idx] <- "OD"
-    p$pontos[idx] <- 0
-}
+
+# Especificar o período do relatório
+pcompleto <- p
+p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
+
+p$ano <- factor(as.numeric(p$ano), levels = Inicio:Fim, labels = as.character(Inicio:Fim))
 
 if(sum(is.na(p$pontos)) > 0){
     cat("\n\n\\textcolor{red}{Pontuação não definida}:\n\n\\begin{verbatim}\n")
@@ -231,38 +235,69 @@ if(sum(is.na(p$pontos)) > 0){
     cat("\\end{verbatim}\n\n")
 }
 
+doutorado <- do.call("rbind", doutorado)
+colnames(doutorado) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano", "DataCV")
+quando <- as.Date(doutorado[, "DataCV"], format = "%d/%m/%Y")
+doutorado <- doutorado[order(quando), ]
+rm(quando)
+
 p$prof <- factor(p$prof)
 
-pontuacao <- as.data.frame(tapply(p$pontos, list(p$prof, p$ano), sum, na.rm = TRUE))
-pontuacao$Professor <- rownames(pontuacao)
-pontuacao <- pontuacao[, c(ncol(pontuacao), 1:(ncol(pontuacao)-1))]
-if(ncol(pontuacao) > 2){
-    pontuacao$Total <- apply(pontuacao[, 2:ncol(pontuacao)], 1, sum, na.rm = TRUE)
-    pontuacao$Total[is.na(pontuacao$Total)] <- 0
-    pmedia <- round(mean(pontuacao$Total))
-    pmediana <- round(median(pontuacao$Total))
-    pontuacao <- pontuacao[order(pontuacao$Total, decreasing = TRUE), ]
-} else {
-    pmedia <- round(mean(pontuacao[, 2]))
-    pmediana <- round(median(pontuacao[, 2]))
-    pontuacao <- pontuacao[order(pontuacao[, 2], decreasing = TRUE), ]
+plvr <- p[p$tipo %in% c("Lvr", "Cap", "Org"), ]
+part <- p[p$tipo == "Artigo", ]
+
+pontuacaoLvr <- as.data.frame(tapply(plvr$pontos, list(plvr$prof, plvr$ano),
+                                     sum, na.rm = TRUE))
+
+# Adicionar professores que não produziram no período
+falta <- !(doutorado[, "Professor"] %in% rownames(pontuacaoLvr))
+if(sum(falta) > 0){
+    falta <- doutorado[falta, "Professor"]
+    ftab <- matrix(nrow = length(falta), ncol = ncol(pontuacaoLvr))
+    rownames(ftab) <- falta
+    colnames(ftab) <- colnames(pontuacaoLvr)
+    pontuacaoLvr <- rbind(pontuacaoLvr, ftab)
 }
 
-
-pTop <- p[p$qualis %in% c("A1", "A2", "B1"), ]
-pontuacaoTop <- as.data.frame(tapply(pTop$pontos, list(pTop$prof, pTop$ano), sum, na.rm = TRUE))
-pontuacaoTop$Professor <- rownames(pontuacaoTop)
-pontuacaoTop <- pontuacaoTop[, c(ncol(pontuacaoTop), 1:(ncol(pontuacaoTop)-1))]
-if(ncol(pontuacaoTop) > 2){
-    pontuacaoTop$Total <- apply(pontuacaoTop[, 2:ncol(pontuacaoTop)], 1, sum, na.rm = TRUE)
-    pontuacaoTop$Total[is.na(pontuacaoTop$Total)] <- 0
-    ptmedia <- round(mean(pontuacaoTop$Total))
-    ptmediana <- round(median(pontuacaoTop$Total))
-    pontuacaoTop <- pontuacaoTop[order(pontuacaoTop$Total, decreasing = TRUE), ]
+pontuacaoLvr$Professor <- rownames(pontuacaoLvr)
+pontuacaoLvr <- pontuacaoLvr[, c(ncol(pontuacaoLvr), 1:(ncol(pontuacaoLvr)-1))]
+if(ncol(pontuacaoLvr) > 2){
+    pontuacaoLvr$Total <- apply(pontuacaoLvr[, 2:ncol(pontuacaoLvr)], 1, sum, na.rm = TRUE)
+    pontuacaoLvr$Total[is.na(pontuacaoLvr$Total)] <- 0
+    pmedia <- round(mean(pontuacaoLvr$Total, na.rm = TRUE))
+    pmediana <- round(median(pontuacaoLvr$Total, na.rm = TRUE))
+    pontuacaoLvr <- pontuacaoLvr[order(pontuacaoLvr$Total, decreasing = TRUE), ]
 } else {
-    ptmedia <- round(mean(pontuacaoTop[, 2]))
-    ptmediana <- round(median(pontuacaoTop[, 2]))
-    pontuacaoTop <- pontuacaoTop[order(pontuacaoTop[, 2], decreasing = TRUE), ]
+    pmedia <- round(mean(pontuacaoLvr[, 2], na.rm = TRUE))
+    pmediana <- round(median(pontuacaoLvr[, 2], na.rm = TRUE))
+    pontuacaoLvr <- pontuacaoLvr[order(pontuacaoLvr[, 2], decreasing = TRUE), ]
+}
+
+pontuacaoArt <- as.data.frame(tapply(part$pontos, list(part$prof, part$ano),
+                                     sum, na.rm = TRUE))
+
+# Adicionar professores que não produziram no período
+falta <- !(doutorado[, "Professor"] %in% rownames(pontuacaoArt))
+if(sum(falta) > 0){
+    falta <- doutorado[falta, "Professor"]
+    ftab <- matrix(nrow = length(falta), ncol = ncol(pontuacaoArt))
+    rownames(ftab) <- falta
+    colnames(ftab) <- colnames(pontuacaoArt)
+    pontuacaoArt <- rbind(pontuacaoArt, ftab)
+}
+
+pontuacaoArt$Professor <- rownames(pontuacaoArt)
+pontuacaoArt <- pontuacaoArt[, c(ncol(pontuacaoArt), 1:(ncol(pontuacaoArt)-1))]
+if(ncol(pontuacaoArt) > 2){
+    pontuacaoArt$Total <- apply(pontuacaoArt[, 2:ncol(pontuacaoArt)], 1, sum, na.rm = TRUE)
+    pontuacaoArt$Total[is.na(pontuacaoArt$Total)] <- 0
+    pmedia <- round(mean(pontuacaoArt$Total, na.rm = TRUE))
+    pmediana <- round(median(pontuacaoArt$Total, na.rm = TRUE))
+    pontuacaoArt <- pontuacaoArt[order(pontuacaoArt$Total, decreasing = TRUE), ]
+} else {
+    pmedia <- round(mean(pontuacaoArt[, 2], na.rm = TRUE))
+    pmediana <- round(median(pontuacaoArt[, 2], na.rm = TRUE))
+    pontuacaoArt <- pontuacaoArt[order(pontuacaoArt[, 2], decreasing = TRUE), ]
 }
 
 p$um <- 1
@@ -272,12 +307,6 @@ rownames(producao) <- c(rownames(producao)[1], paste("\\hline", rownames(produca
 @
 
 <<printDataLattes>>=
-#doutorado <- data.frame(Professor = names(doutorado), Data = doutorado, stringsAsFactors = FALSE)
-doutorado <- do.call("rbind", doutorado)
-colnames(doutorado) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano", "DataCV")
-quando <- as.Date(doutorado[, "DataCV"], format = "%d/%m/%Y")
-doutorado <- doutorado[order(quando), ]
-rm(quando)
 print(xtable(doutorado[, c("Professor", "DataCV")], align = "llc", caption = "Data de atualização do Currículo Lattes"), include.rownames = FALSE)
 @
 
@@ -286,7 +315,6 @@ print(xtable(doutorado[, c("Professor", "DataCV")], align = "llc", caption = "Da
 \section{Titulação}
 
 <<tabelaGeral>>=
-doutorado[, "Professor"] <- sub(" .* ", " ", doutorado[, "Professor"])
 doutorado <- doutorado[order(doutorado[, "Ano"]), ]
 print(xtable(doutorado[, 1:4], align = "llllc", caption = "Informações gerais sobre professores"), include.rownames = FALSE)
 @
@@ -322,13 +350,14 @@ print(xtable(posdoc, align = "lp{4.5cm}p{14cm}cc",
 
 <<premios>>=
 if(length(premios)){
-    premios <- do.call("rbind", premios)
-    colnames(premios) <- c("Professor", "Prêmio", "Entidade promotora", "Ano", "En")
-    premios <- premios[order(premios[, "Ano"]), ]
-    premios[, "Professor"] <- sub(" .* ", " ", premios[, "Professor"])
-    premios <- premios[premios[, "Ano"] >= Inicio & premios[, "Ano"] <= Fim, ]
-    if(nrow(premios) > 0)
-        print(xtable(premios, align = "llp{8cm}p{8cm}cl", caption = "Lista de Prêmios recebidos"),
+    prm <- do.call("rbind", premios)
+    colnames(prm) <- c("Professor", "Prêmio", "Entidade promotora", "Ano", "En")
+    prm <- prm[order(prm[, "Ano"]), ]
+    prm[, "Professor"] <- sub(" .* ", " ", prm[, "Professor"])
+    prm <- as.data.frame(prm, stringsAsFactors = FALSE)
+    prm <- prm[prm[, "Ano"] >= Inicio & prm[, "Ano"] <= Fim, ]
+    if(nrow(prm) > 0)
+        print(xtable(prm, align = "llp{8cm}p{7.5cm}cl", caption = "Lista de Prêmios recebidos"),
               include.rownames = FALSE)
     else
         cat("Nenhum prêmio recebido no período.\n")
@@ -341,7 +370,7 @@ if(length(premios)){
 
 \section{Orientações}
 
-Nas tabelas \ref{tab:oriconc}, \ref{tab:oriand} e \ref{tab:oriandDet},
+Nas tabelas \ref{tab:oriconc}, \ref{tab:detoriconc}, \ref{tab:oriand} e \ref{tab:oriandDet},
 M = Mestrado,
 O = Outros,
 IC = Iniciação científica,
@@ -352,28 +381,31 @@ D = Tese de doutorado e
 PD = Supervisão de pós-doutorado.
 
 <<oriconc>>=
-oriconc <- do.call("rbind", oriconc)
-colnames(oriconc) <- c("Professor", "Natureza", "Ano")
-oriconc <- oriconc[oriconc[, "Ano"] >= Inicio & oriconc[, "Ano"] <= Fim, ]
-oriconc <- as.data.frame(oriconc)
+oc <- do.call("rbind", oriconc)
+colnames(oc) <- c("Professor", "Natureza", "Ano", "Instituição", "Curso", "Orientado")
+oc <- as.data.frame(oc)
+oc$Ano <- as.numeric(as.character(oc$Ano))
+oc <- oc[oc$Ano >= Inicio & oc$Ano <= Fim, ]
+oc <- droplevels(oc)
 
-levels(oriconc$Natureza) <- sub("Dissertação de mestrado", "M", levels(oriconc$Natureza))
-levels(oriconc$Natureza) <- sub("INICIACAO_CIENTIFICA", "IC", levels(oriconc$Natureza))
-levels(oriconc$Natureza) <-
+levels(oc$Natureza) <- sub("Dissertação de mestrado", "M", levels(oc$Natureza))
+levels(oc$Natureza) <- sub("INICIACAO_CIENTIFICA", "IC", levels(oc$Natureza))
+levels(oc$Natureza) <-
     sub("MONOGRAFIA_DE_CONCLUSAO_DE_CURSO_APERFEICOAMENTO_E_ESPECIALIZACAO", "E",
-        levels(oriconc$Natureza))
-levels(oriconc$Natureza) <- sub("ORIENTACAO-DE-OUTRA-NATUREZA", "O", levels(oriconc$Natureza))
-levels(oriconc$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oriconc$Natureza))
-levels(oriconc$Natureza) <- sub("Tese de doutorado", "D", levels(oriconc$Natureza))
-levels(oriconc$Natureza) <- sub("TRABALHO_DE_CONCLUSAO_DE_CURSO_GRADUACAO", "G",
-                                levels(oriconc$Natureza))
-oriconc$um <- 1
-oriconcTab <- tapply(oriconc$um, list(oriconc$Professor, oriconc$Natureza), sum)
+        levels(oc$Natureza))
+levels(oc$Natureza) <- sub("ORIENTACAO-DE-OUTRA-NATUREZA", "O", levels(oc$Natureza))
+levels(oc$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oc$Natureza))
+levels(oc$Natureza) <- sub("Tese de doutorado", "D", levels(oc$Natureza))
+levels(oc$Natureza) <- sub("TRABALHO_DE_CONCLUSAO_DE_CURSO_GRADUACAO", "G",
+                                levels(oc$Natureza))
+oc$um <- 1
+
+oriconcTab <- tapply(oc$um, list(oc$Professor, oc$Natureza), sum)
 oriconcTab[is.na(oriconcTab)] <- 0
 
 # Ordenar colunas (nem todos os programas têm todos os tipos de orientações)
 ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
-ordem <- ordem[ordem %in% levels(oriconc$Natureza)]
+ordem <- ordem[ordem %in% levels(oc$Natureza)]
 
 ro <- 1:nrow(oriconcTab)
 if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
@@ -388,37 +420,52 @@ if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
     }
 }
 
-oriconcTab <- oriconcTab[ro, ordem]
+if(nrow(oriconcTab) > 1)
+    oriconcTab <- oriconcTab[ro, ordem]
 
-aln <- paste0("ll", paste0(rep("r", ncol(oriconcTab)-1), collapse = ""))
+aln <- paste0("l", paste0(rep("r", ncol(oriconcTab)), collapse = ""))
 
-xtable(oriconcTab, align = aln, label = "tab:oriconc", digits = 0,
+xtable(oriconcTab, align = aln, digits = 0, label = "tab:oriconc",
        caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim))
+@
+
+<<detOriConc>>=
+oc$Professor <- sub(" .* ", " ", oc$Professor)
+oc$Orientado <- sub(" .* ", " ", oc$Orientado)
+oc$Instituição <- sub("Universidade", "U.", oc$Instituição)
+oc$Instituição <- sub("Federal", "F.", oc$Instituição)
+oc$Instituição <- sub("Estadual", "E.", oc$Instituição)
+oc$Curso <- sub("Programa de Pós-Graduação", "PPG", oc$Curso)
+oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
+         c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
+print(xtable(oc, align = "lcp{5.5cm}p{7cm}p{4cm}p{4cm}c", label = "tab:detoriconc",
+         digits = 0, caption = "Detalhamento das orientações"),
+      include.rownames = FALSE)
 @
 
 \newpage
 
 <<oriand>>=
-oriand <- do.call("rbind", oriand)
-oriand <- as.data.frame(oriand)
-colnames(oriand) <- c("Professor", "Natureza", "Ano", "Orientando")
-oriand <- oriand[order(oriand$Ano), ]
-levels(oriand$Natureza) <- sub("Dissertação de mestrado", "M", levels(oriand$Natureza))
-levels(oriand$Natureza) <- sub("Iniciação Científica", "IC", levels(oriand$Natureza))
-levels(oriand$Natureza) <-
+oa <- do.call("rbind", oriand)
+oa <- as.data.frame(oa)
+colnames(oa) <- c("Professor", "Natureza", "Ano", "Orientando", "Instituição")
+oa <- oa[order(oa$Ano), ]
+levels(oa$Natureza) <- sub("Dissertação de mestrado", "M", levels(oa$Natureza))
+levels(oa$Natureza) <- sub("Iniciação Científica", "IC", levels(oa$Natureza))
+levels(oa$Natureza) <-
     sub("Monografia de conclusão de curso de aperfeiçoamento/especialização", "E",
-        levels(oriand$Natureza))
-levels(oriand$Natureza) <- sub("Orientação de outra natureza", "O", levels(oriand$Natureza))
-levels(oriand$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oriand$Natureza))
-levels(oriand$Natureza) <- sub("Tese de doutorado", "D", levels(oriand$Natureza))
-levels(oriand$Natureza) <- sub("Trabalho de conclusão de curso de graduação", "G",
-                               oriand$Natureza)
-oriand$um <- 1
-oriandTab <- tapply(oriand$um, list(oriand$Professor, oriand$Natureza), sum)
+        levels(oa$Natureza))
+levels(oa$Natureza) <- sub("Orientação de outra natureza", "O", levels(oa$Natureza))
+levels(oa$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oa$Natureza))
+levels(oa$Natureza) <- sub("Tese de doutorado", "D", levels(oa$Natureza))
+levels(oa$Natureza) <- sub("Trabalho de conclusão de curso de graduação", "G",
+                               oa$Natureza)
+oa$um <- 1
+oriandTab <- tapply(oa$um, list(oa$Professor, oa$Natureza), sum)
 oriandTab[is.na(oriandTab)] <- 0
 
 ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
-ordem <- ordem[ordem %in% levels(oriand$Natureza)]
+ordem <- ordem[ordem %in% levels(oa$Natureza)]
 
 ro <- 1:nrow(oriandTab)
 if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
@@ -444,8 +491,11 @@ xtable(oriandTab, align = aln, label = "tab:oriand", digits = 0,
 \newpage
 
 <<oriandTab>>=
-oriand$um <- NULL
-print(xtable(oriand, align = "llccl", label = "tab:oriandDet",
+oa$um <- NULL
+oa <- oa[order(paste(oa$Ano, oa$Professor, oa$Natureza, oa$Instituição)),
+         c("Ano", "Professor", "Natureza", "Instituição", "Orientando")]
+oa$Professor <- sub(" .* ", " ", oa$Professor)
+print(xtable(oa, align = "lcp{4.5cm}cp{8cm}p{8cm}", label = "tab:oriandDet",
              caption = "Detalhamento das orientações em andamento"),
       include.rownames = FALSE)
 @
@@ -476,12 +526,14 @@ xtable(ensinoTab, align = aln, label = "tab:ensino", digits = 0,
 
 \section{Produção bibliográfica}
 
+\subsection{Produção no período \Sexpr{Inicio}--\Sexpr{Fim}}
+
 A Tabela \ref{tab:pontos} mostra os valores atribuídos aos diferentes níveis
 de classificação Qualis dos periódicos. Livros e capítulos de livros não
-classificados pelo comitê de \emph{\NomeComite} da CAPES, podem não ter sido
+classificados pelo comitê de \emph{\Sexpr{NomeComite}} da CAPES, podem não ter sido
 contabilizados na produção do Programa, mas, aqui, estão, arbitrariamente,
 recebendo pontuação equivalente a L2. Qualis de outras áreas não têm valor
-para a área de \emph{\NomeComite}.
+para a área de \emph{\Sexpr{NomeComite}}.
 
 <<classifpontos>>=
 colnames(pontos) <- c("Classe", "Abreviatura", "Pontos")
@@ -491,51 +543,55 @@ print(xtable(pontos, digits = 0, label = "tab:pontos",
 @
 
 Seguindo os valores da Tabela \ref{tab:pontos}, a pontuação total média dos
-professores do Programa de Pós-Graduação em \NomeProg{} no período
+professores do Programa de Pós-Graduação em \Sexpr{NomeProg} no período
 \Sexpr{Inicio}--\Sexpr{Fim} foi de \textbf{\Sexpr{pmedia}} pontos e a mediana
-de \textbf{\Sexpr{pmediana}} pontos. Considerando apenas publicações em
-periódicos classificados nos estratos A1, A2 e B1, a média foi de
-\textbf{\Sexpr{ptmedia}} e a mediana foi de \textbf{\Sexpr{ptmediana}} pontos.
+de \textbf{\Sexpr{pmediana}} pontos.
 
 \newpage
 
-<<ppgs_pontos>>=
-print(xtable(pontuacao, digits = 0,
-             caption = "Professores classificados por pontuação total"),
+<<ppg_pontos_lvr>>=
+print(xtable(pontuacaoLvr, digits = 0,
+             caption = "Professores classificados por pontuação (Livros)"),
       include.rownames = FALSE)
 @
 
-\newpage
+\clearpage
 
-<<ppgs_pontosTop>>=
-print(xtable(pontuacaoTop, digits = 0,
-             caption = "Professores classificados por pontuação A1, A2 e B1"),
+<<ppg_pontos_art>>=
+print(xtable(pontuacaoArt, digits = 0,
+             caption = "Professores classificados por pontuação (Artigos)"),
       include.rownames = FALSE)
 @
 
-\newpage
+\clearpage
 
-<<figRanking2, fig.height=5, fig.width=10, fig.pos="H", fig.cap=paste0("Pontuação dos professores do PPG --- ", Inicio, "--", Fim)>>=
-par(mfrow=c(1, 2), mar = c(3.4, 2, 2, 2) + 0.1)
-ppp <- pontuacao
-ppp$Professor <- sub(" .*", "", ppp$Professor)
-if(length(Inicio:Fim) == 1)
-    ppp$Total <- ppp[[as.character(Inicio)]]
-bx <- barplot(ppp$Total, names = FALSE, col = "lightblue", main = "Pontuação total") + 0.5
-text(bx, -10, labels = ppp$Professor, pos = 2, cex = 0.9, srt = 90, xpd = TRUE)
+A área de \Sexpr{NomeComite} atribui peso \Sexpr{PesoLivros} aos livros e
+\Sexpr{PesoArtigos} aos artigos. A Tabela~\ref{tab:pond} apresenta a
+classificação dos professores quando sua produção é ponderada de acordo com os
+critérios do comitê de área.
 
-par(mar = c(3.8, 4, 2, 0) + 0.1)
-ppp <- pontuacaoTop
-if(length(Inicio:Fim) == 1)
-    ppp$Total <- ppp[[as.character(Inicio)]]
-if(sum(is.na(ppp$Total)) < length(ppp$Total)){
-    ppp <- ppp[order(ppp$Total, decreasing = TRUE), ]
-    ppp$Professor <- sub(" .*", "", ppp$Professor)
-    bx <- barplot(ppp$Total, names = FALSE, col = "lightblue",
-                  main = "Somente A1, A2 e B1") + 0.5
-    text(bx, -10, labels = ppp$Professor, pos = 2, cex = 0.9, srt = 90, xpd = TRUE)
+<<ppg_ponderado>>=
+if(ncol(pontuacaoLvr) > 2){
+    pLvr <- pontuacaoLvr[, c("Professor", "Total")]
+    pArt <- pontuacaoArt[, c("Professor", "Total")]
+} else {
+    # Relatório de somente 1 ano
+    pLvr <- pontuacaoLvr
+    pArt <- pontuacaoArt
 }
-rm(bx, ppp)
+colnames(pLvr) <- c("Professor", "Livros")
+colnames(pArt) <- c("Professor", "Artigos")
+pond <- merge(pLvr, pArt, all = TRUE)
+pond$Livros[is.na(pond$Livros)] <- 0
+pond$Artigos[is.na(pond$Artigos)] <- 0
+pond$Livros <- pond$Livros / max(pond$Livros, na.rm = TRUE)
+pond$Artigos <- pond$Artigos / max(pond$Artigos, na.rm = TRUE)
+pond$Média <- PesoArtigos * pond$Artigos + PesoLivros * pond$Livros
+pond <- pond[order(pond$Média, decreasing = TRUE), ]
+rownames(pond) <- as.character(1:nrow(pond))
+
+xtable(pond, digits = 3, label = "tab:pond",
+       caption = "Professores classificados por pontuação ponderada")
 @
 
 \clearpage
@@ -549,13 +605,51 @@ print(xtable(producao, align = paste(c("l", rep("r", ncol(producao))), collapse 
 
 \clearpage
 
+\subsection{Média móvel}
+
+Raramente, um professor conseguirá manter aproximadamente o mesmo número de
+publicações e com a mesma qualificação ano após ano. Por isso, os gráficos
+seguintes mostram as médias móveis com períodos de três anos de produção dos
+professores. Ou seja, cada ponto representa o valor médio da pontuação nos
+últimos três anos.
+
+<<mediamovel, fig.width=8, fig.height=3>>=
+par(mar = c(4, 4, 4, 0) + 0.1, cex = 0.75)
+pcl <- split(pcompleto, pcompleto$prof)
+MediaMovel <- function(x)
+{
+    m <- tapply(x$pontos, x$ano, sum)
+    mm <- rep(0, max(as.numeric(names(m))) - min(as.numeric(names(m))) + 1)
+    names(mm) <- as.character(as.numeric(min(names(m))):as.numeric(max(names(m))))
+    for(n in names(m))
+        mm[[n]] <- m[[n]]
+    mml <- length(mm)
+    mm1 <- mm[3:mml]
+    mm2 <- mm[2:(mml - 1)]
+    mm3 <- mm[1:(mml - 2)]
+    mm <- (mm1 + mm2 + mm3) / 3
+}
+mm <- lapply(pcl, MediaMovel)
+
+for(n in names(mm)){
+    plot(as.numeric(names(mm[[n]])), mm[[n]],
+         pch=20, main = n, xlab = "Ano", ylab = "Média")
+    lines(as.numeric(names(mm[[n]])), mm[[n]])
+    cat("\n\\vspace{0.5cm}\n")
+}
+@
+
+\clearpage
+
+\section{Apêndices}
+
 \definecolor{ncarac}{rgb}{1,0.7,0.7}
 \definecolor{ninval}{rgb}{1,1,0.5}
 \definecolor{duplic}{rgb}{0.7,0.8,1}
 \definecolor{capdup}{rgb}{1,0.5,1}
 
 
-<<anexo1, warning=FALSE>>=
+<<apendice1, warning=FALSE>>=
 # http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
 # Convenience function to convert html codes
 html2txt <- function(str) {
@@ -661,16 +755,17 @@ if(length(erros) > 0){
 }
 @
 
+
 <<printTabProdDet>>=
 print(xtable(b, display = c("s", "s", "s", "d", "s", "s", "s"), align = "lllrllr",
-             caption = "ANEXO --- Produção detalhada", label = "tab:proddet"),
+             caption = "Produção detalhada", label = "tab:proddet"),
       sanitize.text.function = function(x)x,
       tabular.environment = "longtable", floating = FALSE, include.rownames = FALSE)
 @
 
 \clearpage
 
-<<anexo2>>=
+<<apendice2>>=
 a <- p[p$tipo == "Artigo", ]
 a <- a[!is.na(a$titulo), ]
 a <- a[tolower(a$titulo) != tolower(a$livro.ou.periodico), c("titulo", "livro.ou.periodico")]
@@ -684,7 +779,7 @@ rm(a, b)
 
 \clearpage
 
-<<anexo3>>=
+<<apendice3>>=
 semqualis <- p[p$qualis == "SQ", c("isxn", "livro.ou.periodico")]
 semqualis <- semqualis[!duplicated(semqualis), ]
 semqualis <- semqualis[order(semqualis$livro.ou.periodico), ]
