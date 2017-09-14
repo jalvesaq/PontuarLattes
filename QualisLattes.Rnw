@@ -515,8 +515,8 @@ print(xtable(oa, align = "lcp{4.5cm}cp{8cm}p{8cm}", label = "tab:oriandDet",
 
 \section{Ensino}
 
-A Tabela \ref{tab:ensino} mostra todas as disciplinas ministradas pelos
-professores em todas as instituições.
+A Tabela \ref{tab:ensino} mostra o número de vezes que o item ``Ensino'' foi
+registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
 
 <<tabEnsino>>=
 ens <- do.call("rbind", ensino)
@@ -530,7 +530,7 @@ ensinoTab[is.na(ensinoTab)] <- 0
 
 aln <- paste0("ll", paste0(rep("r", ncol(ensinoTab)-1), collapse = ""))
 xtable(ensinoTab, align = aln, label = "tab:ensino", digits = 0,
-       caption = paste0("Número de disciplinas ministradas no período ", Inicio, "--", Fim))
+       caption = paste0("Registro do item ``Ensino'' no período ", Inicio, "--", Fim))
 @
 
 \newpage
