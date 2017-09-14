@@ -60,12 +60,17 @@ obter.producao <- function(arquivo)
     prof <- xl$children$`DADOS-GERAIS`
     nomep <- prof$attributes[["NOME-COMPLETO"]]
 
-    dout <- prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children$DOUTORADO$attributes
-    dout <- dout[c("NOME-INSTITUICAO", "NOME-CURSO", "ANO-DE-CONCLUSAO")]
-
     da <- sub("(..)(..)(....)", "\\1/\\2/\\3", xl$attributes[["DATA-ATUALIZACAO"]])
-    doutorado[[length(doutorado)+1]] <<- c("Professor" = nomep, dout,
-                                       "DataCV" = da)
+
+    if("DOUTORADO" %in% names(prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children)){
+        xx <- prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children
+        for(ii in 1:length(xx)){
+            if("DOUTORADO" == names(xx)[ii]){
+                yy <- xx[[ii]]$attributes[c("NOME-INSTITUICAO", "NOME-CURSO", "ANO-DE-CONCLUSAO")]
+                doutorado[[length(doutorado)+1]] <<- c("Professor" = nomep, yy, "DataCV" = da)
+            }
+        }
+    }
 
     if("POS-DOUTORADO" %in% names(prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children)){
         xx <- prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children
@@ -235,10 +240,16 @@ if(sum(is.na(p$pontos)) > 0){
     cat("\\end{verbatim}\n\n")
 }
 
-doutorado <- do.call("rbind", doutorado)
-colnames(doutorado) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano", "DataCV")
-quando <- as.Date(doutorado[, "DataCV"], format = "%d/%m/%Y")
-doutorado <- doutorado[order(quando), ]
+doutor <- do.call("rbind", doutorado)
+colnames(doutor) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano", "DataCV")
+
+# Reter somente último doutorado concluído:
+doutor <- doutor[order(doutor[, "Ano"], decreasing = TRUE), ]
+notdup <- !duplicated(doutor[, "Professor"])
+doutor <- doutor[notdup, ]
+
+quando <- as.Date(doutor[, "DataCV"], format = "%d/%m/%Y")
+doutor <- doutor[order(quando), ]
 rm(quando)
 
 p$prof <- factor(p$prof)
@@ -250,9 +261,9 @@ pontuacaoLvr <- as.data.frame(tapply(plvr$pontos, list(plvr$prof, plvr$ano),
                                      sum, na.rm = TRUE))
 
 # Adicionar professores que não produziram no período
-falta <- !(doutorado[, "Professor"] %in% rownames(pontuacaoLvr))
+falta <- !(doutor[, "Professor"] %in% rownames(pontuacaoLvr))
 if(sum(falta) > 0){
-    falta <- doutorado[falta, "Professor"]
+    falta <- doutor[falta, "Professor"]
     ftab <- matrix(nrow = length(falta), ncol = ncol(pontuacaoLvr))
     rownames(ftab) <- falta
     colnames(ftab) <- colnames(pontuacaoLvr)
@@ -277,9 +288,9 @@ pontuacaoArt <- as.data.frame(tapply(part$pontos, list(part$prof, part$ano),
                                      sum, na.rm = TRUE))
 
 # Adicionar professores que não produziram no período
-falta <- !(doutorado[, "Professor"] %in% rownames(pontuacaoArt))
+falta <- !(doutor[, "Professor"] %in% rownames(pontuacaoArt))
 if(sum(falta) > 0){
-    falta <- doutorado[falta, "Professor"]
+    falta <- doutor[falta, "Professor"]
     ftab <- matrix(nrow = length(falta), ncol = ncol(pontuacaoArt))
     rownames(ftab) <- falta
     colnames(ftab) <- colnames(pontuacaoArt)
@@ -307,7 +318,7 @@ rownames(producao) <- c(rownames(producao)[1], paste("\\hline", rownames(produca
 @
 
 <<printDataLattes>>=
-print(xtable(doutorado[, c("Professor", "DataCV")], align = "llc", caption = "Data de atualização do Currículo Lattes"), include.rownames = FALSE)
+print(xtable(doutor[, c("Professor", "DataCV")], align = "llc", caption = "Data de atualização do Currículo Lattes"), include.rownames = FALSE)
 @
 
 \clearpage
@@ -315,21 +326,21 @@ print(xtable(doutorado[, c("Professor", "DataCV")], align = "llc", caption = "Da
 \section{Titulação}
 
 <<tabelaGeral>>=
-doutorado <- doutorado[order(doutorado[, "Ano"]), ]
-print(xtable(doutorado[, 1:4], align = "llllc", caption = "Informações gerais sobre professores"), include.rownames = FALSE)
+doutor <- doutor[order(doutor[, "Ano"]), ]
+print(xtable(doutor[, 1:4], align = "llllc", caption = "Informações gerais sobre professores"), include.rownames = FALSE)
 @
 
 \newpage
 
 <<areaTitulo>>=
-xtable(freq(factor(doutorado[, "Nome do curso"]), plot = FALSE),
+xtable(freq(factor(doutor[, "Nome do curso"]), plot = FALSE),
        caption = "Área de titulação")
 @
 
 \newpage
 
 <<localTitulo>>=
-xtable(freq(factor(doutorado[, "Instituição doutorado"]), plot = FALSE),
+xtable(freq(factor(doutor[, "Instituição doutorado"]), plot = FALSE),
        caption = "Instituição de titulação")
 @
 
@@ -508,13 +519,13 @@ A Tabela \ref{tab:ensino} mostra todas as disciplinas ministradas pelos
 professores em todas as instituições.
 
 <<tabEnsino>>=
-ensino <- do.call("rbind", ensino)
-ensino <- as.data.frame(ensino, stringsAsFactors = FALSE)
-names(ensino) <- c("Professor", "Tipo", "MI", "AnoI", "MF", "AnoF")
-ensino <- ensino[ensino$AnoI >= as.character(Inicio) &
-                 (ensino$AnoF <= as.character(Fim) | ensino$AnoF <= ""), ]
-ensino$um <- 1
-ensinoTab <- tapply(ensino$um, list(ensino$Professor, ensino$Tipo), sum)
+ens <- do.call("rbind", ensino)
+ens <- as.data.frame(ens, stringsAsFactors = FALSE)
+names(ens) <- c("Professor", "Tipo", "MI", "AnoI", "MF", "AnoF")
+ens <- ens[ens$AnoI >= as.character(Inicio) &
+                 (ens$AnoF <= as.character(Fim) | ens$AnoF == ""), ]
+ens$um <- 1
+ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum)
 ensinoTab[is.na(ensinoTab)] <- 0
 
 aln <- paste0("ll", paste0(rep("r", ncol(ensinoTab)-1), collapse = ""))
