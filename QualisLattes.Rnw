@@ -275,12 +275,12 @@ pontuacaoLvr <- pontuacaoLvr[, c(ncol(pontuacaoLvr), 1:(ncol(pontuacaoLvr)-1))]
 if(ncol(pontuacaoLvr) > 2){
     pontuacaoLvr$Total <- apply(pontuacaoLvr[, 2:ncol(pontuacaoLvr)], 1, sum, na.rm = TRUE)
     pontuacaoLvr$Total[is.na(pontuacaoLvr$Total)] <- 0
-    pmedia <- round(mean(pontuacaoLvr$Total, na.rm = TRUE))
-    pmediana <- round(median(pontuacaoLvr$Total, na.rm = TRUE))
+    pmediaL <- round(mean(pontuacaoLvr$Total, na.rm = TRUE))
+    pmedianaL <- round(median(pontuacaoLvr$Total, na.rm = TRUE))
     pontuacaoLvr <- pontuacaoLvr[order(pontuacaoLvr$Total, decreasing = TRUE), ]
 } else {
-    pmedia <- round(mean(pontuacaoLvr[, 2], na.rm = TRUE))
-    pmediana <- round(median(pontuacaoLvr[, 2], na.rm = TRUE))
+    pmediaL <- round(mean(pontuacaoLvr[, 2], na.rm = TRUE))
+    pmedianaL <- round(median(pontuacaoLvr[, 2], na.rm = TRUE))
     pontuacaoLvr <- pontuacaoLvr[order(pontuacaoLvr[, 2], decreasing = TRUE), ]
 }
 
@@ -302,12 +302,12 @@ pontuacaoArt <- pontuacaoArt[, c(ncol(pontuacaoArt), 1:(ncol(pontuacaoArt)-1))]
 if(ncol(pontuacaoArt) > 2){
     pontuacaoArt$Total <- apply(pontuacaoArt[, 2:ncol(pontuacaoArt)], 1, sum, na.rm = TRUE)
     pontuacaoArt$Total[is.na(pontuacaoArt$Total)] <- 0
-    pmedia <- round(mean(pontuacaoArt$Total, na.rm = TRUE))
-    pmediana <- round(median(pontuacaoArt$Total, na.rm = TRUE))
+    pmediaA <- round(mean(pontuacaoArt$Total, na.rm = TRUE))
+    pmedianaA <- round(median(pontuacaoArt$Total, na.rm = TRUE))
     pontuacaoArt <- pontuacaoArt[order(pontuacaoArt$Total, decreasing = TRUE), ]
 } else {
-    pmedia <- round(mean(pontuacaoArt[, 2], na.rm = TRUE))
-    pmediana <- round(median(pontuacaoArt[, 2], na.rm = TRUE))
+    pmediaA <- round(mean(pontuacaoArt[, 2], na.rm = TRUE))
+    pmedianaA <- round(median(pontuacaoArt[, 2], na.rm = TRUE))
     pontuacaoArt <- pontuacaoArt[order(pontuacaoArt[, 2], decreasing = TRUE), ]
 }
 
@@ -541,10 +541,10 @@ xtable(ensinoTab, align = aln, label = "tab:ensino", digits = 0,
 
 A Tabela \ref{tab:pontos} mostra os valores atribuídos aos diferentes níveis
 de classificação Qualis dos periódicos. Livros e capítulos de livros não
-classificados pelo comitê de \emph{\Sexpr{NomeComite}} da CAPES, podem não ter sido
-contabilizados na produção do Programa, mas, aqui, estão, arbitrariamente,
-recebendo pontuação equivalente a L2. Qualis de outras áreas não têm valor
-para a área de \emph{\Sexpr{NomeComite}}.
+classificados pelo comitê de \emph{\Sexpr{NomeComite}} da CAPES, podem não ter
+sido contabilizados na produção do Programa, mas, aqui, estão,
+arbitrariamente, recebendo pontuação equivalente a L2. Qualis de outras áreas
+não têm valor para a área de \emph{\Sexpr{NomeComite}}.
 
 <<classifpontos>>=
 colnames(pontos) <- c("Classe", "Abreviatura", "Pontos")
@@ -555,8 +555,13 @@ print(xtable(pontos, digits = 0, label = "tab:pontos",
 
 Seguindo os valores da Tabela \ref{tab:pontos}, a pontuação total média dos
 professores do Programa de Pós-Graduação em \Sexpr{NomeProg} no período
-\Sexpr{Inicio}--\Sexpr{Fim} foi de \textbf{\Sexpr{pmedia}} pontos e a mediana
-de \textbf{\Sexpr{pmediana}} pontos.
+\Sexpr{Inicio}--\Sexpr{Fim} na produção de livros e capítulos foi de
+\textbf{\Sexpr{pmediaL}} pontos e a mediana de \textbf{\Sexpr{pmedianaL}}
+pontos e na produção de artigos foi de \textbf{\Sexpr{pmediaA}} pontos e a
+mediana de \textbf{\Sexpr{pmedianaA}}. A área de \Sexpr{NomeComite} atribui
+peso \Sexpr{PesoLivros} aos livros e \Sexpr{PesoArtigos} aos artigos.
+Usando esses valores, a soma ponderada das média é de
+\textbf{\Sexpr{PesoLivros * pmediaL + PesoArtigos * pmediaA}}.
 
 \newpage
 
@@ -576,10 +581,8 @@ print(xtable(pontuacaoArt, digits = 0,
 
 \clearpage
 
-A área de \Sexpr{NomeComite} atribui peso \Sexpr{PesoLivros} aos livros e
-\Sexpr{PesoArtigos} aos artigos. A Tabela~\ref{tab:pond} apresenta a
-classificação dos professores quando sua produção é ponderada de acordo com os
-critérios do comitê de área.
+A Tabela~\ref{tab:pond} apresenta a classificação dos professores quando sua
+produção é ponderada de acordo com os critérios do comitê de área.
 
 <<ppg_ponderado>>=
 if(ncol(pontuacaoLvr) > 2){
