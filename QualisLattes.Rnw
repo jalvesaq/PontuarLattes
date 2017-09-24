@@ -23,6 +23,7 @@ opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="c
 library("XML")
 library("xtable")
 library("descr")
+library("ineq")
 options(xtable.table.placement = "H",
         xtable.caption.placement = "top",
         xtable.booktabs = TRUE,
@@ -582,7 +583,9 @@ print(xtable(pontuacaoArt, digits = 0,
 \clearpage
 
 A Tabela~\ref{tab:pond} apresenta a classificação dos professores quando sua
-produção é ponderada de acordo com os critérios do comitê de área.
+produção é ponderada de acordo com os critérios do comitê de área. Uma linha
+adicional, indicadora da concentração da produção, apresenta o índice de Gini
+para livros, artigos e para a média ponderada dos dois tipos de produção.
 
 <<ppg_ponderado>>=
 if(ncol(pontuacaoLvr) > 2){
@@ -603,10 +606,23 @@ pond$Artigos <- pond$Artigos / max(pond$Artigos, na.rm = TRUE)
 pond$Média <- PesoArtigos * pond$Artigos + PesoLivros * pond$Livros
 pond <- pond[order(pond$Média, decreasing = TRUE), ]
 rownames(pond) <- as.character(1:nrow(pond))
-
-xtable(pond, digits = 3, label = "tab:pond",
-       caption = "Professores classificados por pontuação ponderada")
 @
+
+\begin{longtable}{rlrrr}
+\caption{Professores classificados por pontuação ponderada} \\
+  \toprule
+<<imprimirpond>>=
+print(xtable(pond, digits = 3, label = "tab:pond",
+             caption = "Professores classificados por pontuação ponderada"),
+      booktabs = FALSE, only.contents = TRUE)
+@
+ & Índice de Gini & \Sexpr{sprintf("%0.3f", Gini(pond$Livros))}  &
+                   \Sexpr{sprintf("%0.3f", Gini(pond$Artigos))} &
+                   \Sexpr{sprintf("%0.3f", Gini(pond$Média))} \\
+  \bottomrule
+\label{tab:pond}
+\end{longtable}
+
 
 \clearpage
 
