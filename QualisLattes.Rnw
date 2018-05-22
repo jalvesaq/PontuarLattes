@@ -728,15 +728,16 @@ checkISBN <- function(x){
     x <- as.numeric(x)
     if(sum(is.na(x)) > 0)
         return(TRUE)
-    soma <- 3 * (x[2] + x[4] + x[6] + x[8] + x[10] + x[12]) + x[1] + x[3] + x[5] + x[7] + x[9] + x[11]
-    sobra <- soma %% 10
-    correto <- 10 - sobra
+    correto <- 10 - (sum(x[1:12] * c(1, 3)) %% 10)
+    if(correto == 10)
+        correto <- 0
     if(x[13] == correto){
         return(FALSE) # Nenhum problema
     } else {
         return(TRUE)  # Erro na soma
     }
 }
+
 idx <- sapply(b$isxn, checkISBN)
 if(sum(idx) > 0){
     b$prof[idx] <- paste("\\rowcolor{ninval}", b$prof[idx])
