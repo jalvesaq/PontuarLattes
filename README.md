@@ -27,16 +27,15 @@ arquivo `info.R`, conforme instruções detalhadas a seguir.
 
   4. No novo diretório, crie os diretórios `qualis` e `lattes_xml`.
 
-  5. Copie o arquivo `exemplo/lattes_xml/lista_de_professores.html` para o seu
+  5. Copie o arquivo `exemplo/lattes_xml/baixar_lattes.sh` para o seu
      novo diretório `lattes_xml`.
 
-  6. Edite o seu arquivo `lattes_xml/lista_de_professores.html`. O arquivo
-     possui uma única linha com link para um currículo Lattes na versão XML.
-     Faça cópias dessa linha e substitua os dados pelos nomes e links para os
-     Lattes dos professores do programa de pós-graduação para o qual será
-     produzido o relatório. Depois, abra o arquivo em um navegador e baixe os
-     currículos. Mova todos arquivos `.zip` baixados para o seu diretório
-     `lattes_xml`.
+  6. Edite o seu arquivo `lattes_xml/baixar_lattes.sh`. O arquivo possui uma
+     única linha com link para um currículo Lattes na versão XML. Faça uma
+     cópia dessa linha para cada professor, substituindo o link para o
+     currículo e o nome do arquivo zip. No terminal do Linux, certifique-se de
+     que o arquivo baixar_lattes é executável e execute-o
+     (`./baixar_lattes.sh`).
 
   7. Acesse a página com a pontuação Qualis da Plataforma Sucupira, selecione
      apenas um *Evento de Classificação* e uma *Área de Avaliação*, deixando
@@ -46,7 +45,11 @@ arquivo `info.R`, conforme instruções detalhadas a seguir.
 
   8. Edite o código do `info.R`.
 
-  9. Gere o PDF a partir do link simbólico `QualisLattes.Rnw` (use XeLaTeX e não
+  9. Se quiser apenas ver as tabelas no próprio R, rode o script
+     `gerar_tabelas.R` e execute o comando `print(obj)` para cada uma das
+     tabelas, substituindo `obj` pelo nome do objeto correspondente à tabela.
+
+  10. Gere o PDF a partir do link simbólico `QualisLattes.Rnw` (use XeLaTeX e não
      pdfLaTeX).
 
   10. Em caso de dúvida, peça ajuda a alguém que saiba programar em R e em
