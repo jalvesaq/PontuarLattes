@@ -289,9 +289,10 @@ MediaMovel <- function(x)
     mm <- (mm1 + mm2 + mm3) / 3
 }
 mm <- lapply(pcl, MediaMovel)
+mmMax <- max(sapply(mm, max))
 
 for(n in names(mm)){
-    plot(as.numeric(names(mm[[n]])), mm[[n]],
+    plot(as.numeric(names(mm[[n]])), mm[[n]], ylim = c(0, mmMax),
          pch=20, main = n, xlab = "Ano", ylab = "Média")
     lines(as.numeric(names(mm[[n]])), mm[[n]])
     cat("\n\\vspace{0.5cm}\n")
