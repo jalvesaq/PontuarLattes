@@ -18,7 +18,7 @@
   pdfborder={0 0 0},
 ]{hyperref}
 
-<<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE>>=
+<<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE>>=
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 library("xtable")
 library("ineq")
@@ -41,6 +41,14 @@ source("gerar_tabelas.R")
 \maketitle
 
 \tableofcontents
+
+\clearpage
+
+\section{Apresentação}
+
+Este relatório foi produzido com os scripts desenvolvidos por Jakson Alves de
+Aquino (Universidade Federal do Ceará) e disponibilizados em
+\url{https://github.com/jalvesaq/PontuarLattes}.
 
 \clearpage
 
@@ -232,7 +240,6 @@ print(xtable(pond, digits = 3, label = "tab:pond",
 \label{tab:pond}
 \end{longtable}
 
-
 \clearpage
 
 <<producao_qualis>>=
@@ -241,6 +248,19 @@ print(xtable(producao, align = paste(c("l", rep("r", ncol(producao))), collapse 
              caption = "Produção segundo classificação Qualis"),
       sanitize.rownames.function = function(x) x)
 @
+
+\clearpage
+
+A Tabela~\ref{tab:sjr} mostra a pontuação calculada como a soma do índice SJR
+de cada publicação:
+
+<<ppg_pontos_sjr>>=
+print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
+             caption = "Professores classificados por pontuação (Artigos, SJR)"),
+      include.rownames = FALSE)
+@
+
+
 
 \clearpage
 
@@ -301,8 +321,8 @@ if(length(erros) > 0){
 
 
 <<printTabProdDet>>=
-print(xtable(proddet, display = c("s", "s", "s", "d", "s", "s", "s"),
-             align = "lllrllr", label = "tab:proddet",
+print(xtable(proddet, display = c("s", "s", "s", "d", "s", "f", "s", "s"),
+             align = "lllrllrr", label = "tab:proddet",
              caption = "Produção detalhada"),
       sanitize.text.function = function(x)x,
       tabular.environment = "longtable", floating = FALSE,

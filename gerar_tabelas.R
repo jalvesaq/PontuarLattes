@@ -1,5 +1,6 @@
 library("XML")
 library("descr")
+
 source("info.R")
 
 # Ler currículos
@@ -187,6 +188,35 @@ pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = Pontos
 
 p <- merge(p, pontos, all.x = TRUE)
 
+if(file.exists("qualis/scimagojr 2017.csv")){
+    # Não foi possível carregar o banco de dados "scimagojr 2017.csv" no R sem
+    # erros porque há campos com aspas desbalanceadas. A solução encontrada
+    # foi usar o awk para extrair somente as colunas necessárias.
+    system("awk -F ';' '{OFS=\"\t\" ; print $3, $5, $6, $16}' 'qualis/scimagojr 2017.csv' > /tmp/scimagojr_2017_TAB.csv")
+    s <- readLines("/tmp/scimagojr_2017_TAB.csv")
+    s <- gsub('"', "", s)
+    writeLines(s, "/tmp/scimagojrTAB")
+    s <- read.delim("/tmp/scimagojrTAB", stringsAsFactors = FALSE)
+    names(s) <- c("title", "isxn", "SJR", "country")
+    s$SJR <- as.numeric(sub(",", ".", s$SJR))
+    s$title <- sub("^ *(.*) *$", "\\1", s$title)
+
+    # Revistas com mais de um ISSN
+    s$issn2 <- s$isxn
+    s$issn2 <- sub(".*, ", "", s$isxn)
+    s$isxn <- sub(",.*", "", s$isxn)
+    s2 <- s
+    s2$issn2[s2$isxn == s2$issn2] <- NA
+    s2 <- s2[!is.na(s2$issn2), ]
+    s$issn2 <- NULL
+    s2$isxn <- NULL
+    names(s2) <- sub("issn2", "isxn", names(s2))
+    s <- rbind(s, s2)
+    rm(s2)
+
+    p <- merge(p, s, all.x = TRUE)
+}
+
 
 # Especificar o período do relatório
 pcompleto <- p
@@ -269,6 +299,18 @@ if(ncol(pontuacaoArt) > 2){
     pmediaA <- round(mean(pontuacaoArt[, 2], na.rm = TRUE))
     pmedianaA <- round(median(pontuacaoArt[, 2], na.rm = TRUE))
     pontuacaoArt <- pontuacaoArt[order(pontuacaoArt[, 2], decreasing = TRUE), ]
+}
+
+if(is.null(p$SJR)){
+    pontuacaoSJR <- matrix("Arquivo `qualis/scimagojr_2017_TAB.csv' não encontrado", 1, 1)
+    p$SJR <- NA
+} else {
+    pontuacaoSJR <- as.data.frame(tapply(part$SJR, list(part$prof, part$ano),
+                                     sum, na.rm = TRUE))
+    pontuacaoSJR <- cbind(rownames(pontuacaoSJR), pontuacaoSJR, apply(pontuacaoSJR, 1, sum, na.rm = TRUE))
+    names(pontuacaoSJR)[1] <- "Professores"
+    names(pontuacaoSJR)[ncol(pontuacaoSJR)] <- "Total"
+    pontuacaoSJR <- pontuacaoSJR[order(pontuacaoSJR[, "Total"], decreasing = TRUE), ]
 }
 
 # Lista de Pós-doutorados realizados
@@ -423,7 +465,7 @@ producao <- producao[, !grepl("Nada", colnames(producao))]
 rownames(producao) <- c(rownames(producao)[1], paste("\\hline", rownames(producao)[2:nrow(producao)]))
 
 # Produção detalhada
-b <- p[, c("prof", "producao", "ano", "qualis", "livro.ou.periodico", "isxn")]
+b <- p[, c("prof", "producao", "ano", "qualis", "SJR", "livro.ou.periodico", "isxn")]
 b <- b[order(p$prof, p$ano, p$producao), ]
 
 b$prof <- sub(" .* ", " ", b$prof)
@@ -503,7 +545,7 @@ b$producao <- gsub("&", "\\\\&", b$producao)
 b$producao <- gsub("#", "\\\\#", b$producao)
 b$livro.ou.periodico <- gsub("#", "\\\\#", b$livro.ou.periodico)
 levels(b$qualis) <- sub("Nada", " ", levels(b$qualis))
-names(b) <- c("Professor", "Produção (títulos truncados)", "Ano", "Qualis",
+names(b) <- c("Professor", "Produção (títulos truncados)", "Ano", "Qualis", "SJR",
               "Periódico ou Livro (títulos truncados)", "ISSN/ISBN")
 proddet <- b
 rm(b)
