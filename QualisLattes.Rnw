@@ -19,6 +19,8 @@
 ]{hyperref}
 
 <<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE>>=
+if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
+    Sys.setenv(LANGUAGE = "pt_BR.UTF-8")
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 library("xtable")
 library("ineq")
@@ -28,7 +30,8 @@ options(xtable.table.placement = "H",
         xtable.booktabs = TRUE,
         xtable.floating = FALSE,
         xtable.tabular.environment = "longtable",
-        format.args = list(big.mark = ".", decimal.mark = ","))
+        format.args = list(big.mark = ".", decimal.mark = ","),
+        OutDec = ",")
 source("gerar_tabelas.R")
 @
 
@@ -46,8 +49,9 @@ source("gerar_tabelas.R")
 
 \section{Apresentação}
 
-Este relatório foi produzido com os scripts desenvolvidos por Jakson Alves de
-Aquino (Universidade Federal do Ceará) e disponibilizados em
+Este relatório foi produzido com scripts desenvolvidos por Jakson Alves de
+Aquino\footnote{Professor do Departamento de Ciências Sociais da Universidade
+Federal do Ceará. E-mail: jaa@ufc.br} e disponibilizados em
 \url{https://github.com/jalvesaq/PontuarLattes}.
 
 \clearpage
@@ -257,6 +261,18 @@ de cada publicação:
 <<ppg_pontos_sjr>>=
 print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
              caption = "Professores classificados por pontuação (Artigos, SJR)"),
+      include.rownames = FALSE)
+@
+
+
+\clearpage
+
+A Tabela~\ref{tab:ggl} mostra a pontuação calculada como a soma do Fator de
+Impacto de cada publicação calculado pelo Google:
+
+<<ppg_pontos_ggl>>=
+print(xtable(pontuacaoGgl, digits = 3, label = "tab:ggl",
+             caption = "Professores classificados por pontuação (Artigos, Fator de Impacto do Google Scholar)"),
       include.rownames = FALSE)
 @
 

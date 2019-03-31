@@ -1,5 +1,6 @@
 library("XML")
 library("descr")
+library("scholar")
 
 source("info.R")
 
@@ -150,6 +151,55 @@ xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
 rm(xx, obter.producao)
 
+
+# Adicionar Fator de Impacto SJR
+if(file.exists("qualis/scimagojr 2017.csv")){
+    # Não foi possível carregar o banco de dados "scimagojr 2017.csv" no R sem
+    # erros porque há campos com aspas desbalanceadas. A solução encontrada
+    # foi usar o awk para extrair somente as colunas necessárias.
+    system("awk -F ';' '{OFS=\"\t\" ; print $3, $5, $6, $16}' 'qualis/scimagojr 2017.csv' > /tmp/scimagojr_2017_TAB.csv")
+    s <- readLines("/tmp/scimagojr_2017_TAB.csv")
+    s <- gsub('"', "", s)
+    writeLines(s, "/tmp/scimagojrTAB")
+    s <- read.delim("/tmp/scimagojrTAB", stringsAsFactors = FALSE)
+    names(s) <- c("title", "isxn", "SJR", "country")
+    s$SJR <- as.numeric(sub(",", ".", s$SJR))
+    s$title <- sub("^ *(.*) *$", "\\1", s$title)
+
+    # Revistas com mais de um ISSN
+    s$issn2 <- s$isxn
+    s$issn2 <- sub(".*, ", "", s$isxn)
+    s$isxn <- sub(",.*", "", s$isxn)
+
+    # Usar isxn e issn2 do SJR para fazer equivalência na tabela Qualis
+    for(i in 1:nrow(s)){
+        if(s$issn2[i] %in% qualis$isxn && ! s$isxn[i] %in% qualis$isxn)
+            qualis <- rbind(qualis,
+                            data.frame(isxn = s$isxn[i],
+                                       titulo = qualis$titulo[qualis$isxn == s$issn2[i]],
+                                       qualis = qualis$qualis[qualis$isxn == s$issn2[i]],
+                                       stringsAsFactors = FALSE))
+        else
+            if(s$isxn[i] %in% qualis$isxn && ! s$issn2[i] %in% qualis$isxn)
+                qualis <- rbind(qualis,
+                                data.frame(isxn = s$issn2[i],
+                                           titulo = qualis$titulo[qualis$isxn == s$isxn[i]],
+                                           qualis = qualis$qualis[qualis$isxn == s$isxn[i]],
+                                           stringsAsFactors = FALSE))
+    }
+
+    # Concluir adição de linhas ao banco de dados do SJR
+    s2 <- s
+    s2$issn2[s2$isxn == s2$issn2] <- NA
+    s2 <- s2[!is.na(s2$issn2), ]
+    s$issn2 <- NULL
+    s2$isxn <- NULL
+    names(s2) <- sub("issn2", "isxn", names(s2))
+    s <- rbind(s, s2)
+    rm(s2)
+
+    p <- merge(p, s, all.x = TRUE)
+}
 # Adicionar Qualis
 
 if(exists("equivalente")){
@@ -188,35 +238,54 @@ pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = Pontos
 
 p <- merge(p, pontos, all.x = TRUE)
 
-if(file.exists("qualis/scimagojr 2017.csv")){
-    # Não foi possível carregar o banco de dados "scimagojr 2017.csv" no R sem
-    # erros porque há campos com aspas desbalanceadas. A solução encontrada
-    # foi usar o awk para extrair somente as colunas necessárias.
-    system("awk -F ';' '{OFS=\"\t\" ; print $3, $5, $6, $16}' 'qualis/scimagojr 2017.csv' > /tmp/scimagojr_2017_TAB.csv")
-    s <- readLines("/tmp/scimagojr_2017_TAB.csv")
-    s <- gsub('"', "", s)
-    writeLines(s, "/tmp/scimagojrTAB")
-    s <- read.delim("/tmp/scimagojrTAB", stringsAsFactors = FALSE)
-    names(s) <- c("title", "isxn", "SJR", "country")
-    s$SJR <- as.numeric(sub(",", ".", s$SJR))
-    s$title <- sub("^ *(.*) *$", "\\1", s$title)
 
-    # Revistas com mais de um ISSN
-    s$issn2 <- s$isxn
-    s$issn2 <- sub(".*, ", "", s$isxn)
-    s$isxn <- sub(",.*", "", s$isxn)
-    s2 <- s
-    s2$issn2[s2$isxn == s2$issn2] <- NA
-    s2 <- s2[!is.na(s2$issn2), ]
-    s$issn2 <- NULL
-    s2$isxn <- NULL
-    names(s2) <- sub("issn2", "isxn", names(s2))
-    s <- rbind(s, s2)
-    rm(s2)
-
-    p <- merge(p, s, all.x = TRUE)
+# Adicionar Fator de Impacto do Google Scholar
+# Guardar dados coletados em arquivo para evitar necessidade de baixar dados
+# cada vez que este script for executado
+if(!dir.exists("~/.cache"))
+    dir.create("~/.cache")
+if(file.exists("~/.cache/PontuarLattes_GoogleScholar")){
+    g <- read.delim("~/.cache/PontuarLattes_GoogleScholar", stringsAsFactors = FALSE)
+} else {
+    g <- data.frame(tituloUP = character(),
+                    tituloG = character(),
+                    cites = numeric(),
+                    ImpactFactor = numeric(),
+                    Eigenfactor = numeric(),
+                    stringsAsFactors = FALSE)
 }
 
+# Listar títulos não coletados ainda
+p$tituloUP <- toupper(p$titulo)
+titulos <- levels(factor(p$tituloUP[p$tipo == "Artigo"]))
+coletar <- rep(FALSE, length(titulos))
+for(i in 1:length(titulos)){
+    if(titulos[i] %in% g$tituloUP == FALSE)
+        coletar[i] <- TRUE
+}
+titulos <- titulos[coletar]
+
+if(length(titulos)){
+    # Coletar dados dos títulos cujos dados ainda não foram coletados
+    gif <- lapply(titulos, get_impactfactor)
+    for(i in 1:length(titulos)){
+        if(titulos[i] %in% g$titulo == FALSE)
+            g <- rbind(g,
+                       data.frame(tituloUP = titulos[i],
+                                  tituloG = gif[[i]][[1]],
+                                  cites = gif[[i]][[2]],
+                                  ImpactFactor = gif[[i]][[3]],
+                                  Eigenfactor = gif[[i]][[4]],
+                                  stringsAsFactors = FALSE))
+    }
+    write.table(g, "~/.cache/PontuarLattes_GoogleScholar",
+                quote = FALSE, sep = "\t", row.names = FALSE)
+    rm(gif)
+}
+rm(titulos, coletar)
+
+p <- merge(p, g, all.x = TRUE)
+p$tituloUP <- NULL
 
 # Especificar o período do relatório
 pcompleto <- p
@@ -307,11 +376,20 @@ if(is.null(p$SJR)){
 } else {
     pontuacaoSJR <- as.data.frame(tapply(part$SJR, list(part$prof, part$ano),
                                      sum, na.rm = TRUE))
-    pontuacaoSJR <- cbind(rownames(pontuacaoSJR), pontuacaoSJR, apply(pontuacaoSJR, 1, sum, na.rm = TRUE))
+    pontuacaoSJR <- cbind(rownames(pontuacaoSJR), pontuacaoSJR,
+                          apply(pontuacaoSJR, 1, sum, na.rm = TRUE))
     names(pontuacaoSJR)[1] <- "Professores"
     names(pontuacaoSJR)[ncol(pontuacaoSJR)] <- "Total"
     pontuacaoSJR <- pontuacaoSJR[order(pontuacaoSJR[, "Total"], decreasing = TRUE), ]
 }
+
+pontuacaoGgl <- as.data.frame(tapply(part$ImpactFactor, list(part$prof, part$ano),
+                                     sum, na.rm = TRUE))
+pontuacaoGgl <- cbind(rownames(pontuacaoGgl), pontuacaoGgl,
+                      apply(pontuacaoGgl, 1, sum, na.rm = TRUE))
+names(pontuacaoGgl)[1] <- "Professores"
+names(pontuacaoGgl)[ncol(pontuacaoGgl)] <- "Total"
+pontuacaoGgl <- pontuacaoGgl[order(pontuacaoGgl[, "Total"], decreasing = TRUE), ]
 
 # Lista de Pós-doutorados realizados
 posdoc <- do.call("rbind", posdoc)
