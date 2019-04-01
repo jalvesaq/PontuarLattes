@@ -1,0 +1,702 @@
+# https://pt.wikipedia.org/wiki/Lista_de_institui%C3%A7%C3%B5es_de_ensino_superior_do_Brasil
+# 31/02/2019
+sigla	nome
+ABMDP II	Academia de Bombeiro Militar Dom Pedro II
+ACE	Associação Catarinense de Ensino
+AEMS	Faculdades Integradas de Três Lagoas
+AESA	Anhanguera Educacional
+AESPI	Associação de Ensino Superior do Piauí
+AFA	Academia da Força Aérea
+ALFA	Faculdade Alves Faria
+ALIANÇA	Faculdade Aliança
+AMAN	Academia Militar de Agulhas Negras
+APM-MG	Academia de Polícia Militar de Minas Gerais
+APMBB	Academia de Polícia Militar do Barro Branco
+APMDJVI	Academia de Polícia Militar Dom João VI
+ASMEC	Associação Sul Mineira de Educação e Cultura
+ASPER	Associação Paraibana de Ensino Renovado
+AVEC	Associação Vilhenense de Educação e Cultura
+BANDTEC	Faculdade de Tecnologia Bandeirantes
+BSP	Business School São Paulo
+CAMPO REAL	Faculdade Campo Real
+CASTELLI	Escola Superior de Hotelaria Castelli
+CATHEDRAL	Faculdades Cathedral-Barra do Garças
+CBM	Centro Universitário Barão de Mauá
+CEAMA	Centro de Educação da Amazônia
+CEAP	Centro de Ensino Superior do Amapá
+CECON	Centro Educacional Conceição Nunes
+CEFET-MG	Centro Federal de Educação Tecnológica de Minas Gerais
+CEFET/RJ	Centro Federal de Educação Tecnológica Celso Suckow da Fonseca
+CELSO LISBOA	Centro Universitário Celso Lisboa
+CENSI	Centro de Ensino Superior de Itabira
+CENTEC	Falcudade de Tecnologia CENTEC (Na prática, é como se fosse estadual)
+CESAT	Escola de Ensino Superior Anísio Teixeira
+CESCAGE	Centro de Ensino Superior dos Campos Gerais
+CESF	Centro de Ensino Superior Cenecista de Farroupilha
+CESMAC	Centro de Estudos Superiores de Maceió
+CEST	Faculdade Santa Terezinha (São Luís)
+CESUC	Centro de Ensino Superior de Catalão
+CESUFOZ	Centro de Ensino Superior de Foz do Iguaçu
+CESUMAR	Centro Universitário de Maringá
+CESUPA	Centro Universitário do Pará
+CESV	Centro de Ensino Superior de Vitória
+CET	Centro de Educação Tecnológico
+CEUB	Centro Universitário de Brasília
+CEULJI/ULBRA	Centro Universitário Luterano de Ji-Paraná
+CEULP/ULBRA	Centro Universitário Luterano de Palmas
+CEUNSP	Centro Universitário Nossa Senhora do Patrocínio
+CEUT	Centro de Ensino Unificado de Teresina
+CIABA	Centro de Instrução Almirante Braz de Aguiar
+CIAGA	Centro de Instrução Almirante Graça Aranha
+CLARETIANO	centro universitário
+CNECSAN	Faculdade CNEC Santo Ângelo
+CUEA	Centro Universitário Eaprenda Elearning
+CUFSA	Centro Universitário Fundação Santo André
+CUSC	Centro Universitário São Camilo
+Cathedral	Faculdades Cathedral
+Cesf	Instituto de Ensino Superior Fucapi
+Ciesa	Centro Universitário de Ensino Superior do Amazonas
+DEVRY	DeVry João Pessoa
+DOCTUM	Rede de Ensino Doctum
+DOMPEDRO	Faculdades Integradas Dom Pedro II
+EDUVALE	Faculdade de Ciências Sociais Aplicadas do Vale do São Lourenço
+EEK	Escola de Engenharia Kennedy
+EEP/FUMEP	Escola de Engenharia de Piracicaba
+EEWB	Escola de Enfermagem Wenceslau Braz
+EMESCAM	Escola Superior de Ciências da Santa Casa de Misericórdia de Vitória
+EN	Escola Naval
+ENCE	Escola Nacional de Ciências Estatísticas
+ESAC	Escola Superior de Aviação Civil
+ESAGS	Escola Superior de Administração e Gestão
+ESAMAZ	Escola Superior da Amazônia
+ESBJ	Faculdade Maurício de Nassau
+ESCS	Escola Superior de Ciências da Saúde
+ESDHC	Escola Superior Dom Helder Câmara
+ESEFIC	Escola Superior de Cruzeiro "Prefeito Hamilton Vieira Mendes"
+ESEFJ	Escola Superior de Educação Física de Jundiaí
+ESFA	Escola Superior São Francisco de Assis
+ESMAC	Escola Superior Madre Celeste
+ESMARGS	Escola Superior de Música e Artes do Rio Grande do Sul
+ESPM	Escola Superior de Propaganda e Marketing
+ESPM-RIO	Escola Superior de Propaganda e Marketing
+EST	Faculdades EST
+ESTÁCIO	Faculdade Estácio de Sergipe
+ESTÁCIO FAP	Estácio de Sá Faculdade do Pará
+ESTÁCIO FIC	Faculdade Integrada do Ceará
+Esbam	Escola Superior Batista do Amazonas
+Estácio	Estácio Atual
+FA	Faculdade Atlântico
+FA7	Faculdade 7 de Setembro
+FAA	Faculdade Anhanguera de Anápolis
+FAA & IESA	Associação de Ensino Superior de Alagoas
+FAAB	Faculdade Alfa Brasil
+FAACH	Faculdade Santa Rita de Chapecó
+FAACS	Faculdade Anglo-Americano de Caxias do Sul - Grupo Educacional
+FAACZ	Faculdade de Aracruz
+FAAM	Faculdade da Amazônia
+FAAMA	Faculdade Adventista da Amazônia
+FAAP	Fundação Armando Álvares Penteado
+FAAR	Faculdades Associadas de Ariquemes
+FABAVI	Faculdade Batista de Vitoria
+FABEL	Faculdade de Belém
+FABRAN	Faculdade Brasil Norte
+FACAMP	Faculdades de Campinas
+FACAPA	Faculdade Católica de Pouso Alegre
+FACAR	Faculdade de Aracaju
+FACC	Faculdade Concórdia
+FACCAMP	Faculdade de Campo Limpo Paulista
+FACCAT	Faculdades de Taquara
+FACDO	Faculdade Católica Dom Orione
+FACECA	Faculdade Cenecista de Varginha
+FACED	Faculdade de Ciências Contabeis de Divinópolis
+FACEG	Faculdade Evangelica de Goianesia
+FACELI	Faculdade de Ensino Superior de Linhares
+FACEM	Faculdade do Estado do Maranhão (São Luís)
+FACEMA	Faculdade de Ciências e Tecnologia do Maranhão (Caxias)
+FACEMG	Faculdade de Ensino de Minas Gerais
+FACENE	Faculdade de Enfermagem Nova Esperança
+FACENSA	Faculdade Cenecista Nossa Senhora dos Anjos
+FACER	Faculdade de Ciências de Rubiataba
+FACERES	Faculdade de Ceres
+FACES	Faculdade do Espírito Santo
+FACESM	Faculdade de Ciências Sociais Aplicadas do Sul de Minas
+FACETE	Faculdade de Ensino Tecnológico do Estado do Pará
+FACETEN	Faculdade de Ciências, Educação e Teologia do Norte do Brasil
+FACHA	Faculdades Integradas Hélio Alonso
+FACI	Faculdade Ideal
+FACIC	Faculdade de Ciências Humanas de Cruzeiro
+FACICA	Faculdade de Ciências da Saúde de Campos Gerais
+FACICESP	FACULDADES INTEGRADAS ICESP - UNICESP - Brasília
+FACID	Faculdade Integral Diferencial
+FACIMA	Faculdade da Cidade de Maceió
+FACIMED	Faculdade de Ciências Biomédicas de Cacoal
+FACIMP	Faculdade de Imperatriz
+FACIP	Faculdade Ipiranga
+FACIPLAC	Faculdade de Ciência e Tecnologia do Planalto Central
+FACIT	Faculdade de Ciências do Tocantins
+FACITEC	Faculdade de Ciências Sociais e Tecnológicas
+FACMIL	Faculdade de Administração de São José do Rio Preto
+FACOS	Faculdade Cenecista de Osório
+FACSUL	Faculdade Mato Grosso do Sul
+FACSUM	Faculdade do Sudeste Mineiro
+FACTO	Faculdade Católica do Tocantins
+FACTU	Faculdade de Ciências e Tecnologia de Unaí
+FADAF	Faculdade de Direito de Alta Floresta
+FADI	Faculdade de Direito de Sorocaba
+FADISC	Faculdades Integradas de São Carlos
+FADISMA	Faculdade de Direito de Santa Maria
+FADMINAS	Faculdades Integradas Adventistas de Minas Gerais
+FAECE	Faculdade de Ensino e Cultura do Ceará
+FAEMA	Faculdade de Educação e Meio Ambiente
+FAESA	Faculdades Integradas Espírito-Santenses
+FAESNE	Faculdade de Ensino Superior do Nordeste
+FAETERJ	Faculdade de Educação Tecnológica do Estado do Rio de Janeiro
+FAEV/UNESC	Faculdade de Educação e Cultura de Vilhena
+FAFEM	Faculdades da Fundação de Ensino de Mococa
+FAFIA	Faculdade de Filosofia Ciências e Letras de Alegre
+FAFIC	Faculdade de Filosofía, Ciências e Letras de Cajazeiras
+FAFIG	Faculdade de Foz do Iguaçu
+FAFIL	Faculdade de Filosofía Ciências e Letras
+FAFOR	Faculdade de Fortaleza
+FAGAMMON	Faculdade Presbiteriana Gammon
+FAI	Faculdades Adamantinenses Integradas
+FAIBI	Faculdade de Filosofia, Ciências e Letras de Ibitinga
+FAL	Faculdade de Natal
+FAMAZ	Faculdade Metropolitana da Amazônia
+FAMEMA	Faculdade de Medicina de Marília
+FAMERP	Faculdade de Medicina de São José do Rio Preto
+FAMES	Faculdade De Musica do Espírito Santo" Mauricio de Oliveira"
+FAMETRO	Faculdade Metropolitana de Fortaleza
+FANESE	Faculdade de Administração e Negócios de Sergipe
+FANOR	Faculdades Nordeste
+FANP	Faculdade do Noroeste Paranaense
+FAPA	Faculdade Porto-Alegrense
+FAPAL	Faculdade de Palmas
+FAPAR	Faculdade Paranaense
+FAPCOM	Faculdade Paulus de Comunicação e Tecnologia
+FAPECS	Instituto de Pesquisa em Ciências da Saude
+FAPEN	Faculdade Paraense de Ensino
+FARES	Faculdade Roraimense de Ensino Superior
+FARESC	Faculdades Integradas Santa Cruz de Curitiba
+FARN	Faculdade Natalense para o Desenvolvimento do Rio Grande do Norte
+FARO	Faculdade de Ciências Humanas, Exatas e Letras de Rondônia
+FARR	Faculdade Reinaldo Ramos
+FAS	Faculdade Ari de Sá
+FASAM	Faculdade Sul-Americana
+FASE	Faculdade da Serra
+FASEC	Faculdade Serra do Carmo
+FASEP	Faculdade Serrana
+FASF	Faculdade Sagrada Família
+FASF/Unisa	Faculdade de Filosofia, Ciências e Letras do Alto São Francisco
+FASIPE	Faculdade FASIPE
+FASP	Faculdade São Francisco da Paraíba
+FATE	Faculdade Ateneu
+FATECPB	Faculdade de Tecnología da Paraíba
+FATENE	Faculdade Terra Nordeste
+FAVENORTE	Instituto Superior de Educação Verde Norte
+FAVI	Associação Vitoriana de Ensino Superior
+FAZP	Faculdade Zumbi dos Palmares
+FAZU	Faculdades Associadas de Uberaba
+FBNCTSB	Faculdade Boas Novas de Ciências Teológicas, Sociais e Biotecnológicas
+FCAT	Faculdade de Castanhal
+FCB	Faculdade Castelo Branco
+FCDA	Faculdade Drummond
+FCF	Faculdade Católica de Fortaleza
+FCG	Faculdade Campo Grande
+FCL	Faculdade Cásper Líbero
+FCM	Faculdade de Ciências Médicas de Campina Grande
+FCM-PB	Faculdade de Ciências Médicas da Paraíba
+FCMMG	Faculdade de Ciências Médicas de Minas Gerais
+FCMS/JF	Faculdade de Ciências Médicas e da Saúde de Juiz de Fora
+FCMSCSP	Faculdade de Ciências Médicas da Santa Casa de São Paulo
+FCMV	Faculdade Candido Mendes de Vitória
+FCNSN	Faculdade Católica Nossa Senhora Das Neves
+FCRS	Faculdade Católica Rainha do Sertão
+FDF	Faculdade de Direito de Franca
+FDSBC	Faculdade de Direito de São Bernardo do Campo
+FDSM	Faculdade de Direito do Sul de Minas
+FDV	Faculdades Integradas de Vitória
+FEA	Fundação Educacional Araçatuba
+FEAD	Faculdade de Estudos Administrativos de Minas Gerais
+FEAPA	Faculdade de Estudos Avançados do Pará
+FEBASP	Centro Universitário Belas Artes de São Paulo
+FECAP	Fundação Escola de Comércio Álvares Penteado
+FECIPAR	Faculdade de Educação Ciências e Letras de Paraíso
+FEEVALE	Universidade Feevale
+FEI	Centro Universitário FEI
+FEITEP	Faculdade de Engenharia e Inovação Técnico Profissional
+FEMA	Escola Técnica e Superior Machado de Assis - Santa Rosa
+FEMG	Faculdade de Engenharia de Minas Gerais
+FEPAR	Faculdade Evangélica do Paraná
+FESAM	Faculdade de Ensino Superior da Amazônia
+FESC	Fundação de Ensino Superior de Clevelândia
+FESP	Faculdade de Ensino Superior da Paraíba
+FESPSP	Fundação Escola de Sociologia e Política de São Paulo
+FEST	Faculdade de Educação Santa Terezinha (Imperatriz)
+FESVIP	Faculdade de Enfermagem São Vicente de Paula
+FFB	Faculdade Farias Brito
+FFCL	Faculdade de Filosofia Ciências e Letras de São José do Rio Pardo
+FFSD	Faculdade de Filosofia Santa Doroteia
+FG	Faculdade Guarapuava
+FGF	Faculdade Integrada da Grande Fortaleza
+FGV	Fundação Getulio Vargas
+FGV	Fundação Getúlio Vargas
+FIAA	Faculdades Integradas Anglo-Americano
+FIAP	Faculdade de Informática e Administração Paulista
+FIAR	Faculdades Integradas de Ariquemes
+FIBRA	Faculdade Integrada Brasil Amazônia
+FIES	Faculdades Integradas Espírita
+FIESC	Faculdade Integrada de Ensino Superior de Colinas
+FIJ	Faculdades Integradas de Jacarepaguá
+FIMCA	Faculdades Integradas Aparício Carvalho
+FIO	Faculdades Integradas de Ourinhos
+FIP	Faculdades Integradas de Patos
+FIRB	Faculdades Integradas Rio Branco
+FISMA	Faculdade Integrada de Santa Maria
+FITO	Fundação Instituto Tecnológico de Osasco
+FITS	Faculdade Integrada Tiradentes
+FJF	Faculdade Juiz de Fora
+FJN	Faculdade de Juazeiro do Norte
+FJP	Fundação João Pinheiro
+FLAMINGO	Faculdade Flamingo
+FLF	Faculdade Luciano Feijão
+FMABC	Faculdade de Medicina do ABC
+FMB	Faculdade Montes Belos
+FMF	Faculdade Martha Falcão
+FMG	Faculdade Metodista Granbery
+FMIT	Faculdade de Medicina de Itajubá
+FML	Faculdade Metropolitana Londrinense
+FMM	Faculdade Metropolitana de Marabá
+FMP	Faculdade Municipal de Palhoça
+FMPFM	Faculdade Municipal Professor Franco Montoro de Mogi Guaçu
+FMS	Faculdade Mario Schenberg
+FMU	Centro Universitário das Faculdades Metropolitanas Unidas
+FNC	Faculdade Nossa Cidade
+FOC	Faculdades Oswaldo Cruz
+FPA	Faculdade Pan Americana
+FPAS	Faculdade Pitágoras de Administração Superior
+FPD	Faculdade Pio Décimo
+FPMG	Faculdade Promove de Minas Gerais
+FPP	Faculdades Pequeno Príncipe
+FPPD	Faculdade Paraibana de Processamento de Dados
+FPU	Faculdade Politécnica de Uberlândia
+FRB	Faculdades Integradas Rio Branco
+FSA	Faculdade Santo Agostinho
+FSA	Faculdades Santo Agostinho
+FSB/RJ	Faculdade de São Bento do Rio de Janeiro
+FSDB	Faculdade Salesiana Dom Bosco
+FSG	Faculdade da Serra Gaúcha
+FSLF	Faculdade São Luis de França
+FSM	Faculdade Santa María
+FSMA	Faculdade Salesiana de Macaé
+FT	Faculdade Táhirih
+FTA	Faculdade de Tecnologia Apoena
+FTB	Faculdades Integradas da Terra de Brasília Descredenciada (Despacho n.º 59-SESu/Mec, de 2 de maio de 2011)
+FTEC	Faculdade de Tecnologia TecBrasil
+FTESM	Fundação Técnico Educacional Souza Marques
+FTML	Faculdade de Teologia Metodista Livre
+FTSA	Faculdade Teológica Sul Americana
+FTT	Faculdade de Tecnologia Termomecânica
+FUCAPE	Fundação Instituto Capixaba de Pesquisas em Contabilidade, Economia e Finanças
+FUMEC	Fundação Mineira de Educação e Cultura
+FUNCESI	Fundação Comunitária de Ensino Superior de Itabira
+FUNEC	Faculdades Integradas de Santa Fé do Sul
+FUNEDI	Fundação Educacional de Divinópolis
+FUNENSEG	Escola Nacional de Seguros
+FUNJOB	Faculdade de Medicina de Barbacena
+FURB	Fundação Universidade Regional de Blumenau
+FURG	Universidade Federal do Rio Grande
+FVJ	Faculdade Vale do Jaguaribe
+Faao	Faculdade da Amazônia Ocidental
+Fac	Faculdade Católica de Anápolis
+Facene/RN	Faculdade de Enfermagem e Medicina Nova Esperança de Mossoró
+Facex	Faculdade de Ciências, Cultura e Extensão do RN
+Fadisi	Faculdade Diocesana São José
+Fal	Faculdade Literatus
+Fameta	Faculdade Meta
+Fametro	Faculdade Metropolitana de Manaus
+Fanec	Faculdade Natalense de Ensino e Cultura
+Fasug	Faculdade do Sudeste Goiano
+Fatern Gama Filho	Faculdade de Excelência do Rio Grande do Norte
+Favi/FACES	Faculdade do Espírito Santo
+FeMASS	Faculdade Professor Miguel Ângelo da Silva Santos - Macaé
+Fom	Faculdade de Odontologia de Manaus
+Funorte	Faculdades Unidas do Norte de Minas
+IACS	Instituto Adventista Cruzeiro do Sul
+IAESUP	Faculdades e Colégio Aphonsiano
+IBHES	Instituto Belo Horizonte de Ensino Superior
+IBMEC	Instituto Brasileiro de Mercado e Capitais
+IBMR	Centro Universitário IBMR
+ICEC	Instituto Cuiabá de Ensino e Cultura
+ICF	Instituto Camillo Filho
+IDEAU	Instituto de Desenvolvimento Educacional do Alto Uruguai - Getúlio Vargas
+IEMA	Instituto Estadual do Maranhão
+IEPO	Instituto de Ensino e Pesquisa Objetivo
+IERSA	Instituto Educacional Raimundo Sá (Faculdade Raimundo Sá)
+IESAM	Instituto de Ensinos Superiores da Amazônia
+IESAP	Instituto de Ensino Superior do Amapá
+IESB	Instituto de Educação Superior de Brasília
+IESF	Instituto de Ensino Superior Franciscano (Paço do Lumiar)
+IESF-Fupesp	Instituto de Ensino Superior da Fupesp
+IESF-For	Instituto de Ensino Superior de Fortaleza
+IESMT	Instituto de Ensino Superior de Mato Grosso
+IESP-PB	Instituto de Educação Superior da Paraíba
+IESP-Patrocínio	Instituto de Educação Superior de Patrocínio
+IESRIVER	Instituto de Ensino Superior de Rio Verde
+IF Goiano	Instituto Federal Goiano
+IFB	Instituto Federal de Brasília
+IFC	Instituto Federal Catarinense
+IFCE	Instituto Federal do Ceará
+IFES	Instituto Federal do Espírito Santo
+IFF	Instituto Federal Fluminense
+IFFarroupilha	Instituto Federal Farroupilha
+IFG	Instituto Federal de Goiás
+IFMA	Instituto Federal do Maranhão
+IFMG	Instituto Federal de Minas Gerais
+IFMS	Instituto Federal de Mato Grosso do Sul
+IFMT	Instituto Federal do Mato Grosso
+IFNMG	Instituto Federal do Norte de Minas Gerais
+IFPA	Instituto Federal do Pará
+IFPB	Instituto Federal da Paraíba
+IFPI	Instituto Federal do Piauí
+IFPR	Instituto Federal do Paraná
+IFRJ	Instituto Federal do Rio de Janeiro
+IFRN	Instituto Federal do Rio Grande do Norte
+IFRO	Instituto Federal de Rondônia
+IFRR	Instituto Federal de Roraima
+IFRS	Instituto Federal do Rio Grande do Sul
+IFS	Instituto Federal de Sergipe
+IFSC	Instituto Federal de Santa Catarina
+IFSM	Instituto Federal do Sudeste de Minas
+IFSP	Instituto Federal de Educação, Ciência e Tecnologia de São Paulo
+IFSULDEMINAS	Instituto Federal do Sul de Minas
+IFSul	Instituto Federal Sul-rio-grandense
+IFTM	Instituto Federal do Triângulo Mineiro
+IFTO	Instituto Federal do Tocantins
+ILES/ULBRA	Instituto Luterano de Ensino Superior de Porto Velho
+IME	Instituto Militar de Engenharia
+IMEC	Instituto Maranhense de Ensino e Cultura (São Luís)
+IMES Catanduva	Instituto Municipal de Ensino Superior de Catanduva
+IMESA	Instituto Municipal de Ensino Superior de Assis
+IMESB	Instituto Municipal de Ensino Superior de Bebedouro Victório Cardassi
+IMESSM	Instituto Municipal de Ensino Superior de São Manuel
+IMT	Instituto Mauá de Tecnologia
+INATEL	Instituto Nacional de Telecomunicações
+INESC	Instituto de Ensino Superior Cenecista
+INFNET	Instituto Infnet
+INPER	Insituto Paraibano de Ensino Renovado
+INSJAR	Instituto Jordão de Arruda
+INTA	Instituto Superior de Teologia Aplicada
+IPA	Centro Universitário Metodista do Instituto Porto Alegre
+IPTAN	Instituto de Ensino Superior Presidente Tancredo Neves
+ISEAF	Instituto Superior de Educação Antonino Freire
+ISERJ	Instituto Superior de Educação do Rio de Janeiro
+ISES	Faculdade Sumaré
+ITA	Instituto Tecnológico de Aeronáutica
+ITE	Centro Universitário de Bauru
+ITPAC	Instituto Tocantinense Presidente Antônio Carlos
+ITPAC Porto	Instituto Tocantinense Presidente Antônio Carlos de Porto Nacional
+IUESO	Instituto Unificado de Ensino Superior Objetivo
+IUPERJ	Instituto Universitário de Pesquisas do Rio de Janeiro
+Iaes	Faculdade do Amazonas
+Iesacre	Instituição de Ensino Superior do Acre
+Ifac	Instituto Federal do Acre
+Ifal	Instituto Federal de Alagoas
+Ifam	Instituto Federal do Amazonas
+Ifap	Instituto Federal do Amapá
+Insper	Instituto de Ensino e Pesquisa
+JAPI	Faculdade Japi
+LA SALLE	Faculdade La Salle
+LUMEN FAC	Faculdade de Ciências Contábeis Luiz Mendes
+MACK	Universidade Presbiteriana Mackenzie
+MACKENZIE-RIO	Faculdade Presbiteriana Mackenzie Rio
+MARQUÊS	Instituto de Educação Cenecista Marquês de Herval
+META	Faculdade Meta
+MULTIVIX	Faculdade Brasileira
+Mater Christi	Faculdade Mater Christi
+Municipais	constituídas sob a forma de Fundações
+NovaUnesc	Faculdade Nova Unesc
+Novafapi	Faculdade de Saúde, Ciências Humanas e Tecnológicas do Piauí
+OPET	Organização Paranaense de Ensino Técnico
+PIO XII	Faculdade de Estudos Sociais do Espírito Santo
+PUC	Pontifícia Universidade Católica de Goiás
+PUC-Campinas	Pontifícia Universidade Católica de Campinas (PUCCAMP, antigamente)
+PUC-RIO	Pontifícia Universidade Católica do Rio de Janeiro
+PUCMG	Pontifícia Universidade Católica de Minas Gerais
+PUCPR	Pontifícia Universidade Católica do Paraná
+PUCRS	Pontifícia Universidade Católica do Rio Grande do Sul
+PUCSP	Pontifícia Universidade Católica de São Paulo
+REDENTOR	Sociedade Universitária Redentor (Faculdade Redentor)
+SABERES	Faculdade Saberes
+SEAMA	Faculdade SEAMA
+SECAL	Faculdade Santa Amélia
+SENAC-SP	Centro Universitário Senac - São Paulo
+SENAC-DF	Faculdade Senac - Distrito Federal
+SENAC-RS	Faculdade Senac - Rio Grande do Sul
+SENAC-SC	Faculdade Senac - Santa Catarina
+SENAC-RJ	Faculdade Senac Rio de Janeiro
+SJT	Instituição Educacional São Judas Tadeu
+SLMANDIC	Faculdade de Odontologia e Centro de Pesquisas Odontológicas São Leopoldo Mandic
+SOCIESC	Sociedade Educacional de Santa Catarina
+TECMED	Faculdade de Tecnologia Tecmed
+UAM	Universidade Anhembi Morumbi
+UBC	Universidade Braz Cubas
+UBM	Centro Universitário de Barra Mansa
+UCAM	Universidade Cândido Mendes
+UCDB	Universidade Católica Dom Bosco
+UCESP	Faculdade União Cultural do Estado de São Paulo
+UCL	Faculdade do Centro Leste
+UCPEL	Universidade Católica de Pelotas
+UCS	Universidade de Caxias do Sul
+UDC	Centro Universitário União Dinâmica das Cataratas
+UDESC	Universidade do Estado de Santa Catarina
+UDF	Centro Universitário do Distrito Federal
+UEB	Universidade Eletrônica do Brasil
+UECE	Universidade Estadual do Ceará
+UEG	Universidade Estadual de Goiás
+UEL	Universidade Estadual de Londrina
+UEM	Universidade Estadual de Maringá
+UEMA	Universidade Estadual do Maranhão
+UEMASUL	Universidade Estadual da Região Tocantina do Maranhão
+UEMG	Universidade do Estado de Minas Gerais
+UEMS	Universidade Estadual do Mato Grosso do Sul
+UENF	Universidade Estadual do Norte Fluminense
+UENP	Universidade Estadual do Norte do Paraná
+UEPA	Universidade do Estado do Pará
+UEPB	Universidade Estadual da Paraíba
+UEPG	Universidade Estadual de Ponta Grossa
+UERGS	Universidade Estadual do Rio Grande do Sul
+UERJ	Universidade do Estado do Rio de Janeiro
+UERN	Universidade do Estado do Rio Grande do Norte
+UERR	Universidade Estadual de Roraima
+UESPI	Universidade Estadual do Piauí
+UEZO	Universidade Estadual da Zona Oeste
+UFABC	Universidade Federal do ABC
+UFC	Universidade Federal do Ceará
+UFCA	Universidade Federal do Cariri
+UFCG	Universidade Federal de Campina Grande
+UFCSPA	Universidade Federal de Ciências da Saúde de Porto Alegre
+UFCat	Universidade Federal de Catalão
+UFERSA	Universidade Federal Rural do Semi-Árido
+UFES	Universidade Federal do Espírito Santo
+UFF	Universidade Federal Fluminense
+UFFS	Universidade Federal da Fronteira Sul
+UFG	Universidade Federal de Goiás
+UFGD	Universidade Federal da Grande Dourados
+UFJF	Universidade Federal de Juiz de Fora
+UFJat	Universidade Federal de Jataí
+UFLA	Universidade Federal de Lavras
+UFMA	Universidade Federal do Maranhão
+UFMG	Universidade Federal de Minas Gerais
+UFMS	Universidade Federal do Mato Grosso do Sul
+UFMT	Universidade Federal de Mato Grosso
+UFN	Universidade Franciscana
+UFOP	Universidade Federal de Ouro Preto
+UFOPA	Universidade Federal do Oeste do Pará
+UFPA	Universidade Federal do Pará
+UFPAN	Universidade Federal do Pantanal
+UFPB	Universidade Federal da Paraíba
+UFPDra	Universidade Federal do Delta do Parnaíba
+UFPE	Universidade Federal de Pernambuco
+UFPEL	Universidade Federal de Pelotas
+UFPI	Universidade Federal do Piauí
+UFPR	Universidade Federal do Paraná
+UFRA	Universidade Federal Rural da Amazônia
+UFRGS	Universidade Federal do Rio Grande do Sul
+UFRJ	Universidade Federal do Rio de Janeiro
+UFRN	Universidade Federal do Rio Grande do Norte
+UFRR	Universidade Federal de Roraima
+UFRRJ	Universidade Federal Rural do Rio de Janeiro
+UFS	Universidade Federal de Sergipe
+UFSC	Universidade Federal de Santa Catarina
+UFSCar	Universidade Federal de São Carlos
+UFSJ	Universidade Federal de São João del-Rei
+UFSM	Universidade Federal de Santa Maria
+UFT	Universidade Federal do Tocantins
+UFTM	Universidade Federal do Triângulo Mineiro
+UFU	Universidade Federal de Uberlândia
+UFV	Universidade Federal de Viçosa
+UFVJM	Universidade Federal dos Vales do Jequitinhonha e Mucuri
+UGB	Centro Universitário Geraldo Di Biase
+UGS	Universidade Gama e Souza
+UIT	Universidade de Itaúna
+ULBRA	Universidade Luterana do Brasil
+ULBRA-Natal	Universidade Luterana do Brasil (Polo Natal)
+ULBRA-EAD	Universidade Luterana do Brasil - EAD
+UMC	Universidade de Mogi das Cruzes
+UMESP	Universidade Metodista de São Paulo
+UNA	Centro Universitário UNA
+UNAERP	Universidade de Ribeirão Preto
+UNAES	Centro Universitário de Campo Grande
+UNAMA	Universidade da Amazônia
+UNASP	Centro Universitário Adventista de São Paulo
+UNC	Universidade do Contestado
+UNDB	Unidade de Ensino Superior Dom Bosco (São Luís)
+UNEMAT	Universidade do Estado de Mato Grosso
+UNERJ	Centro Universitário de Jaraguá do Sul
+UNESA	Universidade Estácio de Sá
+UNESC	Universidade do Extremo Sul Catarinense
+UNESP	Universidade Estadual Paulista
+UNESPAR	Universidade Estadual do Paraná
+UNEST	União Educacional de Ensino Superior do Médio Tocantins
+UNG	Universidade Guarulhos
+UNIABEU	UNIABEU Centro Universitário
+UNIANDRADE	Centro Universitário Campos de Andrade
+UNIANHANGUERA	Anhanguera Educacional S.A.
+UNIARA	Universidade de Araraquara
+UNIARAXÁ	Centro Universitário do Planalto de Araxá
+UNIARP	Universidade Alto Vale do Rio do Peixe
+UNIASSELVI	Centro Universitário Leonardo da Vinci
+UNIBAN	Universidade Bandeirante de São Paulo
+UNIBAVE	Universidade Barriga Verde
+UNIBERO	Centro Universitário Anhanguera de São Paulo
+UNIBH	Centro Universitário de Belo Horizonte
+UNIBRATEC	Faculdade de Tecnologia Ibratec
+UNIC	Universidade de Cuiabá
+UNICAMP	Universidade Estadual de Campinas
+UNICAMPO	Faculdade União de Campo Mourão
+UNICARIOCA	Centro Universitário Carioca
+UNICASTELO	Universidade Camilo Castelo Branco
+UNICENTRO	Universidade Estadual do Centro-Oeste
+UNICEP	Centro Universitário Central Paulista
+UNICERP	Centro Universitário do Cerrado - Patrocínio
+UNICEUMA	Centro Universitário do Maranhão (São Luís)
+UNICHRISTUS	Centro Universitário Christus
+UNICRUZ	Universidade de Cruz Alta
+UNICSUL	Universidade Cruzeiro do Sul
+UNICURITIBA	Centro Universitário Curitiba
+UNIDERP	Universidade para o Desenvolvimento do Estado e Região do Pantanal
+UNIDESC	Centro Universitário de Desenvolvimento do Centro Oeste
+UNIEURO	Centro Universitário Euroamericano
+UNIFAE	Centro Universitário das Faculdades Associadas de Ensino
+UNIFAI	Centro Universitário Assunção
+UNIFAL	Universidade Federal de Alfenas
+UNIFASC	Faculdade Santa Rita de Cássia
+UNIFEB	Centro Universitário da Fundação Educacional de Barretos
+UNIFEBE	Centro Universitário de Brusque 
+UNIFEI	Universidade Federal de Itajubá
+UNIFEMM	Centro Universitário de Sete Lagoas "Monsenhor Messias"
+UNIFENAS	Universidade de Alfenas José do Rosário Vellano
+UNIFEOB	Centro Universitário Octávio Bastos
+UNIFESO	Centro Universitário Serra dos Órgãos
+UNIFESP	Universidade Federal de São Paulo
+UNIFESSPA	Universidade Federal do Sul e Sudeste do Pará
+UNIFIEO	Centro Universitário FIEO
+UNIFIL	Centro Universitário Filadélfia
+UNIFOA	Centro Universitário de Volta Redonda
+UNIFOR	Universidade de Fortaleza
+UNIFORMG	Centro Universitário de Formiga
+UNIFRAN	Universidade de Franca
+UNIGRAN	Centro Universitário da Grande Dourados
+UNIGRANRIO	Universidade do Grande Rio
+UNIJIPA	Faculdade Panamericana de Ji-Paraná
+UNIJUÍ	Universidade Regional do Noroeste do Estado do Rio Grande do Sul
+UNILA	Universidade Federal da Integração Latino-Americana
+UNILAB	Universidade Federal de Integração Luso-Afro-Brasileira
+UNILAGO	União das Faculdades dos Grandes Lagos
+UNILASALLE-RJ	Universidade La Salle - RJ
+UNILAVRAS	Centro Universitário de Lavras
+UNILESTE	Centro Universitário do Leste de Minas Gerais
+UNIMAR	Universidade de Marília
+UNIMEP	Universidade Metodista de Piracicaba
+UNIMES	Universidade Metropolitana de Santos
+UNIMONTE	Centro Universitário Monte Serrat
+UNIMONTES	Universidade Estadual de Montes Claros
+UNINASSAU	Faculdade Maurício de Nassau
+UNINGÁ	Faculdade Ingá
+UNINILTONLINS	Centro Universitário Nilton Lins
+UNINTER	Grupo Educacional Uninter
+UNIOESTE	Universidade Estadual do Oeste do Paraná
+UNIP	Universidade Paulista
+UNIPAC	Universidade Presidente Antônio Carlos
+UNIPAM	Centro Universitário de Patos de Minas
+UNIPAMPA	Universidade Federal do Pampa
+UNIPAR	Universidade Paranaense
+UNIPB	Faculdade Unida da Paraíba
+UNIPLAC	Universidade do Planalto Catarinense
+UNIPLAN	Centro Universitário Planalto do Distrito Federal
+UNIPÊ	Centro Universitário de João Pessoa
+UNIR	Universidade Federal de Rondônia
+UNIRB	Faculdade Serigy
+UNIRIO	Universidade Federal do Estado do Rio de Janeiro
+UNIRITTER	Centro Universitário Ritter dos Reis
+UNIRON	Faculdade Interamericana de Porto Velho
+UNIRONDON	Centro Universitário Cândido Rondon
+UNIRP	Centro Universitário de Rio Preto
+UNISA	Universidade de Santo Amaro
+UNISAL	Centro Universitário Salesiano de São Paulo
+UNISALESIANO	Centro Universitário Católico Salesiano Auxilium
+UNISANT'ANNA	Universidade Sant'Anna
+UNISANTA	Universidade Santa Cecília
+UNISANTOS	Universidade Católica de Santos
+UNISC	Universidade de Santa Cruz do Sul
+UNISEB-Brasília	Centro Universitário Estácio UniSEB - Brasília
+UNISEB-SP	Centro Universitário Estácio UniSEB - São Paulo
+UNISEP	União de Ensino do Sudoeste do Paraná
+UNISINOS	Universidade do Vale do Rio dos Sinos
+UNISO	Universidade de Sorocaba
+UNISUAM	Centro Universitário Augusto Motta
+UNISUL	Universidade do Sul de Santa Catarina
+UNITAU	Universidade de Taubaté
+UNITINS	Fundação Universidade do Tocantins
+UNITRI	Centro Universitário do Triângulo
+UNIUBE	Universidade de Uberaba
+UNIUOL	Faculdade de Tecnologia do Uniuol
+UNIVAG	Centro Universitário de Várzea Grande
+UNIVALE	Universidade Vale do Rio Doce
+UNIVALI	Universidade do Vale do Itajaí
+UNIVAP	Universidade do Vale do Paraíba
+UNIVAR	Universidades Unidas do Vale do Araguaia-Barra do Garças
+UNIVAS	Universidade do Vale do Sapucaí
+UNIVASF	Universidade Federal do Vale do São Francisco
+UNIVATES	Centro Universitário UNIVATES
+UNIVEM	Centro Universitário Eurípedes de Marília
+UNIVERITAS	Centro Universitário Universus Veritas
+UNIVERSITAS	Centro Universitário de Itajubá
+UNIVERSO	Universidade Salgado de Oliveira
+UNIVESP	Universidade Virtual do Estado de São Paulo
+UNIVILLE	Universidade da Região de Joinville
+UNIVIÇOSA	União de Ensino Superior de Viçosa
+UNOCHAPECÓ	Universidade Comunitária Regional de Chapecó
+UNOESC	Universidade do Oeste de Santa Catarina
+UNOESTE	Universidade do Oeste Paulista
+UNORP	Centro Universitário do Norte Paulista
+UNP	Universidade Potiguar
+UP	Universidade Positivo
+UPA	Universidade Patativa do Assaré
+UPF	Universidade de Passo Fundo
+UPIS	União Pioneira de Integração Social
+URCA	Universidade Regional do Cariri
+URCAMP	Universidade da Região da Campanha
+URI	Universidade Regional Integrada do Alto Uruguai e das Missões
+USCS	Universidade Municipal de São Caetano do Sul
+USF	Universidade São Francisco
+USJ	Universidade Municipal de São José
+USJT	Universidade São Judas Tadeu
+USP	Universidade de São Paulo
+USS	Universidade Severino Sombra
+USU	Universidade Santa Úrsula
+UTFPR	Universidade Tecnológica Federal do Paraná
+UTP	Universidade Tuiuti do Paraná
+UVV	Universidade Vila Velha
+Uea	Universidade do Estado do Amazonas
+Ueap	Universidade Estadual do Amapá
+Ufac	Universidade Federal do Acre
+Ufal	Universidade Federal de Alagoas
+Ufam	Universidade Federal do Amazonas
+UnB	Universidade de Brasília
+Uncisal	Universidade Estadual de Ciências da Saúde de Alagoas
+Uneal	Universidade Estadual de Alagoas
+Uni-FACEF	Centro Universitário de Franca
+UniABC	Universidade do Grande ABC
+UniCOC	Sistema COC de Educação
+UniEvangelica	Universidade Evangélica
+UniRV (FESURV)	Universidade de Rio Verde
+UniSãopaulo	Instituto São Paulo de Formação e Especialização Profissional
+Unianhanguera	Universidade Anhanguera
+Unifap	Universidade Federal do Amapá
+Unip	Universidade Paulista
+UnirG	Centro Universitário UnirG
+Unisalle	Faculdade La Salle
+Unit	Universidade Tiradentes
+Univel	União Educacional de Cascavel

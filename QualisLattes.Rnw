@@ -24,7 +24,6 @@ if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 library("xtable")
 library("ineq")
-library("descr")
 options(xtable.table.placement = "H",
         xtable.caption.placement = "top",
         xtable.booktabs = TRUE,
@@ -57,36 +56,75 @@ Federal do Ceará. E-mail: jaa@ufc.br} e disponibilizados em
 \clearpage
 
 <<printDataLattes>>=
-print(xtable(doutor[, c("Professor", "DataCV")], align = "llc", caption = "Data de atualização do Currículo Lattes"), include.rownames = FALSE)
+tab <- cbind(doutor[, c("Professor", "DataCV")],
+             "Dias" = as.Date(Sys.time()) - as.Date(doutor[, "DataCV"], "%d/%m/%Y"))
+
+print(xtable(tab, align = "llcr", caption = "Data de atualização do Currículo Lattes"),
+      include.rownames = FALSE)
 @
 
 \clearpage
 
 \section{Titulação}
 
+\begin{longtable}{lllcc}
+\caption{Informações gerais sobre professores} \\
+  \toprule
 <<tabelaGeral>>=
 doutor <- doutor[order(doutor[, "Ano"]), ]
-print(xtable(doutor[, 1:4], align = "llllc", caption = "Informações gerais sobre professores"), include.rownames = FALSE)
+tab <- cbind(doutor[, 1:4], "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time()))))
+- as.numeric(doutor[, "Ano"]))
+print(xtable(tab), booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
 @
+    \multicolumn{4}{l}{Tempo médio de titulação}  &
+    \Sexpr{round(mean(as.numeric(tab[, 5])))} \\
+   \bottomrule
+\end{longtable}
 
 \newpage
 
+\begin{longtable}{lrr}
+\caption{Área de titulação} \\
+  \midrule
 <<areaTitulo>>=
-xtable(freq(factor(doutor[, "Nome do curso"]), plot = FALSE),
-       caption = "Área de titulação")
+tab <- sort(table(doutor[, "Nome do curso"]), decreasing = TRUE)
+tab <- cbind("Área" = sub("^$", "(não especificado)", rownames(tab)),
+             "Frequência" = tab, "%" = sub("\\.", ",",
+                                           sprintf("%0.1f", 100 * tab / sum(tab))))
+print(xtable(tab),
+      booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
+# Difícil de automaticamente acertar a margem esquerda necessária:
+# barplot(as.numeric(tab[, 2]), names.arg = tab[, 1], horiz = TRUE, las = 1)
 @
+    Total & \Sexpr{sum(as.numeric(tab[, 2]))} & 100,0 \\
+   \bottomrule
+\end{longtable}
 
 \newpage
 
+\begin{longtable}{lrr}
+\caption{Instituição doutorado} \\
+  \midrule
 <<localTitulo>>=
-xtable(freq(factor(doutor[, "Instituição doutorado"]), plot = FALSE),
-       caption = "Instituição de titulação")
+tab <- sort(table(doutor[, "Instituição doutorado"]), decreasing = TRUE)
+tab <- cbind("Instituição" = sub("^$", "(não especificado)", rownames(tab)),
+             "Frequência" = tab, "%" = sub("\\.", ",",
+                                           sprintf("%0.1f", 100 * tab / sum(tab))))
+print(xtable(tab),
+      booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
 @
+    Total & \Sexpr{sum(as.numeric(tab[, 2]))} & 100,0 \\
+   \bottomrule
+\end{longtable}
 
 \clearpage
 
+Como pode ser visto na Tabela~\ref{tab:posdoc}, dos \Sexpr{nrow(doutor)}
+professores do programa, \Sexpr{length(levels(factor(posdoc[, 1])))}
+realizaram pós-doutorado pelo menos uma vez.
+
 <<posdoc>>=
-print(xtable(posdoc, align = "lp{4.5cm}p{14cm}cc",
+print(xtable(posdoc, align = "lp{4.5cm}p{14cm}cc", label = "tab:posdoc",
              caption = "Lista de Pós-doutorados realizados"),
       floating = FALSE, tabular.environment = "longtable",
       include.rownames = FALSE)
@@ -127,9 +165,15 @@ D = Tese de doutorado e
 PD = Supervisão de pós-doutorado.
 
 <<oriconc>>=
-aln <- paste0("l", paste0(rep("r", ncol(oriconcTab)), collapse = ""))
-xtable(oriconcTab, align = aln, digits = 0, label = "tab:oriconc",
-       caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim))
+tab <- rbind(oriconcTab, "Total" = apply(oriconcTab, 2, sum))
+tab <- cbind("Orientador" = rownames(tab),
+             tab,
+             "Total" = apply(tab, 1, sum))
+aln <- paste0("ll", paste0(rep("r", ncol(tab) - 1), collapse = ""))
+print(xtable(tab, align = aln, digits = 0, label = "tab:oriconc",
+             caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim)),
+      booktabs = TRUE, hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)),
+      include.rownames = FALSE)
 @
 
 \newpage
@@ -143,7 +187,7 @@ oc$Instituição <- sub("Estadual", "E.", oc$Instituição)
 oc$Curso <- sub("Programa de Pós-Graduação", "PPG", oc$Curso)
 oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
          c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
-print(xtable(oc, align = "lcp{5.5cm}p{7cm}p{4cm}p{4cm}c", label = "tab:detoriconc",
+print(xtable(oc, align = "lcp{5.5cm}p{4cm}p{4cm}p{4cm}c", label = "tab:detoriconc",
          digits = 0, caption = "Detalhamento das orientações"),
       include.rownames = FALSE)
 @
@@ -151,9 +195,14 @@ print(xtable(oc, align = "lcp{5.5cm}p{7cm}p{4cm}p{4cm}c", label = "tab:detoricon
 \newpage
 
 <<oriand>>=
-aln <- paste0("ll", paste0(rep("r", ncol(oriandTab)-1), collapse = ""))
-xtable(oriandTab, align = aln, label = "tab:oriand", digits = 0,
-       caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim))
+tab <- rbind(oriandTab, "Total" = apply(oriandTab, 2, sum))
+tab <- cbind("Orientador" = rownames(tab),
+             tab,
+             "Total" = apply(tab, 1, sum))
+aln <- paste0("ll", paste0(rep("r", ncol(tab) - 1), collapse = ""))
+print(xtable(tab, align = aln, digits = 0, label = "tab:oriand",
+             caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim)),
+      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)), include.rownames = FALSE)
 @
 
 \newpage
@@ -209,16 +258,28 @@ Usando esses valores, a soma ponderada das média é de
 \newpage
 
 <<ppg_pontos_lvr>>=
-print(xtable(pontuacaoLvr, digits = 0,
+ultimalinha <- apply(pontuacaoLvr[, 2:ncol(pontuacaoLvr)], 2,
+                     function(x) round(sum(x, na.rm = TRUE) / length(x), 1))
+tab <- rbind(pontuacaoLvr, pontuacaoLvr[1, ])
+tab$Professor[nrow(tab)] <- "Média"
+tab[nrow(tab), 2:ncol(tab)] <- ultimalinha
+print(xtable(tab, digits = 0,
              caption = "Professores classificados por pontuação (Livros)"),
+      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)),
       include.rownames = FALSE)
 @
 
 \clearpage
 
 <<ppg_pontos_art>>=
-print(xtable(pontuacaoArt, digits = 0,
+ultimalinha <- apply(pontuacaoArt[, 2:ncol(pontuacaoArt)], 2,
+                     function(x) round(sum(x, na.rm = TRUE) / length(x), 1))
+tab <- rbind(pontuacaoArt, pontuacaoArt[1, ])
+tab$Professor[nrow(tab)] <- "Média"
+tab[nrow(tab), 2:ncol(tab)] <- ultimalinha
+print(xtable(tab, digits = 0,
              caption = "Professores classificados por pontuação (Artigos)"),
+      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)),
       include.rownames = FALSE)
 @
 
@@ -229,27 +290,24 @@ produção é ponderada de acordo com os critérios do comitê de área. Uma lin
 adicional, indicadora da concentração da produção, apresenta o índice de Gini
 para livros, artigos e para a média ponderada dos dois tipos de produção.
 
-\begin{longtable}{rlrrr}
-\caption{Professores classificados por pontuação ponderada} \\
-  \toprule
 <<imprimirpond>>=
-print(xtable(pond, digits = 3, label = "tab:pond",
+ultimalinha <- apply(pond[, 2:ncol(pond)], 2, function(x) Gini(x))
+tab <- rbind(pond, pond[1, ])
+tab$Professor[nrow(tab)] <- "Índice de Gini"
+tab[nrow(tab), 2:ncol(tab)] <- ultimalinha
+print(xtable(tab, digits = 3, label = "tab:pond",
              caption = "Professores classificados por pontuação ponderada"),
-      booktabs = FALSE, only.contents = TRUE)
+      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)))
 @
- & Índice de Gini & \Sexpr{sprintf("%0.3f", Gini(pond$Livros))}  &
-                   \Sexpr{sprintf("%0.3f", Gini(pond$Artigos))} &
-                   \Sexpr{sprintf("%0.3f", Gini(pond$Média))} \\
-  \bottomrule
-\label{tab:pond}
-\end{longtable}
 
 \clearpage
 
 <<producao_qualis>>=
-print(xtable(producao, align = paste(c("l", rep("r", ncol(producao))), collapse = "|"),
+tab <- rbind(producao, "Total" = apply(producao, 2, sum, na.rm = TRUE))
+print(xtable(tab, align = paste(c("l", rep("r", ncol(producao))), collapse = "|"),
              display = c("s", rep("d", ncol(producao))),
              caption = "Produção segundo classificação Qualis"),
+      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)),
       sanitize.rownames.function = function(x) x)
 @
 
@@ -260,8 +318,9 @@ de cada publicação:
 
 <<ppg_pontos_sjr>>=
 print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
+             align = paste0("l", paste0(rep("r", ncol(pontuacaoSJR)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos, SJR)"),
-      include.rownames = FALSE)
+      hline.after = c(-1, 0, nrow(pontuacaoSJR) - 1, nrow(pontuacaoSJR)))
 @
 
 
@@ -271,9 +330,10 @@ A Tabela~\ref{tab:ggl} mostra a pontuação calculada como a soma do Fator de
 Impacto de cada publicação calculado pelo Google:
 
 <<ppg_pontos_ggl>>=
-print(xtable(pontuacaoGgl, digits = 3, label = "tab:ggl",
+print(xtable(pontuacaoGgl, align = paste0("l", paste0(rep("r", ncol(pontuacaoGgl)), collapse = "")),
+             digits = 3, label = "tab:ggl",
              caption = "Professores classificados por pontuação (Artigos, Fator de Impacto do Google Scholar)"),
-      include.rownames = FALSE)
+      hline.after = c(-1, 0, nrow(pontuacaoGgl) - 1, nrow(pontuacaoGgl)))
 @
 
 
@@ -286,14 +346,42 @@ Raramente, um professor conseguirá manter aproximadamente o mesmo número de
 publicações e com a mesma qualificação ano após ano. Por isso, os gráficos
 seguintes mostram as médias móveis com períodos de três anos de produção dos
 professores. Ou seja, cada ponto representa o valor médio da pontuação nos
-últimos três anos.
+últimos três anos. Os valores estão ponderados conforme o peso para artigos
+($\Sexpr{PesoArtigos}$) e para livros ($\Sexpr{PesoLivros}$). A linha laranja
+representa a média móvel da produção média de todos os professores,
+correspondendo à media dos professores permanentes do programa somente nos
+anos mais recentes, em que a composição do corpo docente for a mesma da atual.
 
 <<mediamovel, fig.width=8, fig.height=3>>=
 par(mar = c(4, 4, 4, 0) + 0.1, cex = 0.75)
-pcl <- split(pcompleto, pcompleto$prof)
+
+# Calcular média móvel geral
+pm <- pcompleto[, c("tipo", "pontos", "ano")]
+pm$pontos[pm$tipo == "Artigo"] <- 0.7 * pm$pontos[pm$tipo == "Artigo"]
+pm$pontos[pm$tipo != "Artigo"] <- 0.3 * pm$pontos[pm$tipo != "Artigo"]
+media <- tapply(pm$pontos, pm$ano, function(x) sum(x) / nrow(doutor))
+mediamovel <- rep(0, max(as.numeric(names(media))) - min(as.numeric(names(media))) + 1)
+names(mediamovel) <- as.character(as.numeric(min(names(media))):as.numeric(max(names(media))))
+for(n in names(media))
+    mediamovel[[n]] <- media[[n]]
+
+# Calcular média móvel de cada professor
 MediaMovel <- function(x)
 {
-    m <- tapply(x$pontos, x$ano, sum)
+    # cat(x$prof[1], "\n")
+    sa <- tapply(x$pontos[x$tipo == "Artigo"], x$ano[x$tipo == "Artigo"], sum) * PesoArtigos
+    sl <- tapply(x$pontos[x$tipo != "Artigo"], x$ano[x$tipo != "Artigo"], sum) * PesoLivros
+    anos <- c(names(sa), names(sl))
+    m <- numeric()
+    for(a in min(as.numeric(anos)):max(as.numeric(anos))){
+        ano <- as.character(a)
+        m[ano] <- 0
+        if(length(grep(ano, names(sa))))
+            m[ano] <- m[ano] + PesoArtigos * sa[ano]
+        if(length(grep(ano, names(sl))))
+            m[ano] <- m[ano] + PesoLivros * sl[ano]
+    }
+    # print(m)
     mm <- rep(0, max(as.numeric(names(m))) - min(as.numeric(names(m))) + 1)
     names(mm) <- as.character(as.numeric(min(names(m))):as.numeric(max(names(m))))
     for(n in names(m))
@@ -304,12 +392,15 @@ MediaMovel <- function(x)
     mm3 <- mm[1:(mml - 2)]
     mm <- (mm1 + mm2 + mm3) / 3
 }
+pcl <- split(pcompleto, pcompleto$prof)
 mm <- lapply(pcl, MediaMovel)
+
 mmMax <- max(sapply(mm, max))
 
 for(n in names(mm)){
     plot(as.numeric(names(mm[[n]])), mm[[n]], ylim = c(0, mmMax),
          pch=20, main = n, xlab = "Ano", ylab = "Média")
+    lines(as.numeric(names(mediamovel)), mediamovel, col = "orange")
     lines(as.numeric(names(mm[[n]])), mm[[n]])
     cat("\n\\vspace{0.5cm}\n")
 }
@@ -356,6 +447,13 @@ print(xtable(ttldif, align = "lp{13cm}p{10cm}",
 @
 
 \clearpage
+
+Períodicos podem estar sem Qualis porque não foram ainda classificados pelo
+comitê da área ou porque o professor errou a digitação do ISSN no currículo
+Lattes. Para descobrir se foi um erro de digitação, veja na
+Tabela~\ref{tab:proddet} quem foi o professor que publicou no periodico,
+descubra qual o ISSN correto do periódico e verifique no currículo Lattes do
+professor se os dados foram digitados corretamente.
 
 <<apendice3>>=
 print(xtable(semqualis, align = "lrl",

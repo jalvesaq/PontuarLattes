@@ -1,8 +1,17 @@
 library("XML")
-library("descr")
 library("scholar")
 
 source("info.R")
+
+siglas <- read.delim("siglas_univ.txt", comment.char = "#", stringsAsFactors = FALSE)
+
+NomeSigla <- function(x)
+{
+    for(i in 1:nrow(siglas))
+        x <- sub(paste0("^", siglas$nome[i], "$"), siglas$sigla[i], x)
+    x
+}
+
 
 # Ler currículos
 
@@ -110,7 +119,10 @@ obter.producao <- function(arquivo)
                      dl[["TITULO-DO-PERIODICO-OU-REVISTA"]],
                      dl[["ISSN"]])
         } else {
-            res <- c(NA, NA, NA, NA, NA, NA)
+            res <- c(prof, db[["ANO-DO-ARTIGO"]], "NãoArt",
+                     db[["TITULO-DO-ARTIGO"]],
+                     dl[["TITULO-DO-PERIODICO-OU-REVISTA"]],
+                     dl[["ISSN"]])
         }
         return(res)
     }
@@ -213,11 +225,11 @@ if(exists("equivalente")){
 
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
-p$qualis[is.na(p$qualis) & !is.na(p$tipo) & p$tipo == "Artigo"] <- "SQ"
-p$qualis[is.na(p$qualis) & !is.na(p$tipo) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & !is.na(p$tipo) & p$tipo != "Artigo"]
+p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
+p$qualis[is.na(p$qualis) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & p$tipo != "Artigo"]
 
 # Organização de dossiês em periódicos:
-idx <- p$tipo != "Artigo" & p$qualis %in% c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C")
+idx <- p$tipo != "Artigo" & p$tipo != "NãoArt" & p$qualis %in% c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C")
 if(sum(idx) > 0)
     p$qualis[idx] <- "OD"
 
@@ -237,6 +249,7 @@ pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
 pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis, stringsAsFactors = FALSE))
 
 p <- merge(p, pontos, all.x = TRUE)
+p$pontos[p$tipo == "NãoArt"] <- 0
 
 
 # Adicionar Fator de Impacto do Google Scholar
@@ -301,6 +314,7 @@ if(sum(is.na(p$pontos)) > 0){
 
 # Informações sobre professores
 doutor <- do.call("rbind", doutorado)
+doutor[, 2] <- NomeSigla(doutor[, 2])
 colnames(doutor) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano", "DataCV")
 # Reter somente último doutorado concluído:
 doutor <- doutor[order(doutor[, "Ano"], decreasing = TRUE), ]
@@ -374,32 +388,30 @@ if(is.null(p$SJR)){
     pontuacaoSJR <- matrix("Arquivo `qualis/scimagojr_2017_TAB.csv' não encontrado", 1, 1)
     p$SJR <- NA
 } else {
-    pontuacaoSJR <- as.data.frame(tapply(part$SJR, list(part$prof, part$ano),
-                                     sum, na.rm = TRUE))
-    pontuacaoSJR <- cbind(rownames(pontuacaoSJR), pontuacaoSJR,
-                          apply(pontuacaoSJR, 1, sum, na.rm = TRUE))
-    names(pontuacaoSJR)[1] <- "Professores"
-    names(pontuacaoSJR)[ncol(pontuacaoSJR)] <- "Total"
+    pontuacaoSJR <- tapply(part$SJR, list(part$prof, part$ano), sum, na.rm = TRUE)
+    pontuacaoSJR <- cbind(pontuacaoSJR, "Total" = apply(pontuacaoSJR, 1, sum, na.rm = TRUE))
     pontuacaoSJR <- pontuacaoSJR[order(pontuacaoSJR[, "Total"], decreasing = TRUE), ]
+    pontuacaoSJR <- rbind(pontuacaoSJR, "Média" = apply(pontuacaoSJR, 2, function(x) sum(x, na.rm = TRUE) / length(x)))
 }
 
-pontuacaoGgl <- as.data.frame(tapply(part$ImpactFactor, list(part$prof, part$ano),
-                                     sum, na.rm = TRUE))
-pontuacaoGgl <- cbind(rownames(pontuacaoGgl), pontuacaoGgl,
-                      apply(pontuacaoGgl, 1, sum, na.rm = TRUE))
-names(pontuacaoGgl)[1] <- "Professores"
-names(pontuacaoGgl)[ncol(pontuacaoGgl)] <- "Total"
+pontuacaoGgl <- tapply(part$ImpactFactor, list(part$prof, part$ano), sum, na.rm = TRUE)
+pontuacaoGgl <- cbind(pontuacaoGgl,
+                      "Total" = apply(pontuacaoGgl, 1, sum, na.rm = TRUE))
 pontuacaoGgl <- pontuacaoGgl[order(pontuacaoGgl[, "Total"], decreasing = TRUE), ]
+pontuacaoGgl <- rbind(pontuacaoGgl, "Média" = apply(pontuacaoGgl, 2, function(x) sum(x, na.rm = TRUE) / length(x)))
+
 
 # Lista de Pós-doutorados realizados
 posdoc <- do.call("rbind", posdoc)
 colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
+posdoc[, 2] <- NomeSigla(posdoc[, 2])
 posdoc[, 1] <- sub(" .* ", " ", posdoc[, 1])
 posdoc <- posdoc[order(posdoc[, "Fim"]), ]
 
 # Orientações concluídas
 oc <- do.call("rbind", oriconc)
 colnames(oc) <- c("Professor", "Natureza", "Ano", "Instituição", "Curso", "Orientado")
+oc[, 4] <- NomeSigla(oc[, 4])
 oc <- as.data.frame(oc)
 oc$Ano <- as.numeric(as.character(oc$Ano))
 oc <- oc[oc$Ano >= Inicio & oc$Ano <= Fim, ]
@@ -453,6 +465,7 @@ oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$O
 # Orientações em andamento
 oa <- do.call("rbind", oriand)
 oa <- as.data.frame(oa)
+oa[, 5] <- NomeSigla(oa[, 5])
 colnames(oa) <- c("Professor", "Natureza", "Ano", "Orientando", "Instituição")
 oa <- oa[order(oa$Ano), ]
 levels(oa$Natureza) <- sub("Dissertação de mestrado", "M", levels(oa$Natureza))
