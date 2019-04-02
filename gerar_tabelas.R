@@ -1,5 +1,5 @@
 library("XML")
-library("scholar")
+# library("scholar")
 
 source("info.R")
 
@@ -252,53 +252,54 @@ p <- merge(p, pontos, all.x = TRUE)
 p$pontos[p$tipo == "NãoArt"] <- 0
 
 
-# Adicionar Fator de Impacto do Google Scholar
-# Guardar dados coletados em arquivo para evitar necessidade de baixar dados
-# cada vez que este script for executado
-if(!dir.exists("~/.cache"))
-    dir.create("~/.cache")
-if(file.exists("~/.cache/PontuarLattes_GoogleScholar")){
-    g <- read.delim("~/.cache/PontuarLattes_GoogleScholar", stringsAsFactors = FALSE)
-} else {
-    g <- data.frame(tituloUP = character(),
-                    tituloG = character(),
-                    cites = numeric(),
-                    ImpactFactor = numeric(),
-                    Eigenfactor = numeric(),
-                    stringsAsFactors = FALSE)
-}
+# # Adicionar Fator de Impacto do Google Scholar
+# # Guardar dados coletados em arquivo para evitar necessidade de baixar dados
+# # cada vez que este script for executado
+# if(!dir.exists("~/.cache"))
+#     dir.create("~/.cache")
+# if(file.exists("~/.cache/PontuarLattes_GoogleScholar")){
+#     g <- read.delim("~/.cache/PontuarLattes_GoogleScholar", stringsAsFactors = FALSE)
+# } else {
+#     g <- data.frame(tituloUP = character(),
+#                     tituloG = character(),
+#                     cites = numeric(),
+#                     ImpactFactor = numeric(),
+#                     Eigenfactor = numeric(),
+#                     stringsAsFactors = FALSE)
+# }
+# 
+# # Listar títulos não coletados ainda
+# p$tituloUP <- toupper(p$titulo)
+# titulos <- levels(factor(p$tituloUP[p$tipo == "Artigo"]))
+# coletar <- rep(FALSE, length(titulos))
+# for(i in 1:length(titulos)){
+#     if(titulos[i] %in% g$tituloUP == FALSE)
+#         coletar[i] <- TRUE
+# }
+# titulos <- titulos[coletar]
+# 
+# if(length(titulos)){
+#     # Coletar dados dos títulos cujos dados ainda não foram coletados
+#     gif <- lapply(titulos, get_impactfactor)
+#     for(i in 1:length(titulos)){
+#         if(titulos[i] %in% g$titulo == FALSE)
+#             g <- rbind(g,
+#                        data.frame(tituloUP = titulos[i],
+#                                   tituloG = gif[[i]][[1]],
+#                                   cites = gif[[i]][[2]],
+#                                   ImpactFactor = gif[[i]][[3]],
+#                                   Eigenfactor = gif[[i]][[4]],
+#                                   stringsAsFactors = FALSE))
+#     }
+#     write.table(g, "~/.cache/PontuarLattes_GoogleScholar",
+#                 quote = FALSE, sep = "\t", row.names = FALSE)
+#     rm(gif)
+# }
+# rm(titulos, coletar)
+# 
+# p <- merge(p, g, all.x = TRUE)
+# p$tituloUP <- NULL
 
-# Listar títulos não coletados ainda
-p$tituloUP <- toupper(p$titulo)
-titulos <- levels(factor(p$tituloUP[p$tipo == "Artigo"]))
-coletar <- rep(FALSE, length(titulos))
-for(i in 1:length(titulos)){
-    if(titulos[i] %in% g$tituloUP == FALSE)
-        coletar[i] <- TRUE
-}
-titulos <- titulos[coletar]
-
-if(length(titulos)){
-    # Coletar dados dos títulos cujos dados ainda não foram coletados
-    gif <- lapply(titulos, get_impactfactor)
-    for(i in 1:length(titulos)){
-        if(titulos[i] %in% g$titulo == FALSE)
-            g <- rbind(g,
-                       data.frame(tituloUP = titulos[i],
-                                  tituloG = gif[[i]][[1]],
-                                  cites = gif[[i]][[2]],
-                                  ImpactFactor = gif[[i]][[3]],
-                                  Eigenfactor = gif[[i]][[4]],
-                                  stringsAsFactors = FALSE))
-    }
-    write.table(g, "~/.cache/PontuarLattes_GoogleScholar",
-                quote = FALSE, sep = "\t", row.names = FALSE)
-    rm(gif)
-}
-rm(titulos, coletar)
-
-p <- merge(p, g, all.x = TRUE)
-p$tituloUP <- NULL
 
 # Especificar o período do relatório
 pcompleto <- p
@@ -394,11 +395,11 @@ if(is.null(p$SJR)){
     pontuacaoSJR <- rbind(pontuacaoSJR, "Média" = apply(pontuacaoSJR, 2, function(x) sum(x, na.rm = TRUE) / length(x)))
 }
 
-pontuacaoGgl <- tapply(part$ImpactFactor, list(part$prof, part$ano), sum, na.rm = TRUE)
-pontuacaoGgl <- cbind(pontuacaoGgl,
-                      "Total" = apply(pontuacaoGgl, 1, sum, na.rm = TRUE))
-pontuacaoGgl <- pontuacaoGgl[order(pontuacaoGgl[, "Total"], decreasing = TRUE), ]
-pontuacaoGgl <- rbind(pontuacaoGgl, "Média" = apply(pontuacaoGgl, 2, function(x) sum(x, na.rm = TRUE) / length(x)))
+# pontuacaoGgl <- tapply(part$ImpactFactor, list(part$prof, part$ano), sum, na.rm = TRUE)
+# pontuacaoGgl <- cbind(pontuacaoGgl,
+#                       "Total" = apply(pontuacaoGgl, 1, sum, na.rm = TRUE))
+# pontuacaoGgl <- pontuacaoGgl[order(pontuacaoGgl[, "Total"], decreasing = TRUE), ]
+# pontuacaoGgl <- rbind(pontuacaoGgl, "Média" = apply(pontuacaoGgl, 2, function(x) sum(x, na.rm = TRUE) / length(x)))
 
 
 # Lista de Pós-doutorados realizados

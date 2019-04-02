@@ -72,8 +72,8 @@ print(xtable(tab, align = "llcr", caption = "Data de atualização do Currículo
   \toprule
 <<tabelaGeral>>=
 doutor <- doutor[order(doutor[, "Ano"]), ]
-tab <- cbind(doutor[, 1:4], "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time()))))
-- as.numeric(doutor[, "Ano"]))
+tab <- cbind(doutor[, 1:4],
+             "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor[, "Ano"]))
 print(xtable(tab), booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
 @
     \multicolumn{4}{l}{Tempo médio de titulação}  &
@@ -295,6 +295,7 @@ ultimalinha <- apply(pond[, 2:ncol(pond)], 2, function(x) Gini(x))
 tab <- rbind(pond, pond[1, ])
 tab$Professor[nrow(tab)] <- "Índice de Gini"
 tab[nrow(tab), 2:ncol(tab)] <- ultimalinha
+rownames(tab) <- c(as.character(1:(nrow(tab)-1)), " ")
 print(xtable(tab, digits = 3, label = "tab:pond",
              caption = "Professores classificados por pontuação ponderada"),
       hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)))
@@ -324,19 +325,19 @@ print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
 @
 
 
-\clearpage
-
-A Tabela~\ref{tab:ggl} mostra a pontuação calculada como a soma do Fator de
-Impacto de cada publicação calculado pelo Google:
-
-<<ppg_pontos_ggl>>=
-print(xtable(pontuacaoGgl, align = paste0("l", paste0(rep("r", ncol(pontuacaoGgl)), collapse = "")),
-             digits = 3, label = "tab:ggl",
-             caption = "Professores classificados por pontuação (Artigos, Fator de Impacto do Google Scholar)"),
-      hline.after = c(-1, 0, nrow(pontuacaoGgl) - 1, nrow(pontuacaoGgl)))
-@
-
-
+%\clearpage
+%
+%A Tabela~\ref{tab:ggl} mostra a pontuação calculada como a soma do Fator de
+%Impacto de cada publicação calculado pelo Google:
+%
+%<<ppg_pontos_ggl>>=
+%print(xtable(pontuacaoGgl, align = paste0("l", paste0(rep("r", ncol(pontuacaoGgl)), collapse = "")),
+%             digits = 3, label = "tab:ggl",
+%             caption = "Professores classificados por pontuação (Artigos, Fator de Impacto do Google Scholar)"),
+%      hline.after = c(-1, 0, nrow(pontuacaoGgl) - 1, nrow(pontuacaoGgl)))
+%@
+%
+%
 
 \clearpage
 
