@@ -3,6 +3,27 @@ library("XML")
 
 source("info.R")
 
+# Usar issn1 e issn2 do scielo para fazer equivalência na tabela Qualis
+sci <- read.delim("scielo_issn.tsv", stringsAsFactors = FALSE)
+for(i in 1:nrow(sci)){
+    if(!is.na(sci$issn2[i]) && sci$issn2[i] %in% qualis$issxn && ! sci$issn1[i] %in% qualis$issxn){
+        qualis <- rbind(qualis,
+                        data.frame(isxn = sci$issn1[i],
+                                   titulo = qualis$titulo[qualis$isxn == sci$issn2[i]],
+                                   qualis = qualis$qualis[qualis$isxn == sci$issn2[i]],
+                                   stringsAsFactors = FALSE))
+    } else {
+        if(!is.na(sci$issn2[i]) && sci$issn1[i] %in% qualis$isxn && ! sci$issn2[i] %in% qualis$isxn){
+            qualis <- rbind(qualis,
+                            data.frame(isxn = sci$issn2[i],
+                                       titulo = qualis$titulo[qualis$isxn == sci$issn1[i]],
+                                       qualis = qualis$qualis[qualis$isxn == sci$issn1[i]],
+                                       stringsAsFactors = FALSE))
+        }
+    }
+}
+
+
 siglas <- read.delim("siglas_univ.txt", comment.char = "#", stringsAsFactors = FALSE)
 
 NomeSigla <- function(x)
@@ -210,6 +231,28 @@ if(file.exists("qualis/scimagojr 2017.csv")){
     s <- rbind(s, s2)
     rm(s2)
 
+    # Usar issn1 e issn2 do scielo para fazer equivalência na tabela do SJR
+    for(i in 1:nrow(sci)){
+        if(!is.na(sci$issn2[i]) && sci$issn2[i] %in% s$issxn && ! sci$issn1[i] %in% s$issxn){
+            s <- rbind(s,
+                       data.frame(isxn = sci$issn1[i],
+                                  title = s$titulo[s$isxn == sci$issn2[i]],
+                                  SJR = s$SJR[s$isxn == sci$issn2[i]],
+                                  country = s$country[s$isxn == sci$issn2[i]],
+                                  stringsAsFactors = FALSE))
+        } else {
+            if(!is.na(sci$issn2[i]) && sci$issn1[i] %in% s$isxn && ! sci$issn2[i] %in% s$isxn){
+                s <- rbind(s,
+                           data.frame(isxn = sci$issn2[i],
+                                      title = s$title[s$isxn == sci$issn1[i]],
+                                      SJR = s$SJR[s$isxn == sci$issn1[i]],
+                                      country = s$country[s$isxn == sci$issn1[i]],
+                                      stringsAsFactors = FALSE))
+            }
+        }
+    }
+
+
     p <- merge(p, s, all.x = TRUE)
 }
 # Adicionar Qualis
@@ -267,7 +310,7 @@ p$pontos[p$tipo == "NãoArt"] <- 0
 #                     Eigenfactor = numeric(),
 #                     stringsAsFactors = FALSE)
 # }
-# 
+#
 # # Listar títulos não coletados ainda
 # p$tituloUP <- toupper(p$titulo)
 # titulos <- levels(factor(p$tituloUP[p$tipo == "Artigo"]))
@@ -277,7 +320,7 @@ p$pontos[p$tipo == "NãoArt"] <- 0
 #         coletar[i] <- TRUE
 # }
 # titulos <- titulos[coletar]
-# 
+#
 # if(length(titulos)){
 #     # Coletar dados dos títulos cujos dados ainda não foram coletados
 #     gif <- lapply(titulos, get_impactfactor)
@@ -296,7 +339,7 @@ p$pontos[p$tipo == "NãoArt"] <- 0
 #     rm(gif)
 # }
 # rm(titulos, coletar)
-# 
+#
 # p <- merge(p, g, all.x = TRUE)
 # p$tituloUP <- NULL
 
@@ -328,78 +371,50 @@ rm(quando)
 
 p$prof <- factor(p$prof)
 
-plvr <- p[p$tipo %in% c("Lvr", "Cap", "Org"), ]
-part <- p[p$tipo == "Artigo", ]
+TabProd <- function(d, v)
+{
+    tab <- tapply(d[[v]], list(d$prof, d$ano), sum, na.rm = TRUE)
 
-pontuacaoLvr <- as.data.frame(tapply(plvr$pontos, list(plvr$prof, plvr$ano),
-                                     sum, na.rm = TRUE))
+    # Adicionar professores que não produziram no período
+    falta <- !(doutor[, "Professor"] %in% rownames(tab))
+    if(sum(falta) > 0){
+        falta <- doutor[falta, "Professor"]
+        ftab <- matrix(nrow = length(falta), ncol = ncol(tab))
+        rownames(ftab) <- falta
+        colnames(ftab) <- colnames(tab)
+        tab <- rbind(tab, ftab)
+    }
 
-# Adicionar professores que não produziram no período
-falta <- !(doutor[, "Professor"] %in% rownames(pontuacaoLvr))
-if(sum(falta) > 0){
-    falta <- doutor[falta, "Professor"]
-    ftab <- matrix(nrow = length(falta), ncol = ncol(pontuacaoLvr))
-    rownames(ftab) <- falta
-    colnames(ftab) <- colnames(pontuacaoLvr)
-    pontuacaoLvr <- rbind(pontuacaoLvr, ftab)
+    if(ncol(tab) > 2)
+        tab <- cbind(tab, "Total" = apply(tab, 1, sum, na.rm = TRUE))
+    tab[is.na(tab)] <- 0
+    cn <- colnames(tab)
+    tab <- tab[order(tab[, ncol(tab)], decreasing = TRUE), ]
+    # Matrix com uma coluna se transforma em vetor
+    if(is.null(dim(tab)[1])){
+        rn <- names(tab)
+        tab <- matrix(tab, nrow = length(tab), ncol = 1)
+        rownames(tab) <- rn
+        colnames(tab) <- cn
+    }
+    tab <- rbind(tab, "Média" = apply(tab, 2, function(x)
+                                       round(sum(x, na.rm = TRUE) / length(x), 1)))
+
+    tab
 }
 
-pontuacaoLvr$Professor <- rownames(pontuacaoLvr)
-pontuacaoLvr <- pontuacaoLvr[, c(ncol(pontuacaoLvr), 1:(ncol(pontuacaoLvr)-1))]
-if(ncol(pontuacaoLvr) > 2){
-    pontuacaoLvr$Total <- apply(pontuacaoLvr[, 2:ncol(pontuacaoLvr)], 1, sum, na.rm = TRUE)
-    pontuacaoLvr$Total[is.na(pontuacaoLvr$Total)] <- 0
-    pmediaL <- round(mean(pontuacaoLvr$Total, na.rm = TRUE))
-    pmedianaL <- round(median(pontuacaoLvr$Total, na.rm = TRUE))
-    pontuacaoLvr <- pontuacaoLvr[order(pontuacaoLvr$Total, decreasing = TRUE), ]
-} else {
-    pmediaL <- round(mean(pontuacaoLvr[, 2], na.rm = TRUE))
-    pmedianaL <- round(median(pontuacaoLvr[, 2], na.rm = TRUE))
-    pontuacaoLvr <- pontuacaoLvr[order(pontuacaoLvr[, 2], decreasing = TRUE), ]
-}
+pontuacaoLvr <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
+pontuacaoArt <- TabProd(p[p$tipo == "Artigo", ], "pontos")
 
-pontuacaoArt <- as.data.frame(tapply(part$pontos, list(part$prof, part$ano),
-                                     sum, na.rm = TRUE))
-
-# Adicionar professores que não produziram no período
-falta <- !(doutor[, "Professor"] %in% rownames(pontuacaoArt))
-if(sum(falta) > 0){
-    falta <- doutor[falta, "Professor"]
-    ftab <- matrix(nrow = length(falta), ncol = ncol(pontuacaoArt))
-    rownames(ftab) <- falta
-    colnames(ftab) <- colnames(pontuacaoArt)
-    pontuacaoArt <- rbind(pontuacaoArt, ftab)
-}
-
-pontuacaoArt$Professor <- rownames(pontuacaoArt)
-pontuacaoArt <- pontuacaoArt[, c(ncol(pontuacaoArt), 1:(ncol(pontuacaoArt)-1))]
-if(ncol(pontuacaoArt) > 2){
-    pontuacaoArt$Total <- apply(pontuacaoArt[, 2:ncol(pontuacaoArt)], 1, sum, na.rm = TRUE)
-    pontuacaoArt$Total[is.na(pontuacaoArt$Total)] <- 0
-    pmediaA <- round(mean(pontuacaoArt$Total, na.rm = TRUE))
-    pmedianaA <- round(median(pontuacaoArt$Total, na.rm = TRUE))
-    pontuacaoArt <- pontuacaoArt[order(pontuacaoArt$Total, decreasing = TRUE), ]
-} else {
-    pmediaA <- round(mean(pontuacaoArt[, 2], na.rm = TRUE))
-    pmedianaA <- round(median(pontuacaoArt[, 2], na.rm = TRUE))
-    pontuacaoArt <- pontuacaoArt[order(pontuacaoArt[, 2], decreasing = TRUE), ]
-}
 
 if(is.null(p$SJR)){
     pontuacaoSJR <- matrix("Arquivo `qualis/scimagojr_2017_TAB.csv' não encontrado", 1, 1)
     p$SJR <- NA
 } else {
-    pontuacaoSJR <- tapply(part$SJR, list(part$prof, part$ano), sum, na.rm = TRUE)
-    pontuacaoSJR <- cbind(pontuacaoSJR, "Total" = apply(pontuacaoSJR, 1, sum, na.rm = TRUE))
-    pontuacaoSJR <- pontuacaoSJR[order(pontuacaoSJR[, "Total"], decreasing = TRUE), ]
-    pontuacaoSJR <- rbind(pontuacaoSJR, "Média" = apply(pontuacaoSJR, 2, function(x) sum(x, na.rm = TRUE) / length(x)))
+    pontuacaoSJR <- TabProd(p[p$tipo == "Artigo", ], "SJR")
 }
 
-# pontuacaoGgl <- tapply(part$ImpactFactor, list(part$prof, part$ano), sum, na.rm = TRUE)
-# pontuacaoGgl <- cbind(pontuacaoGgl,
-#                       "Total" = apply(pontuacaoGgl, 1, sum, na.rm = TRUE))
-# pontuacaoGgl <- pontuacaoGgl[order(pontuacaoGgl[, "Total"], decreasing = TRUE), ]
-# pontuacaoGgl <- rbind(pontuacaoGgl, "Média" = apply(pontuacaoGgl, 2, function(x) sum(x, na.rm = TRUE) / length(x)))
+# pontuacaoGgl <- TabProd(p[p$tipo == "Artigo", ], "ImpactFactor")
 
 
 # Lista de Pós-doutorados realizados
@@ -520,16 +535,12 @@ ensinoTab[is.na(ensinoTab)] <- 0
 
 # Produção bibliográfica (Livros e Artigos)
 colnames(pontos) <- c("Classe", "Abreviatura", "Pontos")
-if(ncol(pontuacaoLvr) > 2){
-    pLvr <- pontuacaoLvr[, c("Professor", "Total")]
-    pArt <- pontuacaoArt[, c("Professor", "Total")]
-} else {
-    # Relatório de somente 1 ano
-    pLvr <- pontuacaoLvr
-    pArt <- pontuacaoArt
-}
-colnames(pLvr) <- c("Professor", "Livros")
-colnames(pArt) <- c("Professor", "Artigos")
+pLvr <- data.frame(Professor = rownames(pontuacaoLvr)[1:(nrow(pontuacaoLvr)-1)],
+                   Livros = pontuacaoLvr[1:(nrow(pontuacaoLvr)-1), ncol(pontuacaoLvr)],
+                   stringsAsFactors = FALSE)
+pArt <- data.frame(Professor = rownames(pontuacaoArt)[1:(nrow(pontuacaoArt)-1)],
+                   Artigos = pontuacaoArt[1:(nrow(pontuacaoArt)-1), ncol(pontuacaoArt)],
+                   stringsAsFactors = FALSE)
 
 # Professores classificados por pontuação ponderada
 pond <- merge(pLvr, pArt, all = TRUE)

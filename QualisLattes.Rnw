@@ -243,6 +243,11 @@ não têm valor para a área de \emph{\Sexpr{NomeComite}}.
 print(xtable(pontos, digits = 0, label = "tab:pontos",
              caption = "Tabela de pontuação conforme classificação da produção"),
       include.rownames = FALSE)
+
+pmediaL <- pontuacaoLvr[nrow(pontuacaoLvr), ncol(pontuacaoLvr)]
+pmedianaL <- round(median(pontuacaoLvr[1:(nrow(pontuacaoLvr)-1), ncol(pontuacaoLvr)], na.rm = TRUE))
+pmediaA <- pontuacaoArt[nrow(pontuacaoArt), ncol(pontuacaoArt)]
+pmedianaA <- round(median(pontuacaoArt[1:(nrow(pontuacaoArt)-1), ncol(pontuacaoArt)], na.rm = TRUE))
 @
 
 Seguindo os valores da Tabela \ref{tab:pontos}, a pontuação total média dos
@@ -258,29 +263,19 @@ Usando esses valores, a soma ponderada das média é de
 \newpage
 
 <<ppg_pontos_lvr>>=
-ultimalinha <- apply(pontuacaoLvr[, 2:ncol(pontuacaoLvr)], 2,
-                     function(x) round(sum(x, na.rm = TRUE) / length(x), 1))
-tab <- rbind(pontuacaoLvr, pontuacaoLvr[1, ])
-tab$Professor[nrow(tab)] <- "Média"
-tab[nrow(tab), 2:ncol(tab)] <- ultimalinha
-print(xtable(tab, digits = 0,
+print(xtable(pontuacaoLvr, digits = 0,
+             align = paste0("l", paste0(rep("r", ncol(pontuacaoLvr)), collapse = "")),
              caption = "Professores classificados por pontuação (Livros)"),
-      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)),
-      include.rownames = FALSE)
+      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)))
 @
 
 \clearpage
 
 <<ppg_pontos_art>>=
-ultimalinha <- apply(pontuacaoArt[, 2:ncol(pontuacaoArt)], 2,
-                     function(x) round(sum(x, na.rm = TRUE) / length(x), 1))
-tab <- rbind(pontuacaoArt, pontuacaoArt[1, ])
-tab$Professor[nrow(tab)] <- "Média"
-tab[nrow(tab), 2:ncol(tab)] <- ultimalinha
-print(xtable(tab, digits = 0,
+print(xtable(pontuacaoArt, digits = 0,
+             align = paste0("l", paste0(rep("r", ncol(pontuacaoArt)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos)"),
-      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)),
-      include.rownames = FALSE)
+      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)))
 @
 
 \clearpage
