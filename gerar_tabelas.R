@@ -552,6 +552,63 @@ pond$Média <- PesoArtigos * pond$Artigos + PesoLivros * pond$Livros
 pond <- pond[order(pond$Média, decreasing = TRUE), ]
 rownames(pond) <- as.character(1:nrow(pond))
 
+# Média móvel
+# Calcular média móvel geral
+pm <- pcompleto[, c("tipo", "pontos", "ano")]
+pm$pontos[pm$tipo == "Artigo"] <- 0.7 * pm$pontos[pm$tipo == "Artigo"]
+pm$pontos[pm$tipo != "Artigo"] <- 0.3 * pm$pontos[pm$tipo != "Artigo"]
+media <- tapply(pm$pontos, pm$ano, function(x) sum(x) / nrow(doutor))
+mediamovel <- rep(0, max(as.numeric(names(media))) - min(as.numeric(names(media))) + 1)
+names(mediamovel) <- as.character(as.numeric(min(names(media))):as.numeric(max(names(media))))
+for(n in names(media))
+    mediamovel[[n]] <- media[[n]]
+
+# Calcular média móvel de cada professor
+MediaMovel <- function(x)
+{
+    if(nrow(x) < 3){
+        cat("\n\n", x$prof[1], ": não é possível calcular a média móvel porque ")
+        if(nrow(x) == 0)
+            cat("não há nenhuma publicação registrada.\n\n")
+        else if(nrow(x) == 1)
+            cat("apenas 1 publicação está registrada.\n\n")
+        else
+            cat("apenas 2 publicações estão registradas.\n\n")
+        return(NA)
+    }
+
+    sa <- tapply(x$pontos[x$tipo == "Artigo"], x$ano[x$tipo == "Artigo"], sum) * PesoArtigos
+    sl <- tapply(x$pontos[x$tipo != "Artigo"], x$ano[x$tipo != "Artigo"], sum) * PesoLivros
+    anos <- c(names(sa), names(sl))
+    if(max(as.numeric(anos)) - min(as.numeric(anos)) < 3){
+        cat("\n\n", x$prof[1], ": não é possível calcular a média móvel porque a produção registrada não se estende por um mínimo de três anos.")
+        return(NA)
+    }
+    m <- numeric()
+    for(a in min(as.numeric(anos)):max(as.numeric(anos))){
+        ano <- as.character(a)
+        m[ano] <- 0
+        if(length(grep(ano, names(sa))))
+            m[ano] <- m[ano] + PesoArtigos * sa[ano]
+        if(length(grep(ano, names(sl))))
+            m[ano] <- m[ano] + PesoLivros * sl[ano]
+    }
+
+    mm <- rep(0, max(as.numeric(names(m))) - min(as.numeric(names(m))) + 1)
+    names(mm) <- as.character(as.numeric(min(names(m))):as.numeric(max(names(m))))
+    for(n in names(m))
+        mm[[n]] <- m[[n]]
+    mml <- length(mm)
+    mm1 <- mm[3:mml]
+    mm2 <- mm[2:(mml - 1)]
+    mm3 <- mm[1:(mml - 2)]
+    mm <- (mm1 + mm2 + mm3) / 3
+    mm
+}
+pcl <- split(pcompleto, pcompleto$prof)
+mm <- lapply(pcl, MediaMovel)
+mm <- mm[!is.na(mm)]
+
 
 
 # http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
