@@ -53,6 +53,24 @@ Aquino\footnote{Professor do Departamento de Ciências Sociais da Universidade
 Federal do Ceará. E-mail: jaa@ufc.br} e disponibilizados em
 \url{https://github.com/jalvesaq/PontuarLattes}.
 
+O relatório ajuda a identificar problema no preenchimento do Lattes pelos
+professores. Cada coordenador de curso deve consultar os documentos de
+orientação da sua área e ficar atento neste relatório às tabelas mais
+relevantes para uma boa avaliação do seu programa.
+
+Há discussões na CAPES sobre mudanças no sistema Qualis. Entre as propostas,
+está o uso do JSR para a classificação da produção. Por isso, o relatório
+inclui uma tabela em com a produção dos professores pontuada pelo índice SJR
+dos periódicos em que os seus artigos foram publicados.
+
+Vale salientar que este relatório deve ser usado com cautela porque,
+embora ele seja útil para a identificação de problemas no programa de
+pós-graduação, não é um instrumento usado oficialmente pela CAPES.
+
+Os scripts para elaboração deste relatório ainda estão em desenvolvimento e
+solicitamos que nos sejam comunicados qualquer erro encontrado nas tabelas e
+gráficos.
+
 \clearpage
 
 <<printDataLattes>>=
@@ -266,7 +284,7 @@ Usando esses valores, a soma ponderada das média é de
 print(xtable(pontuacaoLvr, digits = 0,
              align = paste0("l", paste0(rep("r", ncol(pontuacaoLvr)), collapse = "")),
              caption = "Professores classificados por pontuação (Livros)"),
-      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)))
+      hline.after = c(-1, 0, nrow(pontuacaoLvr)-1, nrow(pontuacaoLvr)))
 @
 
 \clearpage
@@ -275,7 +293,7 @@ print(xtable(pontuacaoLvr, digits = 0,
 print(xtable(pontuacaoArt, digits = 0,
              align = paste0("l", paste0(rep("r", ncol(pontuacaoArt)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos)"),
-      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)))
+      hline.after = c(-1, 0, nrow(pontuacaoArt)-1, nrow(pontuacaoArt)))
 @
 
 \clearpage
@@ -364,7 +382,17 @@ for(n in names(media))
 # Calcular média móvel de cada professor
 MediaMovel <- function(x)
 {
-    # cat(x$prof[1], "\n")
+    if(nrow(x) < 3){
+        cat("\n\n", x$prof[1], ": não é possível calcular a média móvel porque ")
+        if(nrow(x) == 0)
+            cat("nenhum artigo foi publicado.\n\n")
+        else if(nrow(x) == 1)
+            cat("apenas 1 artigo foi publicado.\n\n")
+        else
+            cat("apenas 2 artigos foram publicados.\n\n")
+        return(NA)
+    }
+
     sa <- tapply(x$pontos[x$tipo == "Artigo"], x$ano[x$tipo == "Artigo"], sum) * PesoArtigos
     sl <- tapply(x$pontos[x$tipo != "Artigo"], x$ano[x$tipo != "Artigo"], sum) * PesoLivros
     anos <- c(names(sa), names(sl))
@@ -377,7 +405,7 @@ MediaMovel <- function(x)
         if(length(grep(ano, names(sl))))
             m[ano] <- m[ano] + PesoLivros * sl[ano]
     }
-    # print(m)
+
     mm <- rep(0, max(as.numeric(names(m))) - min(as.numeric(names(m))) + 1)
     names(mm) <- as.character(as.numeric(min(names(m))):as.numeric(max(names(m))))
     for(n in names(m))
@@ -387,9 +415,11 @@ MediaMovel <- function(x)
     mm2 <- mm[2:(mml - 1)]
     mm3 <- mm[1:(mml - 2)]
     mm <- (mm1 + mm2 + mm3) / 3
+    mm
 }
 pcl <- split(pcompleto, pcompleto$prof)
 mm <- lapply(pcl, MediaMovel)
+mm <- mm[!is.na(mm)]
 
 mmMax <- max(sapply(mm, max))
 
