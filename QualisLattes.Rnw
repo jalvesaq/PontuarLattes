@@ -5,6 +5,7 @@
 \geometry{a4paper,landscape,left=2cm,right=2cm,top=2cm,bottom=2cm}
 \usepackage{fontspec}
 \setmainfont{Liberation Serif}
+\usepackage[font=bf]{caption}
 \usepackage{float}
 \usepackage{longtable}
 \usepackage{colortbl}
@@ -18,17 +19,19 @@
   pdfborder={0 0 0},
 ]{hyperref}
 
-<<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE>>=
+<<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE, error=FALSE>>=
 if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
     Sys.setenv(LANGUAGE = "pt_BR.UTF-8")
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 library("xtable")
 library("ineq")
+bold <- function(x) {paste('\\textbf{', x,'}', sep ='')}
 options(xtable.table.placement = "H",
         xtable.caption.placement = "top",
         xtable.booktabs = TRUE,
         xtable.floating = FALSE,
         xtable.tabular.environment = "longtable",
+        xtable.sanitize.colnames.function = bold,
         format.args = list(big.mark = ".", decimal.mark = ","),
         OutDec = ",")
 source("gerar_tabelas.R")
@@ -44,6 +47,10 @@ source("gerar_tabelas.R")
 
 \tableofcontents
 
+\newpage
+
+\listoftables
+
 \clearpage
 
 \section{Apresentação}
@@ -54,24 +61,31 @@ Federal do Ceará. E-mail: jaa@ufc.br} e disponibilizados em
 \url{https://github.com/jalvesaq/PontuarLattes}.
 
 O relatório ajuda a identificar problema no preenchimento do Lattes pelos
-professores. Cada coordenador de curso deve consultar os documentos de
-orientação da sua área e ficar atento neste relatório às tabelas mais
+professores. Cada coordenador de curso deve consultar os documentos
+da sua área e ficar atento neste relatório às tabelas mais
 relevantes para uma boa avaliação do seu programa.
 
 Há discussões na CAPES sobre mudanças no sistema Qualis. Entre as propostas,
-está o uso do JSR para a classificação da produção. Por isso, o relatório
-inclui uma tabela em com a produção dos professores pontuada pelo índice SJR
-dos periódicos em que os seus artigos foram publicados.
+está o uso do JSR ou do SNIP para a classificação da produção. Por isso, o
+relatório inclui tabelas com a produção dos professores pontuadas por esses
+fatores de impacto.
 
 Vale salientar que este relatório deve ser usado com cautela porque,
 embora ele seja útil para a identificação de problemas no programa de
 pós-graduação, não é um instrumento usado oficialmente pela CAPES.
 
 Os scripts para elaboração deste relatório ainda estão em desenvolvimento e
-solicitamos que nos sejam comunicados qualquer erro encontrado nas tabelas e
+solicitamos que nos sejam comunicados erros encontrados nas tabelas e
 gráficos.
 
+Reconhecemos os esforços da CAPES nos últimos anos para a realização de
+avaliações objetivas dos programas de pós-graduação e esperamos com esta
+ferramenta contribuir para uma transparência e publicidade dos processos de
+avaliação.
+
 \clearpage
+
+\section{Data do currículo}
 
 <<printDataLattes>>=
 tab <- cbind(doutor[, c("Professor", "DataCV")],
@@ -83,10 +97,10 @@ print(xtable(tab, align = "llcr", caption = "Data de atualização do Currículo
 
 \clearpage
 
-\section{Titulação}
+\section{Titulos e prêmios}
 
 \begin{longtable}{lllcc}
-\caption{Informações gerais sobre professores} \\
+\caption{Curso de doutorado} \\
   \toprule
 <<tabelaGeral>>=
 doutor <- doutor[order(doutor[, "Ano"]), ]
@@ -107,7 +121,7 @@ print(xtable(tab), booktabs = FALSE, only.contents = TRUE, include.rownames = FA
 <<areaTitulo>>=
 tab <- sort(table(doutor[, "Nome do curso"]), decreasing = TRUE)
 tab <- cbind("Área" = sub("^$", "(não especificado)", rownames(tab)),
-             "Frequência" = tab, "%" = sub("\\.", ",",
+             "Frequência" = tab, "\\%" = sub("\\.", ",",
                                            sprintf("%0.1f", 100 * tab / sum(tab))))
 print(xtable(tab),
       booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
@@ -126,7 +140,7 @@ print(xtable(tab),
 <<localTitulo>>=
 tab <- sort(table(doutor[, "Instituição doutorado"]), decreasing = TRUE)
 tab <- cbind("Instituição" = sub("^$", "(não especificado)", rownames(tab)),
-             "Frequência" = tab, "%" = sub("\\.", ",",
+             "Frequência" = tab, "\\%" = sub("\\.", ",",
                                            sprintf("%0.1f", 100 * tab / sum(tab))))
 print(xtable(tab),
       booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
@@ -337,6 +351,18 @@ print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
       hline.after = c(-1, 0, nrow(pontuacaoSJR) - 1, nrow(pontuacaoSJR)))
 @
 
+\clearpage
+
+A Tabela~\ref{tab:snip} mostra a pontuação calculada como a soma do índice
+SNIP de cada publicação:
+
+<<ppg_pontos_snip>>=
+print(xtable(pontuacaoSNIP, digits = 3, label = "tab:snip",
+             align = paste0("l", paste0(rep("r", ncol(pontuacaoSNIP)), collapse = "")),
+             caption = "Professores classificados por pontuação (Artigos, SNIP)"),
+      hline.after = c(-1, 0, nrow(pontuacaoSNIP) - 1, nrow(pontuacaoSNIP)))
+@
+
 
 %\clearpage
 %
@@ -365,6 +391,13 @@ professores. Ou seja, cada ponto representa o valor médio da pontuação nos
 representa a média móvel da produção média de todos os professores,
 correspondendo à media dos professores permanentes do programa somente nos
 anos mais recentes, em que a composição do corpo docente for a mesma da atual.
+
+<<mmmsg>>=
+if(length(mmmsg))
+    for(msg in mmmsg)
+        cat("\n\n", msg, "\n\n")
+@
+
 
 <<mediamovel, fig.width=8, fig.height=3>>=
 par(mar = c(4, 4, 4, 0) + 0.1, cex = 0.75)

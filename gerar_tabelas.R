@@ -88,11 +88,12 @@ obter.producao <- function(arquivo)
 
     if(!is.null(xl$children$`DADOS-COMPLEMENTARES`$children$`ORIENTACOES-EM-ANDAMENTO`)){
         oa <- xl$children$`DADOS-COMPLEMENTARES`$children$`ORIENTACOES-EM-ANDAMENTO`$children
-        for(ii in 1:length(oa))
-        oriand[[length(oriand)+1]] <<- c("Professor" = nomep,
-                                         oa[[ii]]$children[[1]]$attributes[c("NATUREZA", "ANO")],
-                                         oa[[ii]]$children[[2]]$attributes[c("NOME-DO-ORIENTANDO",
-                                                                             "NOME-INSTITUICAO")])
+        for(ii in 1:length(oa)){
+            if(length(oa[[ii]]$children) > 1)
+                oriand[[length(oriand)+1]] <<- c("Professor" = nomep,
+                                                 oa[[ii]]$children[[1]]$attributes[c("NATUREZA", "ANO")],
+                                                 oa[[ii]]$children[[2]]$attributes[c("NOME-DO-ORIENTANDO", "NOME-INSTITUICAO")])
+        }
     }
 
 
@@ -117,8 +118,6 @@ obter.producao <- function(arquivo)
                                                  ap[[ii]]$attributes["NOME-INSTITUICAO"])
             }
     }
-
-    ap1 <- ap[[1]]
 
     xl <- xl$children$`PRODUCAO-BIBLIOGRAFICA`
     artigos <- xl$children$`ARTIGOS-PUBLICADOS`
@@ -179,11 +178,13 @@ obter.producao <- function(arquivo)
     b
 }
 
-xx <- lapply(dir("lattes_xml", pattern = "*.zip"), obter.producao)
+zipls <- dir("lattes_xml", pattern = "*.zip")
+if(length(zipls) == 0)
+    stop("Nenhum currículo encontrado na pasta 'lattes_xml'")
+xx <- lapply(zipls, obter.producao)
 xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
 rm(xx, obter.producao)
-
 
 # Adicionar Fator de Impacto SJR
 if(file.exists("qualis/scimagojr 2017.csv")){
@@ -252,8 +253,7 @@ if(file.exists("qualis/scimagojr 2017.csv")){
         }
     }
 
-
-    p <- merge(p, s, all.x = TRUE)
+    p <- merge(p, s, all.x = TRUE, stringsAsFactors = FALSE)
 }
 # Adicionar Qualis
 
@@ -266,6 +266,42 @@ if(exists("equivalente")){
         }
 }
 
+if(file.exists("SNIP.RData")){
+    load("SNIP.RData")
+} else {
+    # Obter SNIP de http://www.journalindicators.com/methodology#sthash.FN5cRgxb.dpuf%20
+    if(!file.exists("qualis/CWTS Journal Indicators May 2018.xlsx")){
+        cat("Baixando o CWTS Journal Indicators\n")
+        download.file("http://www.journalindicators.com/Content/CWTS%20Journal%20Indicators%20May%202018.xlsx",
+                      destfile = "qualis/CWTS Journal Indicators May 2018.xlsx")
+    }
+    if(!file.exists("qualis/CWTS Journal Indicators May 2018.xlsx"))
+        stop("Arquivo 'qualis/CWTS Journal Indicators May 2018.xlsx' não encontrado.")
+
+    library("openxlsx")
+    # TODO: usar área de conhecimento.
+    afield <- read.xlsx("qualis/CWTS Journal Indicators May 2018.xlsx", 2)
+    snip1 <- read.xlsx("qualis/CWTS Journal Indicators May 2018.xlsx", 1)
+    snip2 <- snip1
+    names(snip1) <- sub("Print.ISSN", "isxn", names(snip1))
+    names(snip2) <- sub("Electronic.ISSN", "isxn", names(snip2))
+    snip1$Electronic.ISSN <- NULL
+    snip2$Print.ISSN <- NULL
+    snip <- rbind(snip1, snip2)
+    snip <- snip[snip$Year == 2017 & snip$isxn != "-", c("Source.title", "isxn", "SNIP")]
+
+    # Existem ISSNs duplicados (atribuídos a mais de um periódico):
+    # sum(duplicated(snip$isxn))
+    # # Exemplo:
+    # snip[snip$isxn == "1432-2218", 1:4]
+
+    snip <- snip[!duplicated(snip$isxn), ]
+
+    snip$isxn <- sub("-", "", snip$isxn)
+    save(snip, file = "SNIP.RData")
+}
+
+p <- merge(p, snip, all.x = TRUE, stringsAsFactors = FALSE)
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
 p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
@@ -289,9 +325,10 @@ pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
                               c("Livro publicado", "Lvr"),
                               c("Livro organizado", "Org"),
                               c("Capítulo de livro", "Cap")), stringsAsFactors = FALSE)
-pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis, stringsAsFactors = FALSE))
+pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis,
+                                   stringsAsFactors = FALSE))
 
-p <- merge(p, pontos, all.x = TRUE)
+p <- merge(p, pontos, all.x = TRUE, stringsAsFactors = FALSE)
 p$pontos[p$tipo == "NãoArt"] <- 0
 
 
@@ -340,11 +377,12 @@ p$pontos[p$tipo == "NãoArt"] <- 0
 # }
 # rm(titulos, coletar)
 #
-# p <- merge(p, g, all.x = TRUE)
+# p <- merge(p, g, all.x = TRUE, stringsAsFactors = FALSE)
 # p$tituloUP <- NULL
 
 
 # Especificar o período do relatório
+p <- p[p$ano > "1900" & p$ano < "2100", ] # O ano pode não estar especificado
 pcompleto <- p
 p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
 
@@ -406,6 +444,7 @@ TabProd <- function(d, v)
 pontuacaoLvr <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
 pontuacaoArt <- TabProd(p[p$tipo == "Artigo", ], "pontos")
 
+pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP")
 
 if(is.null(p$SJR)){
     pontuacaoSJR <- matrix("Arquivo `qualis/scimagojr_2017_TAB.csv' não encontrado", 1, 1)
@@ -419,10 +458,14 @@ if(is.null(p$SJR)){
 
 # Lista de Pós-doutorados realizados
 posdoc <- do.call("rbind", posdoc)
+if(is.null(posdoc)){
+    posdoc <- matrix(NA, ncol = 4)
+} else {
+    posdoc[, 2] <- NomeSigla(posdoc[, 2])
+    posdoc[, 1] <- sub(" .* ", " ", posdoc[, 1])
+    posdoc <- posdoc[order(posdoc[, 4]), ]
+}
 colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
-posdoc[, 2] <- NomeSigla(posdoc[, 2])
-posdoc[, 1] <- sub(" .* ", " ", posdoc[, 1])
-posdoc <- posdoc[order(posdoc[, "Fim"]), ]
 
 # Orientações concluídas
 oc <- do.call("rbind", oriconc)
@@ -492,8 +535,8 @@ levels(oa$Natureza) <-
 levels(oa$Natureza) <- sub("Orientação de outra natureza", "O", levels(oa$Natureza))
 levels(oa$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oa$Natureza))
 levels(oa$Natureza) <- sub("Tese de doutorado", "D", levels(oa$Natureza))
-levels(oa$Natureza) <- sub("Trabalho de conclusão de curso de graduação", "G",
-                               oa$Natureza)
+levels(oa$Natureza) <- sub("Trabalho de conclusão de curso de graduação", "G", oa$Natureza)
+
 oa$um <- 1
 oriandTab <- tapply(oa$um, list(oa$Professor, oa$Natureza), sum)
 oriandTab[is.na(oriandTab)] <- 0
@@ -543,7 +586,7 @@ pArt <- data.frame(Professor = rownames(pontuacaoArt)[1:(nrow(pontuacaoArt)-1)],
                    stringsAsFactors = FALSE)
 
 # Professores classificados por pontuação ponderada
-pond <- merge(pLvr, pArt, all = TRUE)
+pond <- merge(pLvr, pArt, all = TRUE, stringsAsFactors = FALSE)
 pond$Livros[is.na(pond$Livros)] <- 0
 pond$Artigos[is.na(pond$Artigos)] <- 0
 pond$Livros <- pond$Livros / max(pond$Livros, na.rm = TRUE)
@@ -554,7 +597,10 @@ rownames(pond) <- as.character(1:nrow(pond))
 
 # Média móvel
 # Calcular média móvel geral
+
+# É preciso especificar o ano porque há casos de não registro do ano
 pm <- pcompleto[, c("tipo", "pontos", "ano")]
+
 pm$pontos[pm$tipo == "Artigo"] <- 0.7 * pm$pontos[pm$tipo == "Artigo"]
 pm$pontos[pm$tipo != "Artigo"] <- 0.3 * pm$pontos[pm$tipo != "Artigo"]
 media <- tapply(pm$pontos, pm$ano, function(x) sum(x) / nrow(doutor))
@@ -563,17 +609,19 @@ names(mediamovel) <- as.character(as.numeric(min(names(media))):as.numeric(max(n
 for(n in names(media))
     mediamovel[[n]] <- media[[n]]
 
+mmmsg <- character()
 # Calcular média móvel de cada professor
 MediaMovel <- function(x)
 {
     if(nrow(x) < 3){
-        cat("\n\n", x$prof[1], ": não é possível calcular a média móvel porque ")
+        msg <- paste0(x$prof[1], ": não é possível calcular a média móvel porque ")
         if(nrow(x) == 0)
-            cat("não há nenhuma publicação registrada.\n\n")
+            msg <- paste0(msg, "não há nenhuma publicação registrada.")
         else if(nrow(x) == 1)
-            cat("apenas 1 publicação está registrada.\n\n")
+            msg <- paste0(msg, "apenas 1 publicação está registrada.\n\n")
         else
-            cat("apenas 2 publicações estão registradas.\n\n")
+            msg <- paste0(msg, "apenas 2 publicações estão registradas.\n\n")
+        mmmsg <<- c(mmmsg, msg)
         return(NA)
     }
 
@@ -581,7 +629,7 @@ MediaMovel <- function(x)
     sl <- tapply(x$pontos[x$tipo != "Artigo"], x$ano[x$tipo != "Artigo"], sum) * PesoLivros
     anos <- c(names(sa), names(sl))
     if(max(as.numeric(anos)) - min(as.numeric(anos)) < 3){
-        cat("\n\n", x$prof[1], ": não é possível calcular a média móvel porque a produção registrada não se estende por um mínimo de três anos.")
+        mmmsg <- paste0(x$prof[1], ": não é possível calcular a média móvel porque a produção registrada não se estende por um mínimo de três anos.")
         return(NA)
     }
     m <- numeric()
