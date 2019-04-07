@@ -434,14 +434,16 @@ if(length(erros) > 0){
 @
 
 
+\small
 <<printTabProdDet>>=
-print(xtable(proddet, display = c("s", "s", "s", "d", "s", "f", "s", "s"),
-             align = "lllrllrr", label = "tab:proddet",
+print(xtable(proddet, display = c("s", "s", "s", "d", "s", "f", "f", "s", "s"),
+             align = "lllrrllrr", label = "tab:proddet",
              caption = "Produção detalhada"),
       sanitize.text.function = function(x)x,
       tabular.environment = "longtable", floating = FALSE,
       include.rownames = FALSE)
 @
+\normalsize
 
 \clearpage
 

@@ -1,6 +1,4 @@
 library("XML")
-# library("scholar")
-
 source("info.R")
 
 # Usar issn1 e issn2 do scielo para fazer equivalência na tabela Qualis
@@ -22,7 +20,6 @@ for(i in 1:nrow(sci)){
         }
     }
 }
-
 
 siglas <- read.delim("siglas_univ.txt", comment.char = "#", stringsAsFactors = FALSE)
 
@@ -50,6 +47,8 @@ obter.producao <- function(arquivo)
 {
     unzip(paste0("lattes_xml/", arquivo), exdir = "/tmp/")
     xl <- xmlTreeParse("/tmp/curriculo.xml", encoding = "latin1")
+    if("ERRO" %in% names(xl$doc$children))
+        stop(paste0("O currículo ", arquivo, " contém ERRO. Verifique se usou o link correto para baixar o arquivo."))
     xl <- xl$doc$children$`CURRICULO-VITAE`
     prof <- xl$children$`DADOS-GERAIS`
     nomep <- prof$attributes[["NOME-COMPLETO"]]
@@ -178,7 +177,10 @@ obter.producao <- function(arquivo)
                do.call("rbind", lapply(capitulos, pegar.capitulo, nomep)),
                do.call("rbind", lapply(livros,    pegar.livro,    nomep)))
     rownames(b) <- NULL
-    colnames(b) <- c("prof", "ano", "tipo", "producao", "livro.ou.periodico", "isxn")
+
+    # b = NULL se o autor do currículo nunca tiver publicado nada:
+    if(!is.null(b))
+        colnames(b) <- c("prof", "ano", "tipo", "producao", "livro.ou.periodico", "isxn")
     b
 }
 
@@ -190,8 +192,18 @@ xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
 rm(xx, obter.producao)
 
-# Adicionar Fator de Impacto SJR
-if(file.exists("qualis/scimagojr 2017.csv")){
+if(exists("equivalente")){
+    for(i in 1:length(equivalente))
+        if(sum(qualis$isxn == equivalente[i]) == 1){
+            idx <- grep(equivalente[i], qualis$isxn)
+            qualis <- rbind(qualis, qualis[idx, ])
+            qualis[nrow(qualis), "isxn"] <- names(equivalente)[i]
+        }
+}
+
+if(file.exists("SJR_SNIP.RData")){
+    load("SJR_SNIP.RData")
+} else {
     # Não foi possível carregar o banco de dados "scimagojr 2017.csv" no R sem
     # erros porque há campos com aspas desbalanceadas. A solução encontrada
     # foi usar o awk para extrair somente as colunas necessárias.
@@ -201,8 +213,13 @@ if(file.exists("qualis/scimagojr 2017.csv")){
     writeLines(s, "/tmp/scimagojrTAB")
     s <- read.delim("/tmp/scimagojrTAB", stringsAsFactors = FALSE)
     names(s) <- c("title", "isxn", "SJR", "country")
-    s$SJR <- as.numeric(sub(",", ".", s$SJR))
     s$title <- sub("^ *(.*) *$", "\\1", s$title)
+    s$SJR <- as.numeric(sub(",", ".", s$SJR))
+
+    # Provavelmente, o awk pegou campos errados quando havia aspas desbalanceadas:
+    nSJRfaltantes <- nrow(s)
+    s <- s[!is.na(s$SJR), ]
+    nSJRfaltantes <- nSJRfaltantes - nrow(s)
 
     # Revistas com mais de um ISSN
     s$issn2 <- s$isxn
@@ -257,22 +274,8 @@ if(file.exists("qualis/scimagojr 2017.csv")){
         }
     }
 
-    p <- merge(p, s, all.x = TRUE, stringsAsFactors = FALSE)
-}
-# Adicionar Qualis
+    # p <- merge(p, s, all.x = TRUE, stringsAsFactors = FALSE)
 
-if(exists("equivalente")){
-    for(i in 1:length(equivalente))
-        if(sum(qualis$isxn == equivalente[i]) == 1){
-            idx <- grep(equivalente[i], qualis$isxn)
-            qualis <- rbind(qualis, qualis[idx, ])
-            qualis[nrow(qualis), "isxn"] <- names(equivalente)[i]
-        }
-}
-
-if(file.exists("SNIP.RData")){
-    load("SNIP.RData")
-} else {
     # Obter SNIP de http://www.journalindicators.com/methodology#sthash.FN5cRgxb.dpuf%20
     if(!file.exists("qualis/CWTS Journal Indicators May 2018.xlsx")){
         cat("Baixando o CWTS Journal Indicators\n")
@@ -300,12 +303,13 @@ if(file.exists("SNIP.RData")){
     # snip[snip$isxn == "1432-2218", 1:4]
 
     snip <- snip[!duplicated(snip$isxn), ]
-
     snip$isxn <- sub("-", "", snip$isxn)
-    save(snip, file = "SNIP.RData")
+    sjrsnip <- merge(s, snip, all = TRUE)
+    save(sjrsnip, file = "SJR_SNIP.RData")
 }
 
-p <- merge(p, snip, all.x = TRUE, stringsAsFactors = FALSE)
+p <- merge(p, sjrsnip, all.x = TRUE, stringsAsFactors = FALSE)
+
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
 p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
@@ -334,7 +338,6 @@ pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = Pontos
 
 p <- merge(p, pontos, all.x = TRUE, stringsAsFactors = FALSE)
 p$pontos[p$tipo == "NãoArt"] <- 0
-
 
 # # Adicionar Fator de Impacto do Google Scholar
 # # Guardar dados coletados em arquivo para evitar necessidade de baixar dados
@@ -445,19 +448,12 @@ TabProd <- function(d, v)
     tab
 }
 
-pontuacaoLvr <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
-pontuacaoArt <- TabProd(p[p$tipo == "Artigo", ], "pontos")
-
+pontuacaoLvr  <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
+pontuacaoArt  <- TabProd(p[p$tipo == "Artigo", ], "pontos")
 pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP")
-
-if(is.null(p$SJR)){
-    pontuacaoSJR <- matrix("Arquivo `qualis/scimagojr_2017_TAB.csv' não encontrado", 1, 1)
-    p$SJR <- NA
-} else {
-    pontuacaoSJR <- TabProd(p[p$tipo == "Artigo", ], "SJR")
-}
-
+pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR")
 # pontuacaoGgl <- TabProd(p[p$tipo == "Artigo", ], "ImpactFactor")
+
 
 
 # Lista de Pós-doutorados realizados
@@ -493,6 +489,7 @@ oc$um <- 1
 
 oriconcTab <- tapply(oc$um, list(oc$Professor, oc$Natureza), sum)
 oriconcTab[is.na(oriconcTab)] <- 0
+
 
 # Ordenar colunas (nem todos os programas têm todos os tipos de orientações)
 ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
@@ -568,6 +565,7 @@ oa <- oa[order(paste(oa$Ano, oa$Professor, oa$Natureza, oa$Instituição)),
          c("Ano", "Professor", "Natureza", "Instituição", "Orientando")]
 oa$Professor <- sub(" .* ", " ", oa$Professor)
 
+
 ## Registro do item “Ensino” no período
 ens <- do.call("rbind", ensino)
 ens <- as.data.frame(ens, stringsAsFactors = FALSE)
@@ -577,7 +575,6 @@ ens <- ens[ens$AnoI >= as.character(Inicio) &
 ens$um <- 1
 ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum)
 ensinoTab[is.na(ensinoTab)] <- 0
-
 
 # Produção bibliográfica (Livros e Artigos)
 colnames(pontos) <- c("Classe", "Abreviatura", "Pontos")
@@ -615,6 +612,7 @@ mediamovel <- rep(0, max(as.numeric(names(media))) - min(as.numeric(names(media)
 names(mediamovel) <- as.character(as.numeric(min(names(media))):as.numeric(max(names(media))))
 for(n in names(media))
     mediamovel[[n]] <- media[[n]]
+
 
 mmmsg <- character()
 # Calcular média móvel de cada professor
@@ -665,7 +663,6 @@ mm <- lapply(pcl, MediaMovel)
 mm <- mm[!is.na(mm)]
 
 
-
 # http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
 # Convenience function to convert html codes
 html2txt <- function(str) {
@@ -680,7 +677,7 @@ producao <- producao[, !grepl("Nada", colnames(producao))]
 rownames(producao) <- c(rownames(producao)[1], paste("\\hline", rownames(producao)[2:nrow(producao)]))
 
 # Produção detalhada
-b <- p[, c("prof", "producao", "ano", "qualis", "SJR", "livro.ou.periodico", "isxn")]
+b <- p[, c("prof", "producao", "ano", "qualis", "SJR", "SNIP", "livro.ou.periodico", "isxn")]
 b <- b[order(p$prof, p$ano, p$producao), ]
 
 b$prof <- sub(" .* ", " ", b$prof)
@@ -738,7 +735,7 @@ if(sum(idx) > 0){
 }
 
 
-b$producao <- sub("^(....................................).*", "\\1", b$producao)
+b$producao <- sub("^(................................).*", "\\1", b$producao)
 b$livro.ou.periodico <- sub("^(....................................).*", "\\1", b$livro.ou.periodico)
 idx <- grep("[A-Z][A-Z][A-Z][A-Z][A-Z]", b$producao)
 b$producao[idx] <- sub("^(...........................).*", "\\1", b$producao[idx])
@@ -761,7 +758,7 @@ b$producao <- gsub("#", "\\\\#", b$producao)
 b$livro.ou.periodico <- gsub("#", "\\\\#", b$livro.ou.periodico)
 levels(b$qualis) <- sub("Nada", " ", levels(b$qualis))
 names(b) <- c("Professor", "Produção (títulos truncados)", "Ano", "Qualis", "SJR",
-              "Periódico ou Livro (títulos truncados)", "ISSN/ISBN")
+              "SNIP", "Periódico ou Livro (títulos truncados)", "ISSN/ISBN")
 proddet <- b
 rm(b)
 
@@ -780,3 +777,6 @@ semqualis <- semqualis[!duplicated(semqualis), ]
 semqualis <- semqualis[order(semqualis$livro.ou.periodico), ]
 semqualis$livro.ou.periodico <- sub(" \x26 ", " \x5c\x5c\x26 ", semqualis$livro.ou.periodico)
 colnames(semqualis) <- c("ISSN", "Título do periódico")
+
+save(cnpqId, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
+     pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")
