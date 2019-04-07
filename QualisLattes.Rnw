@@ -80,7 +80,7 @@ gráficos.
 
 Reconhecemos os esforços da CAPES nos últimos anos para a realização de
 avaliações objetivas dos programas de pós-graduação e esperamos com esta
-ferramenta contribuir para uma transparência e publicidade dos processos de
+ferramenta contribuir para a transparência e publicidade dos processos de
 avaliação.
 
 \clearpage

@@ -43,6 +43,9 @@ oriand <- list()
 oriconc <- list()
 ensino <- list()
 nlist <- list()
+cnpqId <- matrix(character(), ncol = 2, nrow = 0)
+colnames(cnpqId) <- c("Professor", "id")
+
 obter.producao <- function(arquivo)
 {
     unzip(paste0("lattes_xml/", arquivo), exdir = "/tmp/")
@@ -50,6 +53,7 @@ obter.producao <- function(arquivo)
     xl <- xl$doc$children$`CURRICULO-VITAE`
     prof <- xl$children$`DADOS-GERAIS`
     nomep <- prof$attributes[["NOME-COMPLETO"]]
+    cnpqId <<- rbind(cnpqId, c(nomep, xl$attributes[["NUMERO-IDENTIFICADOR"]]))
 
     da <- sub("(..)(..)(....)", "\\1/\\2/\\3",
               xl$attributes[["DATA-ATUALIZACAO"]])
@@ -462,7 +466,6 @@ if(is.null(posdoc)){
     posdoc <- matrix(NA, ncol = 4)
 } else {
     posdoc[, 2] <- NomeSigla(posdoc[, 2])
-    posdoc[, 1] <- sub(" .* ", " ", posdoc[, 1])
     posdoc <- posdoc[order(posdoc[, 4]), ]
 }
 colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
@@ -591,7 +594,11 @@ pond$Livros[is.na(pond$Livros)] <- 0
 pond$Artigos[is.na(pond$Artigos)] <- 0
 pond$Livros <- pond$Livros / max(pond$Livros, na.rm = TRUE)
 pond$Artigos <- pond$Artigos / max(pond$Artigos, na.rm = TRUE)
-pond$Média <- PesoArtigos * pond$Artigos + PesoLivros * pond$Livros
+if(PesoLivros > 0){
+    pond$Média <- PesoArtigos * pond$Artigos + PesoLivros * pond$Livros
+} else {
+    pond$Média <- pond$Artigos
+}
 pond <- pond[order(pond$Média, decreasing = TRUE), ]
 rownames(pond) <- as.character(1:nrow(pond))
 
