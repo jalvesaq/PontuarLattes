@@ -214,14 +214,15 @@ D = Tese de doutorado e
 PD = Supervisão de pós-doutorado.
 
 <<oriconc>>=
-tab <- rbind(oriconcTab, "Total" = apply(oriconcTab, 2, sum))
+tab <- rbind(oriconcTab, "Total" = apply(oriconcTab, 2, sum),
+             "Média" = round(apply(oriconcTab, 2, mean), 1))
 tab <- cbind("Orientador" = rownames(tab),
              tab,
              "Total" = apply(tab, 1, sum))
 aln <- paste0("ll", paste0(rep("r", ncol(tab) - 1), collapse = ""))
 print(xtable(tab, align = aln, digits = 0, label = "tab:oriconc",
              caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim)),
-      booktabs = TRUE, hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)),
+      booktabs = TRUE, hline.after = c(-1, 0, nrow(tab) - 2, nrow(tab)),
       include.rownames = FALSE)
 @
 
@@ -244,14 +245,15 @@ print(xtable(oc, align = "lcp{5.5cm}p{4cm}p{4cm}p{4cm}c", label = "tab:detoricon
 \newpage
 
 <<oriand>>=
-tab <- rbind(oriandTab, "Total" = apply(oriandTab, 2, sum))
+tab <- rbind(oriandTab, "Total" = apply(oriandTab, 2, sum),
+             "Média" = round(apply(oriandTab, 2, mean), 1))
 tab <- cbind("Orientador" = rownames(tab),
              tab,
              "Total" = apply(tab, 1, sum))
 aln <- paste0("ll", paste0(rep("r", ncol(tab) - 1), collapse = ""))
 print(xtable(tab, align = aln, digits = 0, label = "tab:oriand",
              caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim)),
-      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)), include.rownames = FALSE)
+      hline.after = c(-1, 0, nrow(tab) - 2, nrow(tab)), include.rownames = FALSE)
 @
 
 \newpage
