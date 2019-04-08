@@ -65,6 +65,23 @@ professores. Cada coordenador de curso deve consultar os documentos
 da sua área e ficar atento neste relatório às tabelas mais
 relevantes para uma boa avaliação do seu programa.
 
+A coautoria da produção entre professores do programa é identificada pela
+coincidência de algumas informações:
+
+\begin{itemize}
+
+    \item Livros: ISBN e ano.
+
+    \item Capítulos de livro: ISBN, ano e página inicial do capítulo.
+
+    \item Artigos: ISSN, ano, volume, número do periódico e página inicial do
+        artigo.
+
+\end{itemize}
+
+No caso de coautoria, a pontuação correspondente à publicação é dividida pelo
+número de coautores que são professores do programa.
+
 Há discussões na CAPES sobre mudanças no sistema Qualis. Entre as propostas,
 está o uso do JSR ou do SNIP para a classificação da produção. Por isso, o
 relatório inclui tabelas com a produção dos professores pontuadas por esses
@@ -416,6 +433,7 @@ for(n in names(mm)){
 
 \section{Apêndices}
 
+\definecolor{coautr}{rgb}{0.5,1.0,0.7}
 \definecolor{ncarac}{rgb}{1,0.7,0.7}
 \definecolor{ninval}{rgb}{1,1,0.5}
 \definecolor{duplic}{rgb}{0.7,0.8,1}
@@ -423,6 +441,13 @@ for(n in names(mm)){
 
 
 <<printerros>>=
+if(TemCoautoria){
+    cat("\\textbf{Legenda de informação adicional indicada na Tabela \\ref{tab:proddet}}:\n\n")
+    cat("\\begin{tabular}{p{23.5cm}}\n")
+    cat("\\rowcolor{coautr}Produção realizada em coautoria por mais de um professor do programa.\\\\\n")
+    cat("\\end{tabular}\n\n\n")
+}
+
 if(length(erros) > 0){
     cat("\\textbf{Legenda de erros de preenchimento do Lattes indicados na Tabela \\ref{tab:proddet}}:\n\n")
     cat("\\begin{tabular}{p{23.5cm}}\n")

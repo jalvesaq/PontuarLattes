@@ -136,28 +136,27 @@ obter.producao <- function(arquivo)
     {
         db <- p$children$`DADOS-BASICOS-DO-ARTIGO`$attributes
         dl <- p$children$`DETALHAMENTO-DO-ARTIGO`$attributes
-        if(db[["NATUREZA"]] == "COMPLETO"){
-            res <- c(prof, db[["ANO-DO-ARTIGO"]], "Artigo",
-                     db[["TITULO-DO-ARTIGO"]],
-                     dl[["TITULO-DO-PERIODICO-OU-REVISTA"]],
-                     dl[["ISSN"]])
-        } else {
-            res <- c(prof, db[["ANO-DO-ARTIGO"]], "NãoArt",
-                     db[["TITULO-DO-ARTIGO"]],
-                     dl[["TITULO-DO-PERIODICO-OU-REVISTA"]],
-                     dl[["ISSN"]])
-        }
-        return(res)
+        c(prof, db[["ANO-DO-ARTIGO"]],
+          ifelse(db[["NATUREZA"]] == "COMPLETO", "Artigo", "NãoArt"),
+          db[["TITULO-DO-ARTIGO"]],
+          dl[["TITULO-DO-PERIODICO-OU-REVISTA"]],
+          dl[["VOLUME"]],
+          dl[["SERIE"]],
+          dl[["PAGINA-INICIAL"]],
+          dl[["PAGINA-FINAL"]],
+          dl[["ISSN"]])
     }
 
     pegar.capitulo <- function(p, prof)
     {
         db <- p$children$`DADOS-BASICOS-DO-CAPITULO`$attributes
         dl <- p$children$`DETALHAMENTO-DO-CAPITULO`$attributes
-        res <- c(prof, db[["ANO"]], "Cap",
-                 db[["TITULO-DO-CAPITULO-DO-LIVRO"]],
-                 dl[["TITULO-DO-LIVRO"]], dl[["ISBN"]])
-        return(res)
+        c(prof, db[["ANO"]], "Cap",
+          db[["TITULO-DO-CAPITULO-DO-LIVRO"]],
+          dl[["TITULO-DO-LIVRO"]], NA, NA,
+          dl[["PAGINA-INICIAL"]],
+          dl[["PAGINA-FINAL"]],
+          dl[["ISBN"]])
     }
 
     pegar.livro <- function(p, prof)
@@ -166,11 +165,9 @@ obter.producao <- function(arquivo)
         db <- db$attributes
         dl <- p$children$`DETALHAMENTO-DO-LIVRO`
         dl <- dl$attributes
-        if(db[["TIPO"]] == "LIVRO_ORGANIZADO_OU_EDICAO")
-            res <- c(prof, db[["ANO"]], "Org", db[["TITULO-DO-LIVRO"]], NA, dl[["ISBN"]])
-        else
-            res <- c(prof, db[["ANO"]], "Lvr", db[["TITULO-DO-LIVRO"]], NA, dl[["ISBN"]])
-        return(res)
+        c(prof, db[["ANO"]],
+          ifelse(db[["TIPO"]] == "LIVRO_ORGANIZADO_OU_EDICAO", "Org", "Lvr"),
+          db[["TITULO-DO-LIVRO"]], NA, NA, NA, NA, NA, dl[["ISBN"]])
     }
 
     b <- rbind(do.call("rbind", lapply(artigos,   pegar.artigo,   nomep)),
@@ -180,7 +177,8 @@ obter.producao <- function(arquivo)
 
     # b = NULL se o autor do currículo nunca tiver publicado nada:
     if(!is.null(b))
-        colnames(b) <- c("prof", "ano", "tipo", "producao", "livro.ou.periodico", "isxn")
+        colnames(b) <- c("prof", "ano", "tipo", "producao", "livro.ou.periodico",
+                         "vol", "num", "pini", "pfim", "isxn")
     b
 }
 
@@ -390,6 +388,13 @@ p$pontos[p$tipo == "NãoArt"] <- 0
 
 # Especificar o período do relatório
 p <- p[p$ano > "1900" & p$ano < "2100", ] # O ano pode não estar especificado
+
+# Detectar coautorias
+p$chave <- tolower(paste(p$isxn, p$ano, p$tipo, p$vol, p$num, p$pini))
+coaut <- table(p$chave)
+coaut <- data.frame(chave = names(coaut), ncoaut = as.numeric(coaut), stringsAsFactors = FALSE)
+p <- merge(p, coaut)
+
 pcompleto <- p
 p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
 
@@ -418,7 +423,8 @@ p$prof <- factor(p$prof)
 
 TabProd <- function(d, v)
 {
-    tab <- tapply(d[[v]], list(d$prof, d$ano), sum, na.rm = TRUE)
+    pontos <- d[[v]] / d$ncoaut
+    tab <- tapply(pontos, list(d$prof, d$ano), sum, na.rm = TRUE)
 
     # Adicionar professores que não produziram no período
     falta <- !(doutor[, "Professor"] %in% rownames(tab))
@@ -677,7 +683,7 @@ producao <- producao[, !grepl("Nada", colnames(producao))]
 rownames(producao) <- c(rownames(producao)[1], paste("\\hline", rownames(producao)[2:nrow(producao)]))
 
 # Produção detalhada
-b <- p[, c("prof", "producao", "ano", "qualis", "SJR", "SNIP", "livro.ou.periodico", "isxn")]
+b <- p[, c("prof", "producao", "ano", "qualis", "SJR", "SNIP", "livro.ou.periodico", "isxn", "ncoaut")]
 b <- b[order(p$prof, p$ano, p$producao), ]
 
 b$prof <- sub(" .* ", " ", b$prof)
@@ -709,6 +715,15 @@ if(sum(idx) > 0){
     b$prof[idx] <- paste("\\rowcolor{ncarac}", b$prof[idx])
     erros <- c(erros, "\\rowcolor{ncarac}ISSN ou ISBN com número inválido de caracteres. O ISSN deve ter 8 caracteres e o ISBN deve ter 13.")
 }
+
+idx <- b$ncoaut > 1
+if(sum(idx) > 0){
+    b$prof[idx] <- paste("\\rowcolor{coautr}", b$prof[idx])
+    TemCoautoria <- TRUE
+} else {
+    TemCoautoria <- FALSE
+}
+b$ncoaut <- NULL
 
 # ISBN check digit
 checkISBN <- function(x){
