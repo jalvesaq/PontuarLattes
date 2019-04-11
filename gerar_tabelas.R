@@ -1,27 +1,45 @@
 library("XML")
+library("ineq")
 source("info.R")
 
-# Usar issn1 e issn2 do scielo para fazer equivalência na tabela Qualis
-sci <- read.delim("scielo_issn.tsv", stringsAsFactors = FALSE)
-for(i in 1:nrow(sci)){
-    if(!is.na(sci$issn2[i]) && sci$issn2[i] %in% qualis$issxn && ! sci$issn1[i] %in% qualis$issxn){
-        qualis <- rbind(qualis,
-                        data.frame(isxn = sci$issn1[i],
-                                   titulo = qualis$titulo[qualis$isxn == sci$issn2[i]],
-                                   qualis = qualis$qualis[qualis$isxn == sci$issn2[i]],
-                                   stringsAsFactors = FALSE))
-    } else {
-        if(!is.na(sci$issn2[i]) && sci$issn1[i] %in% qualis$isxn && ! sci$issn2[i] %in% qualis$isxn){
+# Carregar dados do SJR e SNIP
+load("SJR_SNIP.RData")
+
+if(file.exists("Qualis.RData")){
+    load("Qualis.RData")
+} else {
+    # Carregar Qualis
+    qualis <- read.table(QualisXLS,
+                         stringsAsFactors = FALSE, header = TRUE,
+                         fileEncoding = "Windows-1252", sep = "\t")
+    names(qualis) <- c("isxn", "titulo", "qualis")
+
+    # Correções
+    qualis$isxn <- sub("-", "", qualis$isxn)
+    qualis$qualis <- sub(" *$", "", qualis$qualis)
+    qualis$titulo <- sub(" *$", "", qualis$titulo)
+
+    # Usar issn1 e issn2 do Scielo, do SJR e do SNIP para fazer equivalência na tabela Qualis
+    for(i in 1:nrow(issn)){
+        if(!is.na(issn$issn2[i]) && issn$issn2[i] %in% qualis$issxn && ! issn$issn1[i] %in% qualis$issxn){
             qualis <- rbind(qualis,
-                            data.frame(isxn = sci$issn2[i],
-                                       titulo = qualis$titulo[qualis$isxn == sci$issn1[i]],
-                                       qualis = qualis$qualis[qualis$isxn == sci$issn1[i]],
+                            data.frame(isxn = issn$issn1[i],
+                                       titulo = qualis$titulo[qualis$isxn == issn$issn2[i]],
+                                       qualis = qualis$qualis[qualis$isxn == issn$issn2[i]],
                                        stringsAsFactors = FALSE))
+        } else {
+            if(!is.na(issn$issn2[i]) && issn$issn1[i] %in% qualis$isxn && ! issn$issn2[i] %in% qualis$isxn){
+                qualis <- rbind(qualis,
+                                data.frame(isxn = issn$issn2[i],
+                                           titulo = qualis$titulo[qualis$isxn == issn$issn1[i]],
+                                           qualis = qualis$qualis[qualis$isxn == issn$issn1[i]],
+                                           stringsAsFactors = FALSE))
+            }
         }
     }
+    save(qualis, file = "Qualis.RData")
 }
 
-siglas <- read.delim("siglas_univ.txt", comment.char = "#", stringsAsFactors = FALSE)
 
 NomeSigla <- function(x)
 {
@@ -199,115 +217,8 @@ if(exists("equivalente")){
         }
 }
 
-if(file.exists("SJR_SNIP.RData")){
-    load("SJR_SNIP.RData")
-} else {
-    # Não foi possível carregar o banco de dados "scimagojr 2017.csv" no R sem
-    # erros porque há campos com aspas desbalanceadas. A solução encontrada
-    # foi usar o awk para extrair somente as colunas necessárias.
-    system("awk -F ';' '{OFS=\"\t\" ; print $3, $5, $6, $16}' 'qualis/scimagojr 2017.csv' > /tmp/scimagojr_2017_TAB.csv")
-    s <- readLines("/tmp/scimagojr_2017_TAB.csv")
-    s <- gsub('"', "", s)
-    writeLines(s, "/tmp/scimagojrTAB")
-    s <- read.delim("/tmp/scimagojrTAB", stringsAsFactors = FALSE)
-    names(s) <- c("title", "isxn", "SJR", "country")
-    s$title <- sub("^ *(.*) *$", "\\1", s$title)
-    s$SJR <- as.numeric(sub(",", ".", s$SJR))
-
-    # Provavelmente, o awk pegou campos errados quando havia aspas desbalanceadas:
-    nSJRfaltantes <- nrow(s)
-    s <- s[!is.na(s$SJR), ]
-    nSJRfaltantes <- nSJRfaltantes - nrow(s)
-
-    # Revistas com mais de um ISSN
-    s$issn2 <- s$isxn
-    s$issn2 <- sub(".*, ", "", s$isxn)
-    s$isxn <- sub(",.*", "", s$isxn)
-
-    # Usar isxn e issn2 do SJR para fazer equivalência na tabela Qualis
-    for(i in 1:nrow(s)){
-        if(s$issn2[i] %in% qualis$isxn && ! s$isxn[i] %in% qualis$isxn)
-            qualis <- rbind(qualis,
-                            data.frame(isxn = s$isxn[i],
-                                       titulo = qualis$titulo[qualis$isxn == s$issn2[i]],
-                                       qualis = qualis$qualis[qualis$isxn == s$issn2[i]],
-                                       stringsAsFactors = FALSE))
-        else
-            if(s$isxn[i] %in% qualis$isxn && ! s$issn2[i] %in% qualis$isxn)
-                qualis <- rbind(qualis,
-                                data.frame(isxn = s$issn2[i],
-                                           titulo = qualis$titulo[qualis$isxn == s$isxn[i]],
-                                           qualis = qualis$qualis[qualis$isxn == s$isxn[i]],
-                                           stringsAsFactors = FALSE))
-    }
-
-    # Concluir adição de linhas ao banco de dados do SJR
-    s2 <- s
-    s2$issn2[s2$isxn == s2$issn2] <- NA
-    s2 <- s2[!is.na(s2$issn2), ]
-    s$issn2 <- NULL
-    s2$isxn <- NULL
-    names(s2) <- sub("issn2", "isxn", names(s2))
-    s <- rbind(s, s2)
-    rm(s2)
-
-    # Usar issn1 e issn2 do scielo para fazer equivalência na tabela do SJR
-    for(i in 1:nrow(sci)){
-        if(!is.na(sci$issn2[i]) && sci$issn2[i] %in% s$issxn && ! sci$issn1[i] %in% s$issxn){
-            s <- rbind(s,
-                       data.frame(isxn = sci$issn1[i],
-                                  title = s$titulo[s$isxn == sci$issn2[i]],
-                                  SJR = s$SJR[s$isxn == sci$issn2[i]],
-                                  country = s$country[s$isxn == sci$issn2[i]],
-                                  stringsAsFactors = FALSE))
-        } else {
-            if(!is.na(sci$issn2[i]) && sci$issn1[i] %in% s$isxn && ! sci$issn2[i] %in% s$isxn){
-                s <- rbind(s,
-                           data.frame(isxn = sci$issn2[i],
-                                      title = s$title[s$isxn == sci$issn1[i]],
-                                      SJR = s$SJR[s$isxn == sci$issn1[i]],
-                                      country = s$country[s$isxn == sci$issn1[i]],
-                                      stringsAsFactors = FALSE))
-            }
-        }
-    }
-
-    # p <- merge(p, s, all.x = TRUE, stringsAsFactors = FALSE)
-
-    # Obter SNIP de http://www.journalindicators.com/methodology#sthash.FN5cRgxb.dpuf%20
-    if(!file.exists("qualis/CWTS Journal Indicators May 2018.xlsx")){
-        cat("Baixando o CWTS Journal Indicators\n")
-        download.file("http://www.journalindicators.com/Content/CWTS%20Journal%20Indicators%20May%202018.xlsx",
-                      destfile = "qualis/CWTS Journal Indicators May 2018.xlsx")
-    }
-    if(!file.exists("qualis/CWTS Journal Indicators May 2018.xlsx"))
-        stop("Arquivo 'qualis/CWTS Journal Indicators May 2018.xlsx' não encontrado.")
-
-    library("openxlsx")
-    # TODO: usar área de conhecimento.
-    afield <- read.xlsx("qualis/CWTS Journal Indicators May 2018.xlsx", 2)
-    snip1 <- read.xlsx("qualis/CWTS Journal Indicators May 2018.xlsx", 1)
-    snip2 <- snip1
-    names(snip1) <- sub("Print.ISSN", "isxn", names(snip1))
-    names(snip2) <- sub("Electronic.ISSN", "isxn", names(snip2))
-    snip1$Electronic.ISSN <- NULL
-    snip2$Print.ISSN <- NULL
-    snip <- rbind(snip1, snip2)
-    snip <- snip[snip$Year == 2017 & snip$isxn != "-", c("Source.title", "isxn", "SNIP")]
-
-    # Existem ISSNs duplicados (atribuídos a mais de um periódico):
-    # sum(duplicated(snip$isxn))
-    # # Exemplo:
-    # snip[snip$isxn == "1432-2218", 1:4]
-
-    snip <- snip[!duplicated(snip$isxn), ]
-    snip$isxn <- sub("-", "", snip$isxn)
-    sjrsnip <- merge(s, snip, all = TRUE)
-    save(sjrsnip, file = "SJR_SNIP.RData")
-}
 
 p <- merge(p, sjrsnip, all.x = TRUE, stringsAsFactors = FALSE)
-
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
 p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
@@ -458,7 +369,12 @@ pontuacaoLvr  <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
 pontuacaoArt  <- TabProd(p[p$tipo == "Artigo", ], "pontos")
 pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP")
 pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR")
-# pontuacaoGgl <- TabProd(p[p$tipo == "Artigo", ], "ImpactFactor")
+
+pontuacaoSNIP <- rbind(pontuacaoSNIP, apply(pontuacaoSNIP, 2, function(x) Gini(x)))
+rownames(pontuacaoSNIP)[nrow(pontuacaoSNIP)] <- "Índice de Gini"
+
+pontuacaoSJR <- rbind(pontuacaoSJR, apply(pontuacaoSJR, 2, function(x) Gini(x)))
+rownames(pontuacaoSJR)[nrow(pontuacaoSJR)] <- "Índice de Gini"
 
 
 
@@ -520,12 +436,23 @@ if(nrow(oriconcTab) > 1)
 # Detalhamento das orientações concluídas
 oc$Professor <- sub(" .* ", " ", oc$Professor)
 oc$Orientado <- sub(" .* ", " ", oc$Orientado)
-oc$Instituição <- sub("Universidade", "U.", oc$Instituição)
-oc$Instituição <- sub("Federal", "F.", oc$Instituição)
-oc$Instituição <- sub("Estadual", "E.", oc$Instituição)
-oc$Curso <- sub("Programa de Pós-Graduação", "PPG", oc$Curso)
+oc$Instituição <- sub("Universidade", "U.", oc$Instituição, ignore.case = TRUE)
+oc$Instituição <- sub("Federal", "F.", oc$Instituição, ignore.case = TRUE)
+oc$Instituição <- sub("Estadual", "E.", oc$Instituição, ignore.case = TRUE)
+oc$Curso <- sub("Programa de Pós.Graduação", "PPG", oc$Curso, ignore.case = TRUE)
+oc$Curso <- sub("Programa Pós.Graduação", "PPG", oc$Curso, ignore.case = TRUE)
 oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
          c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
+
+# Prêmios
+if(length(premios)){
+    premios <- do.call("rbind", premios)
+    colnames(premios) <- c("Professor", "Prêmio", "Entidade promotora", "Ano", "En")
+    premios <- premios[order(premios[, "Ano"]), 1:4]
+    premios[, "Professor"] <- sub(" .* ", " ", premios[, "Professor"])
+    premios <- as.data.frame(premios, stringsAsFactors = FALSE)
+    premios <- premios[premios[, "Ano"] >= Inicio & premios[, "Ano"] <= Fim, ]
+}
 
 # Orientações em andamento
 oa <- do.call("rbind", oriand)
@@ -581,6 +508,8 @@ ens <- ens[ens$AnoI >= as.character(Inicio) &
 ens$um <- 1
 ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum)
 ensinoTab[is.na(ensinoTab)] <- 0
+colnames(ensinoTab) <- sub("GRADUACAO", "Graduação", colnames(ensinoTab))
+colnames(ensinoTab) <- sub("POS-", "Pós-", colnames(ensinoTab))
 
 # Produção bibliográfica (Livros e Artigos)
 colnames(pontos) <- c("Classe", "Abreviatura", "Pontos")
@@ -792,6 +721,8 @@ semqualis <- semqualis[!duplicated(semqualis), ]
 semqualis <- semqualis[order(semqualis$livro.ou.periodico), ]
 semqualis$livro.ou.periodico <- sub(" \x26 ", " \x5c\x5c\x26 ", semqualis$livro.ou.periodico)
 colnames(semqualis) <- c("ISSN", "Título do periódico")
+
+p$Country <- factor(p$Country)
 
 save(cnpqId, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
      pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")

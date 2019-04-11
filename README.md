@@ -29,15 +29,15 @@ O código deste repositório foi testado somente no Linux.
   4. Acesse a página com a pontuação Qualis da Plataforma Sucupira, selecione
      apenas um *Evento de Classificação* e uma *Área de Avaliação*, deixando
      todos os demais campos em branco. Clique no botão *Consultar*. Deverá
-     aparecer um link para um arquivo com extensão `.xls`. Salve os arquivos
-     `.xls` de cada *Evento de Classificação* na pasta `qualis`.
+     aparecer um link para um arquivo com extensão `.xls`. Salve o arquivo
+     `.xls` do último *Evento de Classificação* na pasta `qualis`.
 
   6. Acesse o [Scimago Journal Ranking](https://www.scimagojr.com/journalrank.php)
-     e faça o download da base de dados para a pasta `qualis`. O nome do
+     e faça o download da base de dados para a pasta `auxiliar`. O nome do
      arquivo deve ser `scimagojr 2017.csv`
 
   7. Baixe o arquivo [CWTS Journal Indicators May 2018.xlsx](http://www.journalindicators.com/Content/CWTS%20Journal%20Indicators%20May%202018.xlsx)
-     e salve-o na pasta `qualis`.
+     e salve-o na pasta `auxiliar`.
 
   8. Copie o arquivo `exemplo/info.R` para a pasta inicial do PontuarLattes,
      ou seja, a mesma pasta onde encontra-se o arquivo `QualisLattes.Rnw`.

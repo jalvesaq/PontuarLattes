@@ -37,7 +37,7 @@ options(xtable.table.placement = "H",
 source("gerar_tabelas.R")
 @
 
-\title{\Sexpr{TituloDoc}}
+\title{\Sexpr{paste0(TituloDoc, " (", Inicio, "-", Fim, ")")}}
 \author{\Sexpr{Autor}}
 \date{\today}
 
@@ -114,9 +114,9 @@ print(xtable(tab, align = "llcr", caption = "Data de atualização do Currículo
 
 \clearpage
 
-\section{Titulos e prêmios}
+\section{Títulos e prêmios}
 
-\begin{longtable}{lllcc}
+\begin{longtable}{p{7cm}p{7cm}p{7cm}cc}
 \caption{Curso de doutorado} \\
   \toprule
 <<tabelaGeral>>=
@@ -173,7 +173,7 @@ professores do programa, \Sexpr{length(levels(factor(posdoc[, 1])))}
 realizaram pós-doutorado pelo menos uma vez.
 
 <<posdoc>>=
-print(xtable(posdoc, align = "lp{4.5cm}p{14cm}cc", label = "tab:posdoc",
+print(xtable(posdoc, align = "lp{55mm}p{13cm}cc", label = "tab:posdoc",
              caption = "Lista de Pós-doutorados realizados"),
       floating = FALSE, tabular.environment = "longtable",
       include.rownames = FALSE)
@@ -182,20 +182,16 @@ print(xtable(posdoc, align = "lp{4.5cm}p{14cm}cc", label = "tab:posdoc",
 \clearpage
 
 <<premios>>=
-if(length(premios)){
-    prm <- do.call("rbind", premios)
-    colnames(prm) <- c("Professor", "Prêmio", "Entidade promotora", "Ano", "En")
-    prm <- prm[order(prm[, "Ano"]), ]
-    prm[, "Professor"] <- sub(" .* ", " ", prm[, "Professor"])
-    prm <- as.data.frame(prm, stringsAsFactors = FALSE)
-    prm <- prm[prm[, "Ano"] >= Inicio & prm[, "Ano"] <= Fim, ]
-    if(nrow(prm) > 0)
-        print(xtable(prm, align = "llp{8cm}p{7.5cm}cl", caption = "Lista de Prêmios recebidos"),
-              include.rownames = FALSE)
-    else
-        cat("Nenhum prêmio recebido no período.\n")
+if(length(premios) == 0){
+    cat("Nenhum prêmio recebido.\n")
 } else {
-        cat("Nenhum prêmio recebido.\n")
+    if(nrow(premios) == 0){
+        cat("Nenhum prêmio recebido no período.\n")
+    } else {
+        print(xtable(premios, align = "llp{10cm}p{7.5cm}c",
+                     caption = "Lista de Prêmios recebidos"),
+              include.rownames = FALSE)
+    }
 }
 @
 
@@ -367,8 +363,23 @@ de cada publicação:
 print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
              align = paste0("l", paste0(rep("r", ncol(pontuacaoSJR)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos, SJR)"),
-      hline.after = c(-1, 0, nrow(pontuacaoSJR) - 1, nrow(pontuacaoSJR)))
+      hline.after = c(-1, 0, nrow(pontuacaoSJR) - 2, nrow(pontuacaoSJR)))
 @
+
+\clearpage
+
+A Tabela~\ref{tab:pais} usa dados do SJR para identificar os locais de
+publicação dos artigos.
+
+<<paises>>=
+pais <- summary(p$Country)
+names(pais) <- sub("NA's", "Periódico ausente do SJR", names(pais))
+pais <- cbind("País" = names(pais), "N" = pais)
+print(xtable(pais, align = "llr", label = "tab:pais",
+             caption = "País da editora do periódico"),
+      include.rownames = FALSE)
+@
+
 
 \clearpage
 
@@ -379,7 +390,7 @@ SNIP de cada publicação:
 print(xtable(pontuacaoSNIP, digits = 3, label = "tab:snip",
              align = paste0("l", paste0(rep("r", ncol(pontuacaoSNIP)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos, SNIP)"),
-      hline.after = c(-1, 0, nrow(pontuacaoSNIP) - 1, nrow(pontuacaoSNIP)))
+      hline.after = c(-1, 0, nrow(pontuacaoSNIP) - 2, nrow(pontuacaoSNIP)))
 @
 
 
