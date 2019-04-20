@@ -1,45 +1,27 @@
 library("XML")
 library("ineq")
-source("info.R")
 
 # Carregar dados do SJR e SNIP
 load("SJR_SNIP.RData")
 
-if(file.exists("Qualis.RData")){
-    load("Qualis.RData")
-} else {
-    # Carregar Qualis
-    qualis <- read.table(QualisXLS,
-                         stringsAsFactors = FALSE, header = TRUE,
-                         fileEncoding = "Windows-1252", sep = "\t")
-    names(qualis) <- c("isxn", "titulo", "qualis")
+# A leitura do info.R fica aqui para possibilitar a alteração dos pesos das
+# diferentes categorias do SJR e SNIP.
+source("info.R")
+load(paste0("qualis/", gsub(" ", "_", gsub(" / ", " ", NomeComite)), ".RData"))
 
-    # Correções
-    qualis$isxn <- sub("-", "", qualis$isxn)
-    qualis$qualis <- sub(" *$", "", qualis$qualis)
-    qualis$titulo <- sub(" *$", "", qualis$titulo)
+sum(duplicated(qualis$isxn))
 
-    # Usar issn1 e issn2 do Scielo, do SJR e do SNIP para fazer equivalência na tabela Qualis
-    for(i in 1:nrow(issn)){
-        if(!is.na(issn$issn2[i]) && issn$issn2[i] %in% qualis$issxn && ! issn$issn1[i] %in% qualis$issxn){
-            qualis <- rbind(qualis,
-                            data.frame(isxn = issn$issn1[i],
-                                       titulo = qualis$titulo[qualis$isxn == issn$issn2[i]],
-                                       qualis = qualis$qualis[qualis$isxn == issn$issn2[i]],
-                                       stringsAsFactors = FALSE))
-        } else {
-            if(!is.na(issn$issn2[i]) && issn$issn1[i] %in% qualis$isxn && ! issn$issn2[i] %in% qualis$isxn){
-                qualis <- rbind(qualis,
-                                data.frame(isxn = issn$issn2[i],
-                                           titulo = qualis$titulo[qualis$isxn == issn$issn1[i]],
-                                           qualis = qualis$qualis[qualis$isxn == issn$issn1[i]],
-                                           stringsAsFactors = FALSE))
-            }
-        }
-    }
-    save(qualis, file = "Qualis.RData")
-}
+dup <- qualis[duplicated(qualis$isxn, fromLast = TRUE) | duplicated(qualis$isxn), ]
+dup[order(dup$isxn), ]
 
+sum(duplicated(sjrsnip$isxn))
+sum(duplicated(sjrsnip$isxn))
+
+qualis <- merge(qualis, sjrsnip, all = TRUE)
+qualis[duplicated(qualis$isxn), ]
+
+if(sum(duplicated(qualis$isxn)))
+    stop("ISSN duplicado")
 
 NomeSigla <- function(x)
 {
@@ -218,7 +200,6 @@ if(exists("equivalente")){
 }
 
 
-p <- merge(p, sjrsnip, all.x = TRUE, stringsAsFactors = FALSE)
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
 p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
@@ -365,10 +346,56 @@ TabProd <- function(d, v)
     tab
 }
 
+p$SJR.pond <- p$SJR
+if(min(sjr.cat$Peso) != max(sjr.cat$Peso)){
+    p$SJR.pond <- p$SJR * min(sjr.cat$Peso)
+    SJRPond <- sjr.cat[sjr.cat$Peso > min(sjr.cat$Peso), ]
+    SJRPond <- SJRPond[order(SJRPond$Peso), ]
+    SJRPond$Categoria <- as.character(SJRPond$Categoria)
+    for(i in 1:nrow(SJRPond)){
+        idx <- grep(paste0("^", SJRPond$Categoria[i], " \\(Q"), p$cat.sjr)
+        p$SJR.pond[idx] <- SJRPond$Peso[i] * p$SJR[idx]
+        idx <- grep(paste0("; ", SJRPond$Categoria[i], " \\(Q"), p$cat.sjr)
+        p$SJR.pond[idx] <- SJRPond$Peso[i] * p$SJR[idx]
+    }
+    SJRPond <- SJRPond[order(SJRPond$Peso, decreasing = TRUE), ]
+    SJRPond <- rbind(SJRPond,
+                     data.frame("Categoria" = "Outras categorias",
+                                "Peso" = min(sjr.cat$Peso),
+                                stringsAsFactors = FALSE))
+} else {
+    SJRPond <- data.frame("Categoria" = "Todas as categorias", "Peso" = max(sjr.cat$Peso))
+}
+
+p$SNIP.pond <- p$SNIP
+if(min(snip.cat$Peso) != max(snip.cat$Peso)){
+    p$SNIP.pond <- p$SNIP * min(snip.cat$Peso)
+    SNIPPond <- snip.cat[snip.cat$Peso > min(snip.cat$Peso), ]
+    SNIPPond <- SNIPPond[order(SNIPPond$Peso), ]
+    for(i in 1:nrow(SNIPPond)){
+        idx <- grep(paste0("^", SNIPPond$id[i]), p$ASJC.field.IDs)
+        p$SNIP.pond[idx] <- SNIPPond$Peso[i] * p$SNIP[idx]
+        idx <- grep(paste0("; ", SNIPPond$id[i]),  p$ASJC.field.IDs)
+        p$SNIP.pond[idx] <- SNIPPond$Peso[i] * p$SNIP[idx]
+    }
+    SNIPPond <- SNIPPond[order(SNIPPond$Peso, decreasing = TRUE), ]
+    SNIPPond <- rbind(SNIPPond,
+                     data.frame("id" = "",
+                                "Categoria" = "Outras categorias",
+                                "Peso" = min(snip.cat$Peso),
+                                stringsAsFactors = FALSE))
+} else {
+    SNIPPond <- data.frame("id" = "",
+                           "Categoria" = "Todas as categorias",
+                           "Peso" = max(snip.cat$Peso))
+}
+
 pontuacaoLvr  <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
 pontuacaoArt  <- TabProd(p[p$tipo == "Artigo", ], "pontos")
 pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP")
 pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR")
+pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond")
+pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond")
 
 pontuacaoSNIP <- rbind(pontuacaoSNIP, apply(pontuacaoSNIP, 2, function(x) Gini(x)))
 rownames(pontuacaoSNIP)[nrow(pontuacaoSNIP)] <- "Índice de Gini"

@@ -6,19 +6,23 @@ siglas <- read.delim("siglas_univ.txt", comment.char = "#", stringsAsFactors = F
 
 # Lista de ISSNs impresso e eletrônico do Scielo
 issn <- read.delim("scielo_issn.tsv", stringsAsFactors = FALSE)
-issn <- issn[, c("issn1", "issn2")]
+issn <- issn[!is.na(issn$issn2), c("issn1", "issn2")]
 
 # Carregar o SJR
 sjrl <- readLines("scimagojr 2017.csv")
+sjrl <- gsub("&#x00..;", "X", sjrl)
 sjrl <- gsub(";;", "\t\t", sjrl)
 sjrl <- gsub("(\\S);(\\S)", "\\1\t\\2", sjrl)
 sjrl <- gsub("(\\S);(\\S)", "\\1\t\\2", sjrl)
+sjrl <- gsub('"', "", sjrl)
 writeLines(sjrl, "/tmp/scimagojrTAB")
-sjr <- read.delim("/tmp/scimagojrTAB", stringsAsFactors = FALSE)
-sjr$SJR <- as.numeric(sub(",", ".", sjr$SJR))
+sjr <- read.delim2("/tmp/scimagojrTAB", sep = "\t", fill = FALSE,
+                   stringsAsFactors = FALSE)
 sjr <- sjr[!is.na(sjr$SJR), ]
 names(sjr) <- sub("Issn", "isxn", names(sjr))
-sjr <- sjr[, c("Title", "isxn", "SJR", "Country", "Categories")]
+names(sjr) <- sub("Title", "title.sjr", names(sjr))
+names(sjr) <- sub("Categories", "cat.sjr", names(sjr))
+sjr <- sjr[, c("title.sjr", "isxn", "SJR", "Country", "cat.sjr")]
 sjr$Country <- factor(sjr$Country)
 
 # Revistas com mais de um ISSN
@@ -45,6 +49,22 @@ rm(s2)
 # Remover ISSNs duplicados
 sjr <- sjr[!duplicated(sjr$isxn), ]
 
+ss2 <- list()
+for(i in 1:nrow(issn)){
+    if(issn$issn1[i] %in% sjr$isxn & !issn$issn2[i] %in% sjr$isxn){
+        ss2 <- rbind(ss2, sjr[sjr$isxn == issn$issn1[i], ])
+        ss2$isxn[nrow(ss2)] <- issn$issn2[i]
+    }
+}
+for(i in 1:nrow(issn)){
+    if(issn$issn2[i] %in% sjr$isxn & !issn$issn2[i] %in% sjr$isxn){
+        ss2 <- rbind(ss2, sjr[sjr$isxn == issn$issn2[i], ])
+        ss2$isxn[nrow(ss2)] <- issn$issn1[i]
+    }
+}
+sjr <- rbind(sjr, ss2)
+
+
 # Dados do SNIP
 # Obter SNIP de http://www.journalindicators.com/methodology#sthash.FN5cRgxb.dpuf%20
 if(!file.exists("CWTS Journal Indicators May 2018.xlsx")){
@@ -54,7 +74,10 @@ if(!file.exists("CWTS Journal Indicators May 2018.xlsx")){
 }
 
 library("openxlsx")
-# TODO: usar área de conhecimento.
+snip.cat <- read.xlsx("CWTS Journal Indicators May 2018.xlsx", 2)
+names(snip.cat) <- c("id", "Categoria")
+snip.cat$Peso <- 1.0
+
 snip1 <- read.xlsx("CWTS Journal Indicators May 2018.xlsx", 1)
 snip1 <- snip1[snip1$Year == 2017,
                c("Source.title", "Source.type", "Print.ISSN",
@@ -79,36 +102,40 @@ names(snip2) <- sub("Electronic.ISSN", "isxn", names(snip2))
 snip1$Electronic.ISSN <- NULL
 snip2$Print.ISSN <- NULL
 snip <- rbind(snip1, snip2)
-snip <- snip[snip$isxn != "", c("Source.title", "isxn", "SNIP")]
+snip <- snip[snip$isxn != "", c("Source.title", "isxn", "SNIP", "ASJC.field.IDs")]
 
 # Remover ISSNs duplicados
 snip <- snip[!duplicated(snip$isxn), ]
 
-# Juntar SJR e SNIP no mesmo data.frame
-sjrsnip <- merge(sjr, snip, all = TRUE)
+SubId <- function(x){
 
-# Duplicar linhas com ISSN alternativo ausente
-sum(issn$issn1 %in% sjrsnip$isxn) / nrow(issn)
-sum(issn$issn2 %in% sjrsnip$isxn) / nrow(issn)
+}
 
 ss2 <- list()
 for(i in 1:nrow(issn)){
-    if(issn$issn1[i] %in% sjrsnip$isxn & !issn$issn2[i] %in% sjrsnip$isxn){
-        ss2 <- rbind(ss2, sjrsnip[sjrsnip$isxn == issn$issn1[i], ])
+    if(issn$issn1[i] %in% snip$isxn & !issn$issn2[i] %in% snip$isxn){
+        ss2 <- rbind(ss2, snip[snip$isxn == issn$issn1[i], ])
         ss2$isxn[nrow(ss2)] <- issn$issn2[i]
     }
 }
-
 for(i in 1:nrow(issn)){
-    if(issn$issn2[i] %in% sjrsnip$isxn & !issn$issn2[i] %in% sjrsnip$isxn){
-        ss2 <- rbind(ss2, sjrsnip[sjrsnip$isxn == issn$issn2[i], ])
+    if(issn$issn2[i] %in% snip$isxn & !issn$issn2[i] %in% snip$isxn){
+        ss2 <- rbind(ss2, snip[snip$isxn == issn$issn2[i], ])
         ss2$isxn[nrow(ss2)] <- issn$issn1[i]
     }
 }
 
-sjrsnip <- rbind(sjrsnip, ss2)
-table(nchar(sjrsnip$isxn))
-sum(is.na(sjrsnip$isxn))
+# Juntar SJR e SNIP no mesmo data.frame
+sjrsnip <- merge(sjr, snip, all = TRUE)
+
 sjrsnip <- sjrsnip[!is.na(sjrsnip$isxn) & nchar(sjrsnip$isxn) > 1, ]
 
-save(sjrsnip, issn, siglas, file = "../SJR_SNIP.RData")
+sjr.cat <- gsub(" \\(Q[0-4]\\)", "", sjrsnip$cat.sjr)
+sjr.cat <- lapply(sjr.cat, function(x) strsplit(x, ";")[[1]])
+sjr.cat <- do.call("c", sjr.cat)
+sjr.cat <- sub("^ ", "", sjr.cat)
+sjr.cat <- table(sjr.cat)
+sjr.cat <- data.frame("Categoria" = names(sjr.cat),
+                      "Peso" = rep(1.0, length(sjr.cat)))
+
+save(sjrsnip, sjr.cat, snip.cat, issn, siglas, file = "../SJR_SNIP.RData")

@@ -302,9 +302,12 @@ professores do Programa de Pós-Graduação em \Sexpr{NomeProg} no período
 \Sexpr{Inicio}--\Sexpr{Fim} na produção de livros e capítulos foi de
 \textbf{\Sexpr{pmediaL}} pontos e a mediana de \textbf{\Sexpr{pmedianaL}}
 pontos e na produção de artigos foi de \textbf{\Sexpr{pmediaA}} pontos e a
-mediana de \textbf{\Sexpr{pmedianaA}}. A área de \Sexpr{NomeComite} atribui
-peso \Sexpr{PesoLivros} aos livros e \Sexpr{PesoArtigos} aos artigos.
-Usando esses valores, a soma ponderada das média é de
+mediana de \textbf{\Sexpr{pmedianaA}}.\footnote{Os dados do Qualis são
+extraídos do arquivo
+\texttt{\Sexpr{sub(".*/", "", gsub("_", "\\\\_", QualisXLS))}},
+baixado da Plataforma Sucupira.} A área de \Sexpr{NomeComite} atribui peso
+\Sexpr{PesoLivros} aos livros e \Sexpr{PesoArtigos} aos artigos. Usando esses
+valores, a soma ponderada das média é de
 \textbf{\Sexpr{PesoLivros * pmediaL + PesoArtigos * pmediaA}}.
 
 \newpage
@@ -357,13 +360,41 @@ print(xtable(tab, align = paste(c("l", rep("r", ncol(producao))), collapse = "|"
 \clearpage
 
 A Tabela~\ref{tab:sjr} mostra a pontuação calculada como a soma do índice SJR
-de cada publicação:
+de cada publicação.
 
 <<ppg_pontos_sjr>>=
 print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
              align = paste0("l", paste0(rep("r", ncol(pontuacaoSJR)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos, SJR)"),
       hline.after = c(-1, 0, nrow(pontuacaoSJR) - 2, nrow(pontuacaoSJR)))
+@
+
+\clearpage
+
+A base de dados do SJR inclui uma coluna com as áreas de conhecimento em que o
+periódico se classifica. A Tabela~\ref{tab:sjrpesos} mostra os pesos
+atribuídos a cada categoria e a Tabela~\ref{tab:sjrpond} mostra a pontuação
+obtida pelos professores considerando o escopo dos periódicos em que
+publicaram.
+<<sjrsempeso>>=
+if(min(sjr.cat$Peso) == max(sjr.cat$Peso) && max(sjr.cat$Peso) == 1)
+    cat("Entretanto, como todos os pesos tem o mesmo valor (1,0), a Tabela \\ref{tab:sjr} é identica à Tabela \\ref{tab:sjrpond}.")
+@
+
+
+<<sjrpesos>>=
+print(xtable(SJRPond, label = "tab:sjrpesos",
+             caption = "Ponderação dos periódicos por categoria"),
+      include.rownames = FALSE)
+@
+
+\clearpage
+
+<<ppg_pontos_sjrpond>>=
+print(xtable(pontuacaoSJRPond, digits = 3, label = "tab:sjrpond",
+             align = paste0("l", paste0(rep("r", ncol(pontuacaoSJRPond)), collapse = "")),
+             caption = "Professores classificados por pontuação ponderada pelo escopo do periódico (Artigos, SJRPond)"),
+      hline.after = c(-1, 0, nrow(pontuacaoSJRPond) - 2, nrow(pontuacaoSJRPond)))
 @
 
 \clearpage
@@ -391,6 +422,35 @@ print(xtable(pontuacaoSNIP, digits = 3, label = "tab:snip",
              align = paste0("l", paste0(rep("r", ncol(pontuacaoSNIP)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos, SNIP)"),
       hline.after = c(-1, 0, nrow(pontuacaoSNIP) - 2, nrow(pontuacaoSNIP)))
+@
+
+\clearpage
+
+Assim como a base do SJR, a base de dados do SNIP também inclui uma coluna com
+as áreas de conhecimento em que o periódico se classifica. A
+Tabela~\ref{tab:snippesos} mostra os pesos atribuídos a cada categoria e a
+Tabela~\ref{tab:snippond} mostra a pontuação obtida pelos professores
+considerando o escopo dos periódicos em que publicaram.
+
+<<snipsempeso>>=
+if(min(snip.cat$Peso) == max(snip.cat$Peso) && max(snip.cat$Peso) == 1)
+    cat("Entretanto, como todos os pesos tem o mesmo valor (1,0), a Tabela \\ref{tab:snip} é identica à Tabela \\ref{tab:snippond}.")
+@
+
+
+<<snippesos>>=
+print(xtable(SNIPPond, label = "tab:snippesos",
+             caption = "Ponderação dos periódicos por categoria"),
+      include.rownames = FALSE)
+@
+
+\clearpage
+
+<<ppg_pontos_snippond>>=
+print(xtable(pontuacaoSNIPPond, digits = 3, label = "tab:snippond",
+             align = paste0("l", paste0(rep("r", ncol(pontuacaoSNIPPond)), collapse = "")),
+             caption = "Professores classificados por pontuação ponderada pelo escopo do periódico (Artigos, SNIPPond)"),
+      hline.after = c(-1, 0, nrow(pontuacaoSNIPPond) - 2, nrow(pontuacaoSNIPPond)))
 @
 
 

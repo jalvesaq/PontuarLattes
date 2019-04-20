@@ -1,2 +1,0 @@
-Neste diretório deverão ser salvos os arquivos .xls com a pontuação Qualis
-salvos da Plataforma Sucupira.
