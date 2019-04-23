@@ -34,9 +34,9 @@ O código deste repositório foi testado somente no Linux.
 
   6. Edite o código do `info.R`.
 
-  7. Execute o script `areas.R` localizado na pasta `qualis`.
+  7. Execute o script `SJR_SNIP.R` localizado na pasta `auxiliar`.
 
-  8. Execute o script `SJR_SNIP.R` localizado na pasta `auxiliar`.
+  8. Execute o script `areas.R` localizado na pasta `qualis`.
 
   9. Baixe os currículos no formato xml (zipados e, portanto, com extensão
      `.zip`) e salve-os na pasta `lattes_xml`. Dica: o link para o currículo

@@ -3,21 +3,6 @@
 \usepackage{color}
 \usepackage{geometry}
 \geometry{a4paper,landscape,left=2cm,right=2cm,top=2cm,bottom=2cm}
-\usepackage{fontspec}
-\setmainfont{Liberation Serif}
-\usepackage[font=bf]{caption}
-\usepackage{float}
-\usepackage{longtable}
-\usepackage{colortbl}
-\usepackage{booktabs}
-\usepackage{indentfirst}
-\usepackage[unicode=true,
-  pdfsubject={},
-  pdfkeywords={},
-  plainpages=false,
-  bookmarks=false,
-  pdfborder={0 0 0},
-]{hyperref}
 
 <<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE, error=FALSE>>=
 if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
@@ -36,6 +21,22 @@ options(xtable.table.placement = "H",
         OutDec = ",")
 source("gerar_tabelas.R")
 @
+
+\usepackage{fontspec}
+\setmainfont{\Sexpr{MainFont}}
+\usepackage[font=bf]{caption}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{colortbl}
+\usepackage{booktabs}
+\usepackage{indentfirst}
+\usepackage[unicode=true,
+  pdfsubject={},
+  pdfkeywords={},
+  plainpages=false,
+  bookmarks=false,
+  pdfborder={0 0 0},
+]{hyperref}
 
 \title{\Sexpr{paste0(TituloDoc, " (", Inicio, "-", Fim, ")")}}
 \author{\Sexpr{Autor}}

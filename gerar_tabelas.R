@@ -753,3 +753,12 @@ p$Country <- factor(p$Country)
 
 save(cnpqId, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
      pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")
+
+# Fonte a ser usada no PDF:
+if(!exists("MainFont")){
+    if(grepl("linux", version$os)){
+        MainFont = "Liberation Serif"
+    } else {
+        MainFont = "Times New Roman"
+    }
+}
