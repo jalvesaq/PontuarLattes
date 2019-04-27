@@ -1,12 +1,38 @@
 library("XML")
 library("ineq")
 
+# Variáveis cujos valores devem ser substituídos no info.R:
+NomeProg <- "Ciência Política e Relações Internacionais"
+TituloDoc <- "Produção dos Professores do PPG em Ciência Política e Relações Internacionais"
+NomeComite <- "Ciência Política e Relações Internacionais"
+Autor <- "PPG"
+PontosQualis <- c("A1"  = 100,
+                  "A2"  =  85,
+                  "B1"  =  70,
+                  "B2"  =  30,
+                  "B3"  =  20,
+                  "B4"  =  15,
+                  "B5"  =  10,
+                  "C"   =   0,
+                  "SQ"  =   0,
+                  "OD"  =   0,
+                  "Lvr" =  60,
+                  "Org" =  30,
+                  "Cap" =  15)
+# Pesos para cálculo da média ponderada
+PesoArtigos <- 0.7
+PesoLivros <- 0.3
+# Período do relatório
+Inicio <- 2017
+Fim <- 2019
+
 # Carregar dados do SJR e SNIP
 load("SJR_SNIP.RData")
 
 # A leitura do info.R fica aqui para possibilitar a alteração dos pesos das
 # diferentes categorias do SJR e SNIP.
-source("info.R")
+if(file.exists("info.R"))
+    source("info.R")
 load(paste0("qualis/", gsub(" ", "_", gsub(" / ", " ", NomeComite)), ".RData"))
 
 sum(duplicated(qualis$isxn))
@@ -45,8 +71,12 @@ colnames(cnpqId) <- c("Professor", "id")
 
 obter.producao <- function(arquivo)
 {
-    unzip(paste0("lattes_xml/", arquivo), exdir = "/tmp/")
-    xl <- xmlTreeParse("/tmp/curriculo.xml", encoding = "latin1")
+    if(grepl("zip", arquivo)){
+        unzip(paste0("lattes_xml/", arquivo), exdir = "/tmp/")
+        xl <- xmlTreeParse("/tmp/curriculo.xml", encoding = "latin1")
+    } else {
+        xl <- xmlTreeParse(paste0("lattes_xml/", arquivo), encoding = "latin1")
+    }
     if("ERRO" %in% names(xl$doc$children))
         stop(paste0("O currículo ", arquivo, " contém ERRO. Verifique se usou o link correto para baixar o arquivo."))
     xl <- xl$doc$children$`CURRICULO-VITAE`
@@ -182,10 +212,10 @@ obter.producao <- function(arquivo)
     b
 }
 
-zipls <- dir("lattes_xml", pattern = "*.zip")
-if(length(zipls) == 0)
+lsxml <- c(dir("lattes_xml", pattern = "*.zip"), dir("lattes_xml", pattern = "*.xml"))
+if(length(lsxml) == 0)
     stop("Nenhum currículo encontrado na pasta 'lattes_xml'")
-xx <- lapply(zipls, obter.producao)
+xx <- lapply(lsxml, obter.producao)
 xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
 rm(xx, obter.producao)
@@ -340,8 +370,17 @@ TabProd <- function(d, v)
         rownames(tab) <- rn
         colnames(tab) <- cn
     }
-    tab <- rbind(tab, "Média" = apply(tab, 2, function(x)
-                                       round(sum(x, na.rm = TRUE) / length(x), 1)))
+    mrow <- max(apply(tab, 2, mean))
+    if(mrow > 10){
+        rr <- 1
+    } else {
+        if(mrow > 1){
+            rr <- 2
+        } else {
+            rr <- 3
+        }
+    }
+    tab <- rbind(tab, "Média" = round(mrow, rr))
 
     tab
 }
@@ -402,6 +441,13 @@ rownames(pontuacaoSNIP)[nrow(pontuacaoSNIP)] <- "Índice de Gini"
 
 pontuacaoSJR <- rbind(pontuacaoSJR, apply(pontuacaoSJR, 2, function(x) Gini(x)))
 rownames(pontuacaoSJR)[nrow(pontuacaoSJR)] <- "Índice de Gini"
+
+pontuacaoSNIPPond <- rbind(pontuacaoSNIPPond, apply(pontuacaoSNIPPond, 2, function(x) Gini(x)))
+rownames(pontuacaoSNIPPond)[nrow(pontuacaoSNIPPond)] <- "Índice de Gini"
+
+pontuacaoSJRPond <- rbind(pontuacaoSJRPond, apply(pontuacaoSJRPond, 2, function(x) Gini(x)))
+rownames(pontuacaoSJRPond)[nrow(pontuacaoSJRPond)] <- "Índice de Gini"
+
 
 
 
@@ -532,11 +578,15 @@ ens <- as.data.frame(ens, stringsAsFactors = FALSE)
 names(ens) <- c("Professor", "Tipo", "MI", "AnoI", "MF", "AnoF")
 ens <- ens[ens$AnoI >= as.character(Inicio) &
                  (ens$AnoF <= as.character(Fim) | ens$AnoF == ""), ]
-ens$um <- 1
-ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum)
-ensinoTab[is.na(ensinoTab)] <- 0
-colnames(ensinoTab) <- sub("GRADUACAO", "Graduação", colnames(ensinoTab))
-colnames(ensinoTab) <- sub("POS-", "Pós-", colnames(ensinoTab))
+if(nrow(ens)){
+    ens$um <- 1
+    ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum)
+    ensinoTab[is.na(ensinoTab)] <- 0
+    colnames(ensinoTab) <- sub("GRADUACAO", "Graduação", colnames(ensinoTab))
+    colnames(ensinoTab) <- sub("POS-", "Pós-", colnames(ensinoTab))
+} else {
+    ensinoTab <- data.frame("Atividade de ensino" = "Nenhuma atividade de ensino registrada com início e fim no período")
+}
 
 # Produção bibliográfica (Livros e Artigos)
 colnames(pontos) <- c("Classe", "Abreviatura", "Pontos")
@@ -753,6 +803,26 @@ p$Country <- factor(p$Country)
 
 save(cnpqId, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
      pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")
+
+cnpqId <- cnpqId[order(cnpqId[, 1]), ]
+sink("lattes_xml/ultima_lista.html")
+cat('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n')
+cat('<html xmlns="http://www.w3.org/1999/xhtml">\n')
+cat('<head>\n')
+cat('   <meta http-equiv="content-type" content="text/html; charset=utf-8" />\n')
+cat('   <title>Lista de professores</title>\n')
+cat('</head>\n')
+cat('<body>\n')
+cat('<p><strong>Lista os currículos incluídos no relatório gerado mais recentemente (links para Lattes no formato XML):</strong></p>\n')
+cat('<ol>\n')
+for(i in 1:nrow(cnpqId)){
+    cat('  <li><a href="http://buscatextual.cnpq.br/buscatextual/download.do?metodo=apresentar&idcnpq=',
+        cnpqId[i, 2], '">', cnpqId[i, 1], '</a></li>\n', sep = "")
+}
+cat('</ol>\n')
+cat('</body>\n')
+cat('</html>\n')
+sink()
 
 # Fonte a ser usada no PDF:
 if(!exists("MainFont")){
