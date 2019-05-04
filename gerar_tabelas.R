@@ -479,6 +479,12 @@ oriconcTab[is.na(oriconcTab)] <- 0
 
 # Ordenar colunas (nem todos os programas têm todos os tipos de orientações)
 ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
+faltaCol <- !(levels(oc$Natureza) %in% ordem)
+if(sum(faltaCol)){
+    print(levels(oc$Natureza))
+    stop(paste0("Tipo de orientação não reconhecida: ", levels(oc$Natureza)[faltaCol]))
+}
+
 ordem <- ordem[ordem %in% levels(oc$Natureza)]
 
 ro <- 1:nrow(oriconcTab)
@@ -532,13 +538,20 @@ levels(oa$Natureza) <-
 levels(oa$Natureza) <- sub("Orientação de outra natureza", "O", levels(oa$Natureza))
 levels(oa$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oa$Natureza))
 levels(oa$Natureza) <- sub("Tese de doutorado", "D", levels(oa$Natureza))
-levels(oa$Natureza) <- sub("Trabalho de conclusão de curso de graduação", "G", oa$Natureza)
+levels(oa$Natureza) <- sub("Trabalho de conclusão de curso de graduação", "G",
+                           levels(oa$Natureza))
 
 oa$um <- 1
 oriandTab <- tapply(oa$um, list(oa$Professor, oa$Natureza), sum)
 oriandTab[is.na(oriandTab)] <- 0
 
 ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
+faltaCol <- !(levels(oa$Natureza) %in% ordem)
+if(sum(faltaCol)){
+    print(levels(oa$Natureza))
+    stop(paste0("Tipo de orientação desconhecida: ",
+                levels(oa$Natureza)[faltaCol]))
+}
 ordem <- ordem[ordem %in% levels(oa$Natureza)]
 
 ro <- 1:nrow(oriandTab)
@@ -554,7 +567,8 @@ if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
     }
 }
 
-oriandTab <- oriandTab[ro, ordem]
+if(nrow(oriandTab) > 1)
+    oriandTab <- oriandTab[ro, ordem]
 
 # Detalhamento das orientações em andamento
 oa$um <- NULL
