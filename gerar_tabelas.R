@@ -343,7 +343,7 @@ rm(quando)
 
 p$prof <- factor(p$prof)
 
-TabProd <- function(d, v)
+TabProd <- function(d, v, g = FALSE)
 {
     pontos <- d[[v]] / d$ncoaut
     tab <- tapply(pontos, list(d$prof, d$ano), sum, na.rm = TRUE)
@@ -370,7 +370,8 @@ TabProd <- function(d, v)
         rownames(tab) <- rn
         colnames(tab) <- cn
     }
-    mrow <- max(apply(tab, 2, mean))
+    media <- apply(tab, 2, mean)
+    mrow <- max(media)
     if(mrow > 10){
         rr <- 1
     } else {
@@ -380,7 +381,10 @@ TabProd <- function(d, v)
             rr <- 3
         }
     }
-    tab <- rbind(tab, "Média" = round(mrow, rr))
+    tab <- rbind(tab, "Média" = round(media, rr))
+    if(g){
+        tab <- rbind(tab, "Gini" = apply(tab, 2, Gini))
+    }
 
     tab
 }
@@ -431,24 +435,10 @@ if(min(snip.cat$Peso) != max(snip.cat$Peso)){
 
 pontuacaoLvr  <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
 pontuacaoArt  <- TabProd(p[p$tipo == "Artigo", ], "pontos")
-pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP")
-pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR")
-pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond")
-pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond")
-
-pontuacaoSNIP <- rbind(pontuacaoSNIP, apply(pontuacaoSNIP, 2, function(x) Gini(x)))
-rownames(pontuacaoSNIP)[nrow(pontuacaoSNIP)] <- "Índice de Gini"
-
-pontuacaoSJR <- rbind(pontuacaoSJR, apply(pontuacaoSJR, 2, function(x) Gini(x)))
-rownames(pontuacaoSJR)[nrow(pontuacaoSJR)] <- "Índice de Gini"
-
-pontuacaoSNIPPond <- rbind(pontuacaoSNIPPond, apply(pontuacaoSNIPPond, 2, function(x) Gini(x)))
-rownames(pontuacaoSNIPPond)[nrow(pontuacaoSNIPPond)] <- "Índice de Gini"
-
-pontuacaoSJRPond <- rbind(pontuacaoSJRPond, apply(pontuacaoSJRPond, 2, function(x) Gini(x)))
-rownames(pontuacaoSJRPond)[nrow(pontuacaoSJRPond)] <- "Índice de Gini"
-
-
+pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP", TRUE)
+pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR", TRUE)
+pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond", TRUE)
+pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond", TRUE)
 
 
 # Lista de Pós-doutorados realizados
@@ -457,7 +447,8 @@ if(is.null(posdoc)){
     posdoc <- matrix(NA, ncol = 4)
 } else {
     posdoc[, 2] <- NomeSigla(posdoc[, 2])
-    posdoc <- posdoc[order(posdoc[, 4]), ]
+    if(nrow(posdoc) > 1)
+        posdoc <- posdoc[order(posdoc[, 4]), ]
 }
 colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
 
@@ -773,10 +764,10 @@ if(sum(idx) > 0){
     erros <- c(erros, "\\rowcolor{duplic}Produção registrada mais de uma vez.")
 }
 rm(idx, dup, checkISBN)
-b$livro.ou.periodico <- gsub("&", "\\\\&", b$livro.ou.periodico)
-b$producao <- gsub("&", "\\\\&", b$producao)
-b$producao <- gsub("#", "\\\\#", b$producao)
-b$livro.ou.periodico <- gsub("#", "\\\\#", b$livro.ou.periodico)
+
+b$livro.ou.periodico <- xtable::sanitize(b$livro.ou.periodico)
+b$producao <- xtable::sanitize(b$producao)
+
 levels(b$qualis) <- sub("Nada", " ", levels(b$qualis))
 names(b) <- c("Professor", "Produção (títulos truncados)", "Ano", "Qualis", "SJR",
               "SNIP", "Periódico ou Livro (títulos truncados)", "ISSN/ISBN")
