@@ -308,7 +308,7 @@ extraídos do arquivo
 \texttt{\Sexpr{sub(".*/", "", gsub("_", "\\\\_", QualisXLS))}},
 baixado da Plataforma Sucupira.} A área de \Sexpr{NomeComite} atribui peso
 \Sexpr{PesoLivros} aos livros e \Sexpr{PesoArtigos} aos artigos. Usando esses
-valores, a soma ponderada das média é de
+valores, a soma ponderada das médias é de
 \textbf{\Sexpr{PesoLivros * pmediaL + PesoArtigos * pmediaA}}.
 
 \newpage
@@ -377,6 +377,7 @@ periódico se classifica. A Tabela~\ref{tab:sjrpesos} mostra os pesos
 atribuídos a cada categoria e a Tabela~\ref{tab:sjrpond} mostra a pontuação
 obtida pelos professores considerando o escopo dos periódicos em que
 publicaram.
+
 <<sjrsempeso>>=
 if(min(sjr.cat$Peso) == max(sjr.cat$Peso) && max(sjr.cat$Peso) == 1)
     cat("Entretanto, como todos os pesos tem o mesmo valor (1,0), a Tabela \\ref{tab:sjr} é identica à Tabela \\ref{tab:sjrpond}.")

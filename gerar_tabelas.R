@@ -33,7 +33,7 @@ load("SJR_SNIP.RData")
 # diferentes categorias do SJR e SNIP.
 if(file.exists("info.R"))
     source("info.R")
-load(paste0("qualis/", gsub(" ", "_", gsub(" / ", " ", NomeComite)), ".RData"))
+load(paste0("qualis/", gsub(",", "", gsub(" ", "_", gsub(" / ", " ", NomeComite))), ".RData"))
 
 sum(duplicated(qualis$isxn))
 
@@ -525,56 +525,60 @@ if(length(premios)){
 }
 
 # Orientações em andamento
-oa <- do.call("rbind", oriand)
-oa <- as.data.frame(oa)
-oa[, 5] <- NomeSigla(oa[, 5])
-colnames(oa) <- c("Professor", "Natureza", "Ano", "Orientando", "Instituição")
-oa <- oa[order(oa$Ano), ]
-levels(oa$Natureza) <- sub("Dissertação de mestrado", "M", levels(oa$Natureza))
-levels(oa$Natureza) <- sub("Iniciação Científica", "IC", levels(oa$Natureza))
-levels(oa$Natureza) <-
-    sub("Monografia de conclusão de curso de aperfeiçoamento/especialização", "E",
-        levels(oa$Natureza))
-levels(oa$Natureza) <- sub("Orientação de outra natureza", "O", levels(oa$Natureza))
-levels(oa$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oa$Natureza))
-levels(oa$Natureza) <- sub("Tese de doutorado", "D", levels(oa$Natureza))
-levels(oa$Natureza) <- sub("Trabalho de conclusão de curso de graduação", "G",
-                           levels(oa$Natureza))
+if(length(oriand)){
+    oa <- do.call("rbind", oriand)
+    oa <- as.data.frame(oa)
+    oa[, 5] <- NomeSigla(oa[, 5])
+    colnames(oa) <- c("Professor", "Natureza", "Ano", "Orientando", "Instituição")
+    oa <- oa[order(oa$Ano), ]
+    levels(oa$Natureza) <- sub("Dissertação de mestrado", "M", levels(oa$Natureza))
+    levels(oa$Natureza) <- sub("Iniciação Científica", "IC", levels(oa$Natureza))
+    levels(oa$Natureza) <-
+        sub("Monografia de conclusão de curso de aperfeiçoamento/especialização", "E",
+            levels(oa$Natureza))
+    levels(oa$Natureza) <- sub("Orientação de outra natureza", "O", levels(oa$Natureza))
+    levels(oa$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oa$Natureza))
+    levels(oa$Natureza) <- sub("Tese de doutorado", "D", levels(oa$Natureza))
+    levels(oa$Natureza) <- sub("Trabalho de conclusão de curso de graduação", "G",
+                               levels(oa$Natureza))
 
-oa$um <- 1
-oriandTab <- tapply(oa$um, list(oa$Professor, oa$Natureza), sum)
-oriandTab[is.na(oriandTab)] <- 0
+    oa$um <- 1
+    oriandTab <- tapply(oa$um, list(oa$Professor, oa$Natureza), sum)
+    oriandTab[is.na(oriandTab)] <- 0
 
-ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
-faltaCol <- !(levels(oa$Natureza) %in% ordem)
-if(sum(faltaCol)){
-    print(levels(oa$Natureza))
-    stop(paste0("Tipo de orientação desconhecida: ",
-                levels(oa$Natureza)[faltaCol]))
-}
-ordem <- ordem[ordem %in% levels(oa$Natureza)]
-
-ro <- 1:nrow(oriandTab)
-if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
-    ro <- order(oriandTab[, "PD"], oriandTab[, "D"], oriandTab[, "M"],
-                decreasing = TRUE)
-} else {
-    if("D" %in% ordem & "M" %in% ordem){
-        ro <- order(oriandTab[, "D"], oriandTab[, "M"], decreasing = TRUE)
-    } else {
-        if("M" %in% ordem)
-            ro <- order(oriandTab[, "M"], decreasing = TRUE)
+    ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
+    faltaCol <- !(levels(oa$Natureza) %in% ordem)
+    if(sum(faltaCol)){
+        print(levels(oa$Natureza))
+        stop(paste0("Tipo de orientação desconhecida: ",
+                    levels(oa$Natureza)[faltaCol]))
     }
+    ordem <- ordem[ordem %in% levels(oa$Natureza)]
+
+    ro <- 1:nrow(oriandTab)
+    if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
+        ro <- order(oriandTab[, "PD"], oriandTab[, "D"], oriandTab[, "M"],
+                    decreasing = TRUE)
+    } else {
+        if("D" %in% ordem & "M" %in% ordem){
+            ro <- order(oriandTab[, "D"], oriandTab[, "M"], decreasing = TRUE)
+        } else {
+            if("M" %in% ordem)
+                ro <- order(oriandTab[, "M"], decreasing = TRUE)
+        }
+    }
+
+    if(nrow(oriandTab) > 1)
+        oriandTab <- oriandTab[ro, ordem]
+
+    # Detalhamento das orientações em andamento
+    oa$um <- NULL
+    oa <- oa[order(paste(oa$Ano, oa$Professor, oa$Natureza, oa$Instituição)),
+             c("Ano", "Professor", "Natureza", "Instituição", "Orientando")]
+    oa$Professor <- sub(" .* ", " ", oa$Professor)
+} else {
+    oriandTab <- data.frame()
 }
-
-if(nrow(oriandTab) > 1)
-    oriandTab <- oriandTab[ro, ordem]
-
-# Detalhamento das orientações em andamento
-oa$um <- NULL
-oa <- oa[order(paste(oa$Ano, oa$Professor, oa$Natureza, oa$Instituição)),
-         c("Ano", "Professor", "Natureza", "Instituição", "Orientando")]
-oa$Professor <- sub(" .* ", " ", oa$Professor)
 
 
 ## Registro do item “Ensino” no período
