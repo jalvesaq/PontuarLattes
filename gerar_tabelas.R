@@ -33,7 +33,15 @@ load("SJR_SNIP.RData")
 # diferentes categorias do SJR e SNIP.
 if(file.exists("info.R"))
     source("info.R")
-load(paste0("qualis/", gsub(",", "", gsub(" ", "_", gsub(" / ", " ", NomeComite))), ".RData"))
+
+# Novo Qualis?
+if(sum(grepl("A3", names(PontosQualis)))){
+    load("qualis/qualis2019.RData")
+    QNovo <- TRUE
+} else {
+    load(paste0("qualis/", gsub(",", "", gsub(" ", "_", gsub(" / ", " ", NomeComite))), ".RData"))
+    QNovo <- FALSE
+}
 
 sum(duplicated(qualis$isxn))
 
@@ -232,29 +240,57 @@ if(exists("equivalente")){
 
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
-p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
-p$qualis[is.na(p$qualis) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & p$tipo != "Artigo"]
-
 # Organização de dossiês em periódicos:
-idx <- p$tipo != "Artigo" & p$tipo != "NãoArt" & p$qualis %in% c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C")
-if(sum(idx) > 0)
-    p$qualis[idx] <- "OD"
+if(QNovo){
+    p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "NP"
+    p$qualis[is.na(p$qualis) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & p$tipo != "Artigo"]
 
-pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
-                              c("Artigo Qualis A2", "A2"),
-                              c("Artigo Qualis B1", "B1"),
-                              c("Artigo Qualis B2", "B2"),
-                              c("Artigo Qualis B3", "B3"),
-                              c("Artigo Qualis B4", "B4"),
-                              c("Artigo Qualis B5", "B5"),
-                              c("Artigo Qualis C", "C"),
-                              c(paste("Artigo sem Qualis na área de", NomeComite), "SQ"),
-                              c("Organização de dossiê em periódico", "OD"),
-                              c("Livro publicado", "Lvr"),
-                              c("Livro organizado", "Org"),
-                              c("Capítulo de livro", "Cap")), stringsAsFactors = FALSE)
-pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis,
-                                   stringsAsFactors = FALSE))
+    idx <- p$tipo != "Artigo" & p$tipo != "NãoArt" &
+        p$qualis %in% c("A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C", "NP")
+    if(sum(idx) > 0)
+        p$qualis[idx] <- "OD"
+
+    pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
+                                  c("Artigo Qualis A2", "A2"),
+                                  c("Artigo Qualis A3", "A3"),
+                                  c("Artigo Qualis A4", "A4"),
+                                  c("Artigo Qualis B1", "B1"),
+                                  c("Artigo Qualis B2", "B2"),
+                                  c("Artigo Qualis B3", "B3"),
+                                  c("Artigo Qualis B4", "B4"),
+                                  c("Artigo Qualis C", "C"),
+                                  c(paste("Artigo sem Qualis na área de", NomeComite), "NP"),
+                                  c("Organização de dossiê em periódico", "OD"),
+                                  c("Livro publicado", "Lvr"),
+                                  c("Livro organizado", "Org"),
+                                  c("Capítulo de livro", "Cap")), stringsAsFactors = FALSE)
+    pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis,
+                                       stringsAsFactors = FALSE))
+} else {
+    p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
+    p$qualis[is.na(p$qualis) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & p$tipo != "Artigo"]
+
+    idx <- p$tipo != "Artigo" & p$tipo != "NãoArt" &
+        p$qualis %in% c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C")
+    if(sum(idx) > 0)
+        p$qualis[idx] <- "OD"
+
+    pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
+                                  c("Artigo Qualis A2", "A2"),
+                                  c("Artigo Qualis B1", "B1"),
+                                  c("Artigo Qualis B2", "B2"),
+                                  c("Artigo Qualis B3", "B3"),
+                                  c("Artigo Qualis B4", "B4"),
+                                  c("Artigo Qualis B5", "B5"),
+                                  c("Artigo Qualis C", "C"),
+                                  c(paste("Artigo sem Qualis na área de", NomeComite), "SQ"),
+                                  c("Organização de dossiê em periódico", "OD"),
+                                  c("Livro publicado", "Lvr"),
+                                  c("Livro organizado", "Org"),
+                                  c("Capítulo de livro", "Cap")), stringsAsFactors = FALSE)
+    pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis,
+                                       stringsAsFactors = FALSE))
+}
 
 p <- merge(p, pontos, all.x = TRUE, stringsAsFactors = FALSE)
 p$pontos[p$tipo == "NãoArt"] <- 0
