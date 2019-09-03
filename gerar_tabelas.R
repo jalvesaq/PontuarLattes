@@ -838,7 +838,7 @@ ttldif <- ttldif[!duplicated(ttldif), ]
 colnames(ttldif) <- c("Título Qualis", "Título Lattes")
 
 # Lista de periódicos sem qualis
-semqualis <- p[p$qualis == "SQ", c("isxn", "livro.ou.periodico")]
+semqualis <- p[p$qualis == "SQ" | p$qualis == "NP", c("isxn", "livro.ou.periodico")]
 semqualis <- semqualis[!duplicated(semqualis), ]
 semqualis <- semqualis[order(semqualis$livro.ou.periodico), ]
 semqualis$livro.ou.periodico <- sub(" \x26 ", " \x5c\x5c\x26 ", semqualis$livro.ou.periodico)

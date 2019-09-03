@@ -2,13 +2,7 @@
 QualisXLS <- "Qualis_2017-2018.xlsx"
 names(QualisXLS) <- "Todas as áreas"
 
-library("openxlsx")
-qualis <- read.xlsx("Qualis_2017-2018.xlsx")
-names(qualis) <- c("isxn", "titulo", "qualis")
-qualis$isxn <- sub("-", "", qualis$isxn)
-
-sum(duplicated(qualis$isxn))
-qualis <- qualis[!duplicated(qualis$isxn), ]
+qualis <- read.delim("Qualis_2017-2018.tsv", stringsAsFactors = FALSE)
 
 # Usar issn1 e issn2 do Scielo, do SJR e do SNIP para fazer equivalência na
 # tabela Qualis
