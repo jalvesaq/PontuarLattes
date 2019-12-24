@@ -36,10 +36,17 @@ if(file.exists("info.R"))
 
 # Novo Qualis?
 if(sum(grepl("A3", names(PontosQualis)))){
-    load("qualis/qualis2019.RData")
+    load("qualis/qualis_2017_2020.RData")
     QNovo <- TRUE
 } else {
-    load(paste0("qualis/", gsub(",", "", gsub(" ", "_", gsub(" / ", " ", NomeComite))), ".RData"))
+    load("qualis/qualis_2013_2016.RData")
+    if(NomeComite %in% names(qualis)){
+        qualis <- qualis[[NomeComite]]
+    } else {
+        writeLines(names(qualis), "nomes_validos.txt")
+        stop(paste0("Variável 'NomeComite' inválida: '", NomeComite,
+                    "'.\nVeja o arquivo 'nomes_validos.txt'."))
+    }
     QNovo <- FALSE
 }
 
@@ -61,6 +68,17 @@ NomeSigla <- function(x)
 {
     for(i in 1:nrow(siglas))
         x <- sub(paste0("^", siglas$nome[i], "$"), siglas$sigla[i], x)
+    x
+}
+
+AbreviarInstituicao <- function(x)
+{
+    x <- sub("Universidade", "U.", x, ignore.case = TRUE)
+    x <- sub("Federal", "F.", x, ignore.case = TRUE)
+    x <- sub("Estadual", "E.", x, ignore.case = TRUE)
+    x <- sub("Programa de Pós.Graduação", "PPG", x, ignore.case = TRUE)
+    x <- sub("Programa de Pós.Graduação", "PPG", x, ignore.case = TRUE)
+    x <- sub("Programa Pós.Graduação", "PPG", x, ignore.case = TRUE)
     x
 }
 
@@ -542,11 +560,8 @@ if(nrow(oriconcTab) > 1)
 # Detalhamento das orientações concluídas
 oc$Professor <- sub(" .* ", " ", oc$Professor)
 oc$Orientado <- sub(" .* ", " ", oc$Orientado)
-oc$Instituição <- sub("Universidade", "U.", oc$Instituição, ignore.case = TRUE)
-oc$Instituição <- sub("Federal", "F.", oc$Instituição, ignore.case = TRUE)
-oc$Instituição <- sub("Estadual", "E.", oc$Instituição, ignore.case = TRUE)
-oc$Curso <- sub("Programa de Pós.Graduação", "PPG", oc$Curso, ignore.case = TRUE)
-oc$Curso <- sub("Programa Pós.Graduação", "PPG", oc$Curso, ignore.case = TRUE)
+oc$Instituição <- AbreviarInstituicao(oc$Instituição)
+oc$Curso <- AbreviarInstituicao(oc$Curso)
 oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
          c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
 
@@ -566,6 +581,7 @@ if(length(oriand)){
     oa <- as.data.frame(oa)
     oa[, 5] <- NomeSigla(oa[, 5])
     colnames(oa) <- c("Professor", "Natureza", "Ano", "Orientando", "Instituição")
+    oa$Instituição <- AbreviarInstituicao(oa$Instituição)
     oa <- oa[order(oa$Ano), ]
     levels(oa$Natureza) <- sub("Dissertação de mestrado", "M", levels(oa$Natureza))
     levels(oa$Natureza) <- sub("Iniciação Científica", "IC", levels(oa$Natureza))
@@ -609,9 +625,14 @@ if(length(oriand)){
 
     # Detalhamento das orientações em andamento
     oa$um <- NULL
-    oa <- oa[order(paste(oa$Ano, oa$Professor, oa$Natureza, oa$Instituição)),
+    oa <- oa[order(paste(oa$Professor, oa$Instituição, oa$Natureza, oa$Ano)),
              c("Ano", "Professor", "Natureza", "Instituição", "Orientando")]
     oa$Professor <- sub(" .* ", " ", oa$Professor)
+    oa$Ano <- as.numeric(as.character(oa$Ano))
+    idx <- oa$Natureza == "D" & oa$Ano < as.numeric(sub("-.*", "", Sys.Date())) - 6
+    oa$Ano[idx] <- paste("\\rowcolor{yellow}", oa$Ano[idx])
+    idx <- oa$Natureza == "M" & oa$Ano < as.numeric(sub("-.*", "", Sys.Date())) - 4
+    oa$Ano[idx] <- paste("\\rowcolor{yellow}", oa$Ano[idx])
 } else {
     oriandTab <- data.frame()
 }

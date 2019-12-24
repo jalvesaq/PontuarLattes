@@ -36,24 +36,26 @@ O código deste repositório foi testado somente no Linux.
 
   7. Execute o script `SJR_SNIP.R` localizado na pasta `auxiliar`.
 
-  8. Execute o script `areas.R` localizado na pasta `qualis`.
+  8. Execute o script `qualis_2013_2016.R` localizado na pasta `qualis`.
 
-  9. Baixe os currículos no formato xml (zipados e, portanto, com extensão
-     `.zip`) e salve-os na pasta `lattes_xml`. Dica: o link para o currículo
-     no formato xml fica no canto superior direito do currículo Lattes.
+  9. Execute o script `qualis_2017_2020.R` localizado na pasta `qualis`.
 
-  10. Se não tiver conseguido instalar o XeLaTeX ou se quiser apenas ver as
-     tabelas no próprio R, rode o script `gerar_tabelas.R` e execute o comando
-     `print(obj)` para cada uma das tabelas, substituindo `obj` pelo nome do
-     objeto correspondente à tabela.
+  10. Baixe os currículos no formato xml (zipados e, portanto, com extensão
+      `.zip`) e salve-os na pasta `lattes_xml`. Dica: o link para o currículo
+      no formato xml fica no canto superior direito do currículo Lattes.
 
-  11. Gere o PDF a partir do `QualisLattes.Rnw` (use XeLaTeX e não pdfLaTeX)
+  11. Se não tiver conseguido instalar o XeLaTeX ou se quiser apenas ver as
+      tabelas no próprio R, rode o script `gerar_tabelas.R` e execute o comando
+      `print(obj)` para cada uma das tabelas, substituindo `obj` pelo nome do
+      objeto correspondente à tabela.
+
+  12. Gere o PDF a partir do `QualisLattes.Rnw` (use XeLaTeX e não pdfLaTeX)
       ou, se preferir, use o Makefile.
 
-  12. Quando quiser atualizar o relatório, basta repetir os passos 9, 10 e 11.
+  13. Quando quiser atualizar o relatório, basta repetir os passos 9, 10 e 11.
 
-  13. Em caso de dúvida, peça ajuda a alguém que saiba programar em R e em
+  14. Em caso de dúvida, peça ajuda a alguém que saiba programar em R e em
       LaTeX, e que esteja acostumado a gerar relatórios Rnoweb.
 
-  14. Se você tem familiaridade com R e LaTeX e encontrou algum erro nestas
+  15. Se você tem familiaridade com R e LaTeX e encontrou algum erro nestas
       instruções, por favor, me avise.

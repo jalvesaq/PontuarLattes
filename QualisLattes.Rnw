@@ -256,9 +256,16 @@ print(xtable(tab, align = aln, digits = 0, label = "tab:oriand",
 \newpage
 
 <<oriandTab>>=
-print(xtable(oa, align = "lcp{4.5cm}cp{8cm}p{8cm}", label = "tab:oriandDet",
+
+tab <- capture.output(print(xtable(oa, align = "lcp{4.5cm}cp{8cm}p{8cm}",
+                                   label = "tab:oriandDet",
              caption = "Detalhamento das orientações em andamento"),
-      include.rownames = FALSE)
+      include.rownames = FALSE))
+tab <- sub("\\$\\\\backslash\\$rowcolor\\\\\\{yellow\\\\\\}", "\\\\rowcolor{yellow}", tab)
+cat(tab, sep = "\n")
+# print(xtable(oa, align = "lcp{4.5cm}cp{8cm}p{8cm}", label = "tab:oriandDet",
+#              caption = "Detalhamento das orientações em andamento"),
+#       include.rownames = FALSE)
 @
 
 \newpage
