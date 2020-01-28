@@ -1,8 +1,8 @@
 source("str_title_case.R")
 
 # Ler arquivo baixado da Plataforma Sucupira:
-qualis <- read.delim("classificacoes_publicadas_todas_as_areas_avaliacao1522078273541.xls",
-                     fileEncoding = "Latin1")
+QualisXLS <- "classificacoes_publicadas_todas_as_areas_avaliacao1522078273541.xls"
+qualis <- read.delim(QualisXLS, fileEncoding = "Latin1")
 
 levels(qualis$Área.de.Avaliação) <- str_title_case(levels(qualis$Área.de.Avaliação))
 levels(qualis$Título) <- str_title_case(levels(qualis$Título))
@@ -55,4 +55,4 @@ adicionar_issn <- function(x){
 
 qualis <- lapply(qualis, adicionar_issn)
 
-save(qualis, file = "qualis_2013_2016.RData")
+save(QualisXLS, qualis, file = "qualis_2013_2016.RData")
