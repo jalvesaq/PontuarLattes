@@ -9,11 +9,13 @@ issn <- read.delim("scielo_issn.tsv", stringsAsFactors = FALSE)
 issn <- issn[!is.na(issn$issn2), c("issn1", "issn2")]
 
 # Carregar o SJR
-sjrl <- readLines("scimagojr 2017.csv")
+sjrl <- readLines("scimagojr 2018.csv")
 sjrl <- gsub("&#x00..;", "X", sjrl)
 sjrl <- gsub(";;", "\t\t", sjrl)
 sjrl <- gsub("(\\S);(\\S)", "\\1\t\\2", sjrl)
 sjrl <- gsub("(\\S);(\\S)", "\\1\t\\2", sjrl)
+sjrl <- gsub("(\\S);(\\S)", "\\1\t\\2", sjrl)
+sjrl <- gsub('\t"\t', '"\t"', sjrl)
 sjrl <- gsub('"', "", sjrl)
 writeLines(sjrl, "/tmp/scimagojrTAB")
 sjr <- read.delim2("/tmp/scimagojrTAB", sep = "\t", fill = FALSE,
