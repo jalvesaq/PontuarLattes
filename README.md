@@ -24,9 +24,9 @@ O código deste repositório foi testado somente no Linux.
 
   3. Acesse o [Scimago Journal Ranking](https://www.scimagojr.com/journalrank.php)
      e faça o download da base de dados para a pasta `auxiliar`. O nome do
-     arquivo deve ser `scimagojr 2017.csv`
+     arquivo deve ser `scimagojr 2018.csv`
 
-  4. Baixe o arquivo [CWTS Journal Indicators May 2018.xlsx](http://www.journalindicators.com/Content/CWTS%20Journal%20Indicators%20May%202018.xlsx)
+  4. Baixe o arquivo [CWTS Journal Indicators May 2019.xlsx](http://www.journalindicators.com/Content/CWTS%20Journal%20Indicators%20May%202019.xlsx)
      e salve-o na pasta `auxiliar`.
 
   5. Copie o arquivo `exemplo/info.R` para a pasta inicial do PontuarLattes,
@@ -34,11 +34,13 @@ O código deste repositório foi testado somente no Linux.
 
   6. Edite o código do `info.R`.
 
-  7. Execute o script `SJR_SNIP.R` localizado na pasta `auxiliar`.
+  7. Na pasta `auxiliar` execute os scripts: `scielo_01.sh`,
+     `auxiliar/scielo_02.R` e `SJR_SNIP.R`.
 
-  8. Execute o script `qualis_2013_2016.R` localizado na pasta `qualis`.
+  8. Na pasta `qualis` execute os scripts: `qualis_2013_2016.R` e
+     `qualis_2017_2020.R`.
 
-  9. Execute o script `qualis_2017_2020.R` localizado na pasta `qualis`.
+  9. Na pasta principal do PontuarLattes, crie uma pasta chamada `lattes_xml`.
 
   10. Baixe os currículos no formato xml (zipados e, portanto, com extensão
       `.zip`) e salve-os na pasta `lattes_xml`. Dica: o link para o currículo
@@ -52,10 +54,8 @@ O código deste repositório foi testado somente no Linux.
   12. Gere o PDF a partir do `QualisLattes.Rnw` (use XeLaTeX e não pdfLaTeX)
       ou, se preferir, use o Makefile.
 
-  13. Quando quiser atualizar o relatório, basta repetir os passos 9, 10 e 11.
+  13. Quando quiser atualizar o relatório, basta repetir os passos 10, 11 e 12.
 
-  14. Em caso de dúvida, peça ajuda a alguém que saiba programar em R e em
-      LaTeX, e que esteja acostumado a gerar relatórios Rnoweb.
-
-  15. Se você tem familiaridade com R e LaTeX e encontrou algum erro nestas
-      instruções, por favor, me avise.
+Em caso de dúvida, peça ajuda a alguém que saiba programar em R e em LaTeX, e
+que esteja acostumado a gerar relatórios Rnoweb. Se você tem familiaridade com
+R e LaTeX e encontrou algum erro nestas instruções, por favor, me avise.
