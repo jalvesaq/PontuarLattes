@@ -283,6 +283,45 @@ xtable(ensinoTab, align = aln, label = "tab:ensino", digits = 0,
 
 \newpage
 
+\section{Extensão}
+
+A Tabela \ref{tab:extensao} mostra o número de vezes que o item ``Atividades
+de Extensão'' foi registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
+
+<<tabExtensao>>=
+if(ncol(extensaoTab) == 1){
+    print(xtable(extensaoTab, label = "tab:extensao",
+                 caption = paste0("Registro de ``Atividades de Extensão'' no período ",
+                                  Inicio, "--", Fim)),
+          include.rownames = FALSE)
+} else {
+    aln <- paste0("llp{10cm}", paste0(rep("r", ncol(extensaoTab)-2), collapse = ""))
+    xtable(extensaoTab, align = aln, label = "tab:extensao", digits = 0,
+           caption = paste0("Registro de ``Atividades de Extensão'' no período ", Inicio, "--", Fim))
+}
+@
+
+
+A Tabela \ref{tab:projext} mostra o número de vezes que o item ``Projeto de Extensão'' foi
+registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
+
+<<tabProjExt>>=
+if(ncol(extensaoTab) == 1){
+    print(xtable(extensaoTab, label = "tab:projext",
+                 caption = paste0("Registro de ``Projetos de Extensão'' no período ",
+                                  Inicio, "--", Fim)),
+          include.rownames = FALSE)
+} else {
+    aln <- paste0("llp{10cm}", paste0(rep("r", ncol(projextTab)-2), collapse = ""))
+    xtable(projextTab, align = aln, label = "tab:projext", digits = 0,
+           caption = paste0("Registro de ``Projetos de Extensão'' no período ", Inicio, "--", Fim))
+}
+@
+
+
+
+\newpage
+
 \section{Produção bibliográfica}
 
 \subsection{Produção no período \Sexpr{Inicio}--\Sexpr{Fim}}

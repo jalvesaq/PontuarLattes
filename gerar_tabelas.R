@@ -64,6 +64,17 @@ qualis[duplicated(qualis$isxn), ]
 if(sum(duplicated(qualis$isxn)))
     stop("ISSN duplicado")
 
+
+# http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
+# Convenience function to convert html codes
+html2txt <- function(x) {
+    if(is.na(x))
+        return(NA)
+    xpathApply(htmlParse(x, asText=TRUE, encoding = "UTF-8"),
+               "//body//text()", xmlValue)[[1]]
+}
+
+
 NomeSigla <- function(x)
 {
     for(i in 1:nrow(siglas))
@@ -91,6 +102,8 @@ premios <- list()
 oriand <- list()
 oriconc <- list()
 ensino <- list()
+extensao <- list()
+projext <- list()
 nlist <- list()
 cnpqId <- matrix(character(), ncol = 2, nrow = 0)
 colnames(cnpqId) <- c("Professor", "id")
@@ -176,6 +189,40 @@ obter.producao <- function(arquivo)
                                                                   "ANO-FIM")],
                                                  ap[[ii]]$attributes["NOME-INSTITUICAO"])
             }
+    }
+
+    ap <- xl$children$`DADOS-GERAIS`$children$`ATUACOES-PROFISSIONAIS`$children
+    for(ii in 1:length(ap)){
+        yy <- ap[[ii]]$children
+        if("ATIVIDADES-DE-EXTENSAO-UNIVERSITARIA" %in% names(yy))
+            for(ens in yy$`ATIVIDADES-DE-EXTENSAO-UNIVERSITARIA`$children){
+                extensao[[length(extensao)+1]] <<- c("Professsor" = nomep,
+                                                 ens$attributes[c("ATIVIDADE-DE-EXTENSAO-REALIZADA",
+                                                                  "MES-INICIO",
+                                                                  "ANO-INICIO",
+                                                                  "MES-FIM",
+                                                                  "ANO-FIM")])
+            }
+    }
+
+    ap <- xl$children$`DADOS-GERAIS`$children$`ATUACOES-PROFISSIONAIS`$children
+    for(ii in 1:length(ap)){
+        yy <- ap[[ii]]$children
+        if("ATIVIDADES-DE-PARTICIPACAO-EM-PROJETO" %in% names(yy)){
+            for(ens in yy$`ATIVIDADES-DE-PARTICIPACAO-EM-PROJETO`$children){
+                for(prj in ens$children){
+                    if("NATUREZA" %in% names(prj$attributes) &&
+                       prj$attributes["NATUREZA"] == "EXTENSAO"){
+                        projext[[length(projext)+1]] <<- c("Professsor" = nomep,
+                                                           prj$attributes[c("NOME-DO-PROJETO",
+                                                                            "MES-INICIO",
+                                                                            "ANO-INICIO",
+                                                                            "MES-FIM",
+                                                                            "ANO-FIM")])
+                    }
+                }
+            }
+        }
     }
 
     xl <- xl$children$`PRODUCAO-BIBLIOGRAFICA`
@@ -510,21 +557,23 @@ colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
 oc <- do.call("rbind", oriconc)
 colnames(oc) <- c("Professor", "Natureza", "Ano", "Instituição", "Curso", "Orientado")
 oc[, 4] <- NomeSigla(oc[, 4])
-oc <- as.data.frame(oc)
+oc <- as.data.frame(oc, stringsAsFactors = FALSE)
+oc$Instituição <- sapply(oc$Instituição, html2txt)
 oc$Ano <- as.numeric(as.character(oc$Ano))
 oc <- oc[oc$Ano >= Inicio & oc$Ano <= Fim, ]
-oc <- droplevels(oc)
 
-levels(oc$Natureza) <- sub("Dissertação de mestrado", "M", levels(oc$Natureza))
-levels(oc$Natureza) <- sub("INICIACAO_CIENTIFICA", "IC", levels(oc$Natureza))
-levels(oc$Natureza) <-
+oc$Natureza <- sapply(oc$Natureza, html2txt)
+oc$Natureza <- sub("Dissertação de mestrado", "M", oc$Natureza)
+oc$Natureza <- sub("INICIACAO_CIENTIFICA", "IC", oc$Natureza)
+oc$Natureza <-
     sub("MONOGRAFIA_DE_CONCLUSAO_DE_CURSO_APERFEICOAMENTO_E_ESPECIALIZACAO", "E",
-        levels(oc$Natureza))
-levels(oc$Natureza) <- sub("ORIENTACAO-DE-OUTRA-NATUREZA", "O", levels(oc$Natureza))
-levels(oc$Natureza) <- sub("Supervisão de pós-doutorado", "PD", levels(oc$Natureza))
-levels(oc$Natureza) <- sub("Tese de doutorado", "D", levels(oc$Natureza))
-levels(oc$Natureza) <- sub("TRABALHO_DE_CONCLUSAO_DE_CURSO_GRADUACAO", "G",
-                                levels(oc$Natureza))
+        oc$Natureza)
+oc$Natureza <- sub("ORIENTACAO-DE-OUTRA-NATUREZA", "O", oc$Natureza)
+oc$Natureza <- sub("Supervisão de pós-doutorado", "PD", oc$Natureza)
+oc$Natureza <- sub("Tese de doutorado", "D", oc$Natureza)
+oc$Natureza <- sub("TRABALHO_DE_CONCLUSAO_DE_CURSO_GRADUACAO", "G",
+                                oc$Natureza)
+oc$Natureza <- factor(oc$Natureza)
 oc$um <- 1
 
 oriconcTab <- tapply(oc$um, list(oc$Professor, oc$Natureza), sum)
@@ -567,9 +616,13 @@ oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$O
 
 # Prêmios
 if(length(premios)){
-    premios <- do.call("rbind", premios)
+    if(length(premios) > 1)
+        premios <- do.call("rbind", premios)
+    else
+        premios <- matrix(premios[[1]], nrow = 1)
     colnames(premios) <- c("Professor", "Prêmio", "Entidade promotora", "Ano", "En")
-    premios <- premios[order(premios[, "Ano"]), 1:4]
+    if(nrow(premios) > 1)
+        premios <- premios[order(premios[, "Ano"]), 1:4]
     premios[, "Professor"] <- sub(" .* ", " ", premios[, "Professor"])
     premios <- as.data.frame(premios, stringsAsFactors = FALSE)
     premios <- premios[premios[, "Ano"] >= Inicio & premios[, "Ano"] <= Fim, ]
@@ -578,11 +631,14 @@ if(length(premios)){
 # Orientações em andamento
 if(length(oriand)){
     oa <- do.call("rbind", oriand)
-    oa <- as.data.frame(oa)
-    oa[, 5] <- NomeSigla(oa[, 5])
+    oa <- as.data.frame(oa, stringsAsFactors = FALSE)
     colnames(oa) <- c("Professor", "Natureza", "Ano", "Orientando", "Instituição")
+    oa$Instituição <- sapply(oa$Instituição, html2txt)
+    oa$Instituição <- NomeSigla(oa$Instituição)
     oa$Instituição <- AbreviarInstituicao(oa$Instituição)
     oa <- oa[order(oa$Ano), ]
+    oa$Natureza <- sapply(oa$Natureza, html2txt)
+    oa$Natureza <- factor(oa$Natureza)
     levels(oa$Natureza) <- sub("Dissertação de mestrado", "M", levels(oa$Natureza))
     levels(oa$Natureza) <- sub("Iniciação Científica", "IC", levels(oa$Natureza))
     levels(oa$Natureza) <-
@@ -652,6 +708,32 @@ if(nrow(ens)){
     colnames(ensinoTab) <- sub("POS-", "Pós-", colnames(ensinoTab))
 } else {
     ensinoTab <- data.frame("Atividade de ensino" = "Nenhuma atividade de ensino registrada com início e fim no período")
+}
+
+## Registro do item “Extensão” no período
+ext <- do.call("rbind", extensao)
+ext <- as.data.frame(ext, stringsAsFactors = FALSE)
+names(ext) <- c("Professor", "Atividade", "MI", "AnoI", "MF", "AnoF")
+ext$Atividade <- sapply(ext$Atividade, html2txt)
+ext <- ext[(ext$AnoI >= as.character(Inicio) & ext$AnoF <= as.character(Fim)) |
+            ext$AnoF == "", ]
+if(nrow(ext)){
+    extensaoTab <- ext
+} else {
+    extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período")
+}
+
+## Registro do item “Projeto de Extensão” no período
+ext <- do.call("rbind", projext)
+ext <- as.data.frame(ext, stringsAsFactors = FALSE)
+names(ext) <- c("Professor", "Projeto", "MI", "AnoI", "MF", "AnoF")
+ext$Projeto <- sapply(ext$Projeto, html2txt)
+ext <- ext[(ext$AnoI >= as.character(Inicio) & ext$AnoF <= as.character(Fim)) |
+           ext$AnoF == "", ]
+if(nrow(ext)){
+    projextTab <- ext
+} else {
+    projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período")
 }
 
 # Produção bibliográfica (Livros e Artigos)
@@ -741,18 +823,14 @@ mm <- lapply(pcl, MediaMovel)
 mm <- mm[!is.na(mm)]
 
 
-# http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
-# Convenience function to convert html codes
-html2txt <- function(str) {
-      xpathApply(htmlParse(str, asText=TRUE, encoding = "UTF-8"),
-                 "//body//text()", xmlValue)[[1]]
-}
-
 # Produção segundo classificação Qualis
 p$um <- 1
 producao <- tapply(p$um, list(p$prof, p$qualis), sum)
 producao <- producao[, !grepl("Nada", colnames(producao))]
 rownames(producao) <- c(rownames(producao)[1], paste("\\hline", rownames(producao)[2:nrow(producao)]))
+
+p$producao <- sapply(p$producao, html2txt)
+p$livro.ou.periodico <- sapply(p$livro.ou.periodico, html2txt)
 
 # Produção detalhada
 b <- p[, c("prof", "producao", "ano", "qualis", "SJR", "SNIP", "livro.ou.periodico", "isxn", "ncoaut")]
@@ -761,8 +839,6 @@ b <- b[order(p$prof, p$ano, p$producao), ]
 b$prof <- sub(" .* ", " ", b$prof)
 b$prof <- sub("^(...................).*", "\\1", b$prof)
 b$producao <- sapply(b$producao, html2txt)
-# b$livro.ou.periodico <- html2txt(b$livro.ou.periodico)
-# b$producao <- gsub("_", "\\_", b$producao)
 b$livro.ou.periodico <- gsub("_", "\\\\_", b$livro.ou.periodico)
 
 erros <- NULL
@@ -849,6 +925,9 @@ names(b) <- c("Professor", "Produção (títulos truncados)", "Ano", "Qualis", "
 proddet <- b
 rm(b)
 
+# TODO: Produzir tabela com periódicos que mais contribuíram para a pontuação
+# do programa
+
 # Títulos de periódicos registrados nos currículos com alguma diferença dos
 # títulos na planilha Qualis
 ttldif <- p[p$tipo == "Artigo", ]
@@ -879,7 +958,7 @@ cat('   <meta http-equiv="content-type" content="text/html; charset=utf-8" />\n'
 cat('   <title>Lista de professores</title>\n')
 cat('</head>\n')
 cat('<body>\n')
-cat('<p><strong>Lista os currículos incluídos no relatório gerado mais recentemente (links para Lattes no formato XML):</strong></p>\n')
+cat('<p><strong>Lista dos currículos incluídos no relatório gerado mais recentemente (links para Lattes no formato XML):</strong></p>\n')
 cat('<ol>\n')
 for(i in 1:nrow(cnpqId)){
     cat('  <li><a href="http://buscatextual.cnpq.br/buscatextual/download.do?metodo=apresentar&idcnpq=',
