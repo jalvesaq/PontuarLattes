@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html$if(lang)$ lang="$lang$" xml:lang="$lang$"$endif$>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+$for(author-meta)$
+<meta name="author" content="$author-meta$" />
+$endfor$
+
+$if(date-meta)$
+<meta name="date" content="$date-meta$" />
+$endif$
+
+<style>
+
+.lightable-classic {
+  border-top: 0.16em solid #111111;
+  border-bottom: 0.16em solid #111111;
+  width: 100%;
+  margin-bottom: 10px;
+  margin: 10px 5px;
+}
+
+.lightable-classic tfoot tr td {
+  border: 0;
+}
+
+.lightable-classic tfoot tr:first-child td {
+  border-top: 0.14em solid #111111;
+}
+
+.lightable-classic caption {
+  color: #222222;
+}
+
+.lightable-classic td {
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #222222;
+}
+
+.lightable-classic th {
+  padding-left: 5px;
+  padding-right: 5px;
+  font-weight: normal;
+  color: #222222;
+}
+
+.lightable-classic thead tr:last-child th {
+  border-bottom: 0.10em solid #111111;
+}
+
+.lightable-classic.lightable-hover tbody tr:hover {
+  background-color: #F9EEC1;
+}
+
+.lightable-classic.lightable-striped tbody tr:nth-child(even) {
+  background-color: #f5f5f5;
+}
+</style>
+
+<title>$if(title-prefix)$$title-prefix$ - $endif$$pagetitle$</title>
+
+</head>
+
+<body>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+$if(toc-title)$
+<h2 id="$idprefix$toc-title">$toc-title$</h2>
+$endif$
+
+$if(title)$
+<h1 class="title toc-ignore">$title$</h1>
+$if(subtitle)$
+<h3 class="subtitle">$subtitle$</h3>
+$endif$
+$endif$
+
+$for(author)$
+$if(author.name)$<h4 class="author">$author.name$</h4>
+$if(author.affiliation)$<address class="author_afil">$author.affiliation$<br>$endif$
+$if(author.email)$<a class="author_email" href="mailto:#">$author.email$</a></address>$endif$
+$else$
+<h4 class="author">$author$</h4>
+$endif$
+$endfor$
+
+$if(date)$
+<h4 class="date">$date$</h4>
+$endif$
+
+$if(toc)$
+$if(toc-title)$<h2 id="$idprefix$toc-title">$toc-title$</h2>$endif$
+$toc$
+$endif$
+
+$body$
+
+</body>
+</html>

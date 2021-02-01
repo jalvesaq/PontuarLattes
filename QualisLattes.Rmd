@@ -1,0 +1,501 @@
+---
+title: "`r source("info.R") ; paste0(TituloDoc, ' (', Inicio, '-', Fim, ')')`"
+author: "`r Autor`"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output: 
+  html_document:
+    toc: true # table of content true
+    toc_depth: 3
+    template: "`r getwd()`/template.html"
+    theme: null
+    highlight: null
+    mathjax: null
+---
+
+```{r loadlibraries, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE, error=FALSE}
+if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
+    Sys.setenv(LANGUAGE = "pt_BR.UTF-8")
+
+library("knitr")
+library("kableExtra")
+library("ineq")
+
+opts_chunk$set(echo=FALSE, cache=FALSE, fig.width=6, fig.height=3, fig.align="center", results='asis')
+options(knitr.kable.NA = '')
+source("gerar_tabelas.R")
+```
+
+# Apresentação
+
+Este relatório foi produzido com scripts desenvolvidos por Jakson Alves de
+Aquino^[Professor do Departamento de Ciências Sociais da Universidade
+Federal do Ceará. E-mail: jaa@ufc.br] e disponibilizados em
+(https://github.com/jalvesaq/PontuarLattes).
+
+O relatório ajuda a identificar problema no preenchimento do Lattes pelos
+professores. Cada coordenador de curso deve consultar os documentos
+da sua área e ficar atento neste relatório às tabelas mais
+relevantes para uma boa avaliação do seu programa.
+
+A coautoria da produção entre professores do programa é identificada pela
+coincidência de algumas informações:
+
+  - Livros: ISBN e ano.
+
+  - Capítulos de livro: ISBN, ano e página inicial do capítulo.
+
+  - Artigos: ISSN, ano, volume, número do periódico e página inicial do artigo.
+
+No caso de coautoria, a pontuação correspondente à publicação é dividida pelo
+número de coautores que são professores do programa.
+
+Há discussões na CAPES sobre mudanças no sistema Qualis. Entre as propostas,
+está o uso do JSR ou do SNIP para a classificação da produção. Por isso, o
+relatório inclui tabelas com a produção dos professores pontuadas por esses
+fatores de impacto.
+
+Vale salientar que este relatório deve ser usado com cautela porque,
+embora ele seja útil para a identificação de problemas no programa de
+pós-graduação, não é um instrumento usado oficialmente pela CAPES.
+
+Os scripts para elaboração deste relatório ainda estão em desenvolvimento e
+solicitamos que nos sejam comunicados erros encontrados nas tabelas e
+gráficos.
+
+Reconhecemos os esforços da CAPES nos últimos anos para a realização de
+avaliações objetivas dos programas de pós-graduação e esperamos com esta
+ferramenta contribuir para a transparência e publicidade dos processos de
+avaliação.
+
+# Data do currículo
+
+```{r printDataLattes}
+tab <- cbind(doutor[, c("Professor", "DataCV")],
+             "Dias" = as.Date(Sys.time()) - as.Date(doutor[, "DataCV"], "%d/%m/%Y"))
+
+kable(tab, align = c("l", "c", "r"),
+      caption = "Data de atualização do Currículo Lattes") %>%
+    kable_classic(full_width = F)
+```
+
+# Títulos e prêmios
+
+```{r tabelaGeral}
+doutor <- doutor[order(doutor[, "Ano"]), ]
+tab <- cbind(doutor[, 1:4],
+             "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor[, "Ano"]))
+tab <- rbind(tab, c("Tempo médio de titulação", "", "", "", round(mean(as.numeric(tab[, 5])))))
+kable(tab, align = c("l", "l", "l", "c", "r"), caption = "Curso de doutorado") %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(tab) - 1, extra_css = "border-bottom: 1px solid")
+```
+
+```{r areaTitulo}
+tab <- sort(table(doutor[, "Nome do curso"]), decreasing = TRUE)
+tab <- cbind("Área" = sub("^$", "(não especificado)", rownames(tab)),
+             "Frequência" = tab, "%" = sub("\\.", ",",
+                                           sprintf("%0.1f", 100 * tab / sum(tab))))
+kable(tab, row.names = FALSE, align = c("l", "r", "r"), caption = "Área de titulação") %>%
+    kable_classic(full_width = F)
+
+# Difícil de automaticamente acertar a margem esquerda necessária:
+# barplot(as.numeric(tab[, 2]), names.arg = tab[, 1], horiz = TRUE, las = 1)
+```
+
+```{r localTitulo}
+tab <- sort(table(doutor[, "Instituição doutorado"]), decreasing = TRUE)
+tab <- cbind("Instituição" = sub("^$", "(não especificado)", rownames(tab)),
+             "Frequência" = tab, "%" = sub("\\.", ",",
+                                           sprintf("%0.1f", 100 * tab / sum(tab))))
+kable(tab, align = c("l", "r", "r"), row.names = FALSE,
+      caption = "Instituição doutorado") %>%
+    kable_classic(full_width = F)
+```
+
+Como pode ser visto na tabela seguinte, dos `r nrow(doutor)`
+professores do programa, `r length(levels(factor(posdoc[, 1])))`
+realizaram pós-doutorado pelo menos uma vez.
+
+```{r posdoc}
+kable(posdoc, label = "tab:posdoc", row.names = FALSE,
+      caption = "Lista de Pós-doutorados realizados") %>%
+    kable_classic(full_width = F)
+```
+
+```{r premios}
+if(length(premios) == 0){
+    cat("Nenhum prêmio recebido.\n")
+} else {
+    if(nrow(premios) == 0){
+        cat("Nenhum prêmio recebido no período.\n")
+    } else {
+        kable(premios, row.names = FALSE, caption = "Lista de Prêmios recebidos") %>%
+    kable_classic(full_width = F)
+    }
+}
+```
+
+# Orientações
+
+Nas tabelas seguintes,
+M = Mestrado,
+O = Outros,
+IC = Iniciação científica,
+G = Trabalho de conclusão de curso,
+E = Monografia de curso de aperfeiçoamento ou especialização,
+M = Dissertação de mestrado,
+D = Tese de doutorado e
+PD = Supervisão de pós-doutorado.
+
+```{r oriconc}
+tab <- rbind(oriconcTab, "Total" = apply(oriconcTab, 2, sum),
+             "Média" = round(apply(oriconcTab, 2, mean), 1))
+tab <- cbind("Orientador" = rownames(tab),
+             tab,
+             "Total" = apply(tab, 1, sum))
+aln <- c("l", rep("r", ncol(tab) - 1))
+kable(tab, align = aln, digits = 0, row.names = FALSE,
+             caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim)) %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(tab) - 2, extra_css = "border-bottom: 1px solid")
+```
+
+```{r detOriConc}
+oc$Professor <- sub(" .* ", " ", oc$Professor)
+oc$Orientado <- sub(" .* ", " ", oc$Orientado)
+oc$Instituição <- sub("Universidade", "U.", oc$Instituição)
+oc$Instituição <- sub("Federal", "F.", oc$Instituição)
+oc$Instituição <- sub("Estadual", "E.", oc$Instituição)
+oc$Curso <- sub("Programa de Pós-Graduação", "PPG", oc$Curso)
+oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
+         c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
+kable(oc, label = "tab:detoriconc", row.names = FALSE,
+      digits = 0, caption = "Detalhamento das orientações") %>%
+    kable_classic(full_width = F) %>%
+    kable_styling(fixed_thead = ifelse(nrow(proddet) > 30, T, F))
+```
+
+```{r oriand}
+tab <- rbind(oriandTab, "Total" = apply(oriandTab, 2, sum),
+             "Média" = round(apply(oriandTab, 2, mean), 1))
+tab <- cbind("Orientador" = rownames(tab),
+             tab,
+             "Total" = apply(tab, 1, sum))
+aln <- c("l", rep("r", ncol(tab) - 1))
+
+kable(tab, align = aln, digits = 0, row.names = FALSE,
+      caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim)) %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(tab) - 2, extra_css = "border-bottom: 1px solid")
+```
+
+```{r oriandTab}
+idx <- (oa$Natureza == "D" & oa$Ano < as.numeric(sub("-.*", "", Sys.Date())) - 6) |
+    (oa$Natureza == "M" & oa$Ano < as.numeric(sub("-.*", "", Sys.Date())) - 4)
+kable(oa, row.names = FALSE, label = "tab:oriandDet",
+      caption = "Detalhamento das orientações em andamento") %>%
+    kable_classic(full_width = F) %>%
+    kable_styling(fixed_thead = ifelse(nrow(proddet) > 30, T, F)) %>%
+    row_spec(grep(TRUE, idx), background = "moccasin")
+```
+
+# Ensino
+
+A tabela seguinte mostra o número de vezes que o item “Ensino” foi
+registrado no Lattes no período `r Inicio`--`r Fim`.
+
+```{r tabEnsino}
+kable(ensinoTab, label = "tab:ensino", digits = 0,
+       caption = paste0("Registro do item “Ensino” no período ", Inicio, "--", Fim)) %>%
+    kable_classic(full_width = F)
+```
+
+# Extensão
+
+A tabela seguinte mostra o número de vezes que o item “Atividades
+de Extensão” foi registrado no Lattes no período `r Inicio`--`r Fim`.
+
+```{r tabExtensao}
+kable(extensaoTab, digits = 0, row.names = FALSE,
+      caption = paste0("Registro de “Atividades de Extensão” no período ",
+                       Inicio, "--", Fim)) %>%
+    kable_classic(full_width = F)
+```
+
+A tabela seguinte mostra o número de vezes que o item “Projeto de Extensão” foi
+registrado no Lattes no período `r Inicio`--`r Fim`.
+
+```{r tabProjExt}
+kable(projextTab, digits = 0, row.names = FALSE,
+           caption = paste0("Registro de “Projetos de Extensão” no período ",
+                            Inicio, "--", Fim)) %>%
+    kable_classic(full_width = F)
+```
+
+# Produção bibliográfica no período `r Inicio`--`r Fim`
+
+A tabela seguinte mostra os valores atribuídos aos diferentes níveis
+de classificação Qualis dos periódicos. Livros e capítulos de livros não
+classificados pelo comitê de *`r NomeComite`* da CAPES, podem não ter
+sido contabilizados na produção do Programa, mas, aqui, estão,
+arbitrariamente, recebendo pontuação equivalente a L2. Qualis de outras áreas
+não têm valor para a área de *`r NomeComite`*.
+
+```{r classifpontos}
+kable(pontos, digits = 0, label = "tab:pontos",
+      caption = "Tabela de pontuação conforme classificação da produção") %>%
+    kable_classic(full_width = F)
+
+pmediaL <- pontuacaoLvr[nrow(pontuacaoLvr), ncol(pontuacaoLvr)]
+pmedianaL <- round(median(pontuacaoLvr[1:(nrow(pontuacaoLvr)-1), ncol(pontuacaoLvr)], na.rm = TRUE))
+pmediaA <- pontuacaoArt[nrow(pontuacaoArt), ncol(pontuacaoArt)]
+pmedianaA <- round(median(pontuacaoArt[1:(nrow(pontuacaoArt)-1), ncol(pontuacaoArt)], na.rm = TRUE))
+qxls <- sub(".*/", "", gsub("_", "\\\\_", QualisXLS))
+```
+
+Seguindo os valores da próxima tabela, a pontuação total média dos
+professores do Programa de Pós-Graduação em `r NomeProg` no período
+`r Inicio`--`r Fim` na produção de livros e capítulos foi de **`r pmediaL`**
+pontos e a mediana de **`r pmedianaL`** pontos e na produção de artigos foi de
+**`r pmediaA`** pontos e a mediana de **`r pmedianaA`**.^[Os dados do
+Qualis são extraídos do arquivo *`r qxls`*, baixado da Plataforma Sucupira.] A
+área de `r NomeComite` atribui peso `r PesoLivros` aos livros e `r PesoArtigos`
+aos artigos. Usando esses valores, a soma ponderada das médias é
+de **`r PesoLivros * pmediaL + PesoArtigos * pmediaA`**.
+
+## Artigos (Qualis), capítulos e livros
+
+```{r ppg_pontos_lvr}
+kable(pontuacaoLvr, digits = 0,
+             caption = "Professores classificados por pontuação (Livros)") %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(pontuacaoLvr) - 1, extra_css = "border-bottom: 1px solid")
+```
+
+```{r ppg_pontos_art}
+kable(pontuacaoArt, digits = 0,
+             caption = "Professores classificados por pontuação (Artigos)") %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(pontuacaoArt) - 1, extra_css = "border-bottom: 1px solid")
+```
+
+A tabela abaixo apresenta a classificação dos professores quando sua
+produção é ponderada de acordo com os critérios do comitê de área. Uma linha
+adicional, indicadora da concentração da produção, apresenta o índice de Gini
+para livros, artigos e para a média ponderada dos dois tipos de produção.
+
+```{r imprimirpond}
+ultimalinha <- apply(pond[, 2:ncol(pond)], 2, function(x) Gini(x))
+tab <- rbind(pond, pond[1, ])
+tab$Professor[nrow(tab)] <- "Índice de Gini"
+tab[nrow(tab), 2:ncol(tab)] <- ultimalinha
+rownames(tab) <- c(as.character(1:(nrow(tab)-1)), " ")
+kable(tab, digits = 3, label = "tab:pond",
+             caption = "Professores classificados por pontuação ponderada") %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(tab) - 1, extra_css = "border-bottom: 1px solid")
+```
+
+```{r producao_qualis}
+tab <- rbind(producao, "Total" = apply(producao, 2, sum, na.rm = TRUE))
+kable(tab, caption = "Produção segundo classificação Qualis") %>%
+    kable_classic("striped", full_width = F) %>%
+    row_spec(nrow(tab) - 1, extra_css = "border-bottom: 1px solid")
+```
+
+## Artigos (SJR)
+
+A tabela seguinte mostra a pontuação calculada como a soma do índice SJR
+de cada publicação.
+
+```{r ppg_pontos_sjr}
+kable(pontuacaoSJR, digits = 3, label = "tab:sjr",
+      caption = "Professores classificados por pontuação (Artigos, SJR)") %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(pontuacaoSJR) - 2, extra_css = "border-bottom: 1px solid")
+```
+
+A base de dados do SJR inclui uma coluna com as áreas de conhecimento em que o
+periódico se classifica. A próxima tabela mostra os pesos
+atribuídos a cada categoria e a tabela seguinte mostra a pontuação
+obtida pelos professores considerando o escopo dos periódicos em que
+publicaram.
+```{r sjrsempeso}
+if(min(sjr.cat$Peso) == max(sjr.cat$Peso) && max(sjr.cat$Peso) == 1)
+    cat("Entretanto, como todos os pesos tem o mesmo valor (1,0), a duas tabelas são idênticas.")
+```
+
+```{r sjrpesos}
+kable(SJRPond, label = "tab:sjrpesos", row.names = FALSE,
+      caption = "Ponderação dos periódicos por categoria") %>%
+    kable_classic(full_width = F)
+```
+
+```{r ppg_pontos_sjrpond}
+kable(pontuacaoSJRPond, digits = 3, label = "tab:sjrpond",
+      caption = "Professores classificados por pontuação ponderada pelo escopo do periódico (Artigos, SJRPond)") %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(pontuacaoSJRPond) - 2, extra_css = "border-bottom: 1px solid")
+```
+
+A tabela seguinte usa dados do SJR para identificar os locais de
+publicação dos artigos.
+
+```{r paises}
+pais <- summary(p$Country)
+names(pais) <- sub("NA's", "Periódico ausente do SJR", names(pais))
+pais <- cbind("País" = names(pais), "N" = pais)
+kable(pais, row.names = FALSE, caption = "País da editora do periódico") %>%
+    kable_classic(full_width = F)
+```
+
+## Artigos (SNIP)
+
+A tabela seguinte mostra a pontuação calculada como a soma do índice
+SNIP de cada publicação:
+
+```{r ppg_pontos_snip}
+kable(pontuacaoSNIP, digits = 3, label = "tab:snip",
+      caption = "Professores classificados por pontuação (Artigos, SNIP)") %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(pontuacaoSNIP) - 2, extra_css = "border-bottom: 1px solid")
+```
+
+Assim como a base do SJR, a base de dados do SNIP também inclui uma coluna com
+as áreas de conhecimento em que o periódico se classifica. A próxima tabela
+mostra os pesos atribuídos a cada categoria e a tabela seguinte mostra a
+pontuação obtida pelos professores considerando o escopo dos periódicos em que
+publicaram.
+```{r snipsempeso}
+if(min(snip.cat$Peso) == max(snip.cat$Peso) && max(snip.cat$Peso) == 1)
+    cat("Entretanto, como todos os pesos tem o mesmo valor (1,0), a duas tabelas são idênticas.")
+```
+
+```{r snippesos}
+kable(SNIPPond, label = "tab:snippesos", row.names = FALSE,
+      caption = "Ponderação dos periódicos por categoria") %>%
+    kable_classic(full_width = F)
+```
+
+```{r ppg_pontos_snippond}
+kable(pontuacaoSNIPPond, digits = 3, label = "tab:snippond",
+             caption = "Professores classificados por pontuação ponderada pelo escopo do periódico (Artigos, SNIPPond)") %>%
+    kable_classic(full_width = F) %>%
+    row_spec(nrow(pontuacaoSNIPPond) - 2, extra_css = "border-bottom: 1px solid")
+```
+
+## Média móvel
+
+Raramente, um professor conseguirá manter aproximadamente o mesmo número de
+publicações e com a mesma qualificação ano após ano. Por isso, os gráficos
+seguintes mostram as médias móveis com períodos de três anos de produção dos
+professores. Ou seja, cada ponto representa o valor médio da pontuação nos
+últimos três anos. Os valores estão ponderados conforme o peso para artigos
+($`r PesoArtigos`$) e para livros ($`r PesoLivros`$). A linha laranja
+representa a média móvel da produção média de todos os professores,
+correspondendo à media dos professores permanentes do programa somente nos
+anos mais recentes, em que a composição do corpo docente for a mesma da atual.
+
+```{r mmmsg}
+if(length(mmmsg))
+    for(msg in mmmsg)
+        cat("\n\n", msg, "\n\n")
+```
+
+```{r mediamovel, fig.width=8, fig.height=3}
+par(mar = c(4, 4, 4, 0) + 0.1, cex = 0.75)
+mmMax <- max(sapply(mm, max))
+
+for(n in names(mm)){
+    plot(as.numeric(names(mm[[n]])), mm[[n]], ylim = c(0, mmMax),
+         pch=20, main = n, xlab = "Ano", ylab = "Média")
+    lines(as.numeric(names(mediamovel)), mediamovel, col = "orange")
+    lines(as.numeric(names(mm[[n]])), mm[[n]])
+    cat("\n\n")
+}
+```
+
+## Lista completa de publicações
+
+```{r printerros0}
+if(sum(grepl("coautr", proddet$erro))){
+    cat("**Legenda de informação adicional indicada na tabela seguinte:**\n\n")
+    kable(matrix("Artigo escrito em coautoria.", ncol = 1, nrow = 1)) %>%
+        kable_styling() %>%
+        row_spec(1, background = "palegreen")
+}
+```
+
+```{r printerros1}
+if(sum(c("capdup", "ncarac", "ninval", "duplic") %in% proddet$erro)){
+    cat("\n\n**Legenda de erros de preenchimento do Lattes indicados na tabela seguinte:**\n\n")
+}
+```
+
+```{r printerros2}
+if(sum(grepl("capdup", proddet$erro)) > 0){
+    kable(matrix("Capítulo indevidamente registrado porque pertence a livro do próprio professor.",
+                 ncol = 1, nrow = 1)) %>%
+    kable_styling() %>%
+    row_spec(1, background = "violet")
+}
+```
+
+```{r printerros3}
+if(sum(grepl("ncarac", proddet$erro)) > 0){
+    kable(matrix("ISSN ou ISBN com número inválido de caracteres. O ISSN deve ter 8 caracteres e o ISBN deve ter 13.",
+                 ncol = 1, nrow = 1)) %>%
+    kable_styling() %>%
+    row_spec(1, background = "pink")
+}
+```
+
+```{r printerros4}
+    if(sum(grepl("ninval", proddet$erro)) > 0){
+        kable(matrix("O ISBN é inválido. Confira se todos os algarismos estão corretos.",
+                     ncol = 1, nrow = 1)) %>%
+            kable_styling() %>%
+            row_spec(1, background = "moccasin")
+    }
+```
+
+```{r printerros5}
+    if(sum(grepl("duplic", proddet$erro)) > 0){
+        kable(matrix("Produção registrada mais de uma vez.", ncol = 1, nrow = 1)) %>%
+            kable_styling() %>%
+            row_spec(1, background = "powderblue")
+    }
+```
+
+```{r printTabProdDet}
+kable(proddet[, 1:8], row.names = FALSE,
+      caption = "Produção detalhada") %>%
+    kable_classic(full_width = F) %>%
+    kable_styling(fixed_thead = ifelse(nrow(proddet) > 30, T, F)) %>%
+    kable_styling() %>%
+    row_spec(grep("coautr", proddet$erro), background = "palegreen") %>%
+    row_spec(grep("capdup", proddet$erro), background = "violet") %>%
+    row_spec(grep("ncarac", proddet$erro), background = "pink") %>%
+    row_spec(grep("ninval", proddet$erro), background = "moccasin") %>%
+    row_spec(grep("duplic", proddet$erro), background = "powderblue")
+```
+
+```{r apendice2}
+kable(ttldif, row.names = FALSE,
+      caption = "Títulos de periódicos registrados nos currículos com alguma diferença dos títulos na planilha Qualis") %>%
+    kable_classic(full_width = F)
+```
+
+Períodicos podem estar sem Qualis porque não foram ainda classificados pelo
+comitê da área ou porque o professor errou a digitação do ISSN no currículo
+Lattes. Para descobrir se foi um erro de digitação, veja na
+tabela seguinte quem foi o professor que publicou no periodico,
+descubra qual o ISSN correto do periódico e verifique no currículo Lattes do
+professor se os dados foram digitados corretamente.
+
+```{r apendice3}
+kable(semqualis, row.names = FALSE,
+      caption = "Lista de periódicos sem qualis") %>%
+    kable_classic(full_width = F)
+
+```

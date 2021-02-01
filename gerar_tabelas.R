@@ -431,7 +431,7 @@ if(sum(is.na(p$pontos)) > 0){
 
 # Informações sobre professores
 doutor <- do.call("rbind", doutorado)
-doutor[, 2] <- NomeSigla(doutor[, 2])
+doutor[, 2] <- NomeSigla(sapply(doutor[, 2], html2txt))
 colnames(doutor) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano", "DataCV")
 # Reter somente último doutorado concluído:
 doutor <- doutor[order(doutor[, "Ano"], decreasing = TRUE), ]
@@ -547,7 +547,7 @@ posdoc <- do.call("rbind", posdoc)
 if(is.null(posdoc)){
     posdoc <- matrix(NA, ncol = 4)
 } else {
-    posdoc[, 2] <- NomeSigla(posdoc[, 2])
+    posdoc[, 2] <- NomeSigla(sapply(posdoc[, 2], html2txt))
     if(nrow(posdoc) > 1)
         posdoc <- posdoc[order(posdoc[, 4]), ]
 }
@@ -556,7 +556,7 @@ colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
 # Orientações concluídas
 oc <- do.call("rbind", oriconc)
 colnames(oc) <- c("Professor", "Natureza", "Ano", "Instituição", "Curso", "Orientado")
-oc[, 4] <- NomeSigla(oc[, 4])
+oc[, 4] <- NomeSigla(sapply(oc[, 4], html2txt))
 oc <- as.data.frame(oc, stringsAsFactors = FALSE)
 oc$Instituição <- sapply(oc$Instituição, html2txt)
 oc$Ano <- as.numeric(as.character(oc$Ano))
@@ -634,7 +634,7 @@ if(length(oriand)){
     oa <- as.data.frame(oa, stringsAsFactors = FALSE)
     colnames(oa) <- c("Professor", "Natureza", "Ano", "Orientando", "Instituição")
     oa$Instituição <- sapply(oa$Instituição, html2txt)
-    oa$Instituição <- NomeSigla(oa$Instituição)
+    oa$Instituição <- NomeSigla(sapply(oa$Instituição, html2txt))
     oa$Instituição <- AbreviarInstituicao(oa$Instituição)
     oa <- oa[order(oa$Ano), ]
     oa$Natureza <- sapply(oa$Natureza, html2txt)
@@ -685,10 +685,6 @@ if(length(oriand)){
              c("Ano", "Professor", "Natureza", "Instituição", "Orientando")]
     oa$Professor <- sub(" .* ", " ", oa$Professor)
     oa$Ano <- as.numeric(as.character(oa$Ano))
-    idx <- oa$Natureza == "D" & oa$Ano < as.numeric(sub("-.*", "", Sys.Date())) - 6
-    oa$Ano[idx] <- paste("\\rowcolor{yellow}", oa$Ano[idx])
-    idx <- oa$Natureza == "M" & oa$Ano < as.numeric(sub("-.*", "", Sys.Date())) - 4
-    oa$Ano[idx] <- paste("\\rowcolor{yellow}", oa$Ano[idx])
 } else {
     oriandTab <- data.frame()
 }
@@ -827,7 +823,6 @@ mm <- mm[!is.na(mm)]
 p$um <- 1
 producao <- tapply(p$um, list(p$prof, p$qualis), sum)
 producao <- producao[, !grepl("Nada", colnames(producao))]
-rownames(producao) <- c(rownames(producao)[1], paste("\\hline", rownames(producao)[2:nrow(producao)]))
 
 p$producao <- sapply(p$producao, html2txt)
 p$livro.ou.periodico <- sapply(p$livro.ou.periodico, html2txt)
@@ -841,8 +836,6 @@ b$prof <- sub("^(...................).*", "\\1", b$prof)
 b$producao <- sapply(b$producao, html2txt)
 b$livro.ou.periodico <- gsub("_", "\\\\_", b$livro.ou.periodico)
 
-erros <- NULL
-
 bp <- split(b, b$prof)
 ObterCapDup <- function(x)
 {
@@ -852,24 +845,20 @@ ObterCapDup <- function(x)
 }
 bp <- lapply(bp, ObterCapDup)
 b <- do.call("rbind", bp)
+b$erro <- ""
 if(sum(b$capdup) > 0){
-    b$prof[b$capdup] <- paste("\\rowcolor{capdup}", b$prof[b$capdup])
-    erros <- c(erros, "\\rowcolor{capdup}Capítulo indevidamente registrado porque pertence a livro do próprio professor.")
+    b$erro[b$capdup] <- "capdup"
 }
 b$capdup <- NULL
 
 idx <- ((b$tipo == "Artigo" | b$qualis == "OD") & nchar(b$isxn) != 8) | ((b$tipo != "Artigo" & b$qualis != "OD") & nchar(b$isxn) != 13)
 if(sum(idx) > 0){
-    b$prof[idx] <- paste("\\rowcolor{ncarac}", b$prof[idx])
-    erros <- c(erros, "\\rowcolor{ncarac}ISSN ou ISBN com número inválido de caracteres. O ISSN deve ter 8 caracteres e o ISBN deve ter 13.")
+    b$erro[idx] <- "ncarac"
 }
 
 idx <- b$ncoaut > 1
 if(sum(idx) > 0){
-    b$prof[idx] <- paste("\\rowcolor{coautr}", b$prof[idx])
-    TemCoautoria <- TRUE
-} else {
-    TemCoautoria <- FALSE
+    b$erro[idx] <- "coautr"
 }
 b$ncoaut <- NULL
 
@@ -893,8 +882,7 @@ checkISBN <- function(x){
 
 idx <- sapply(b$isxn, checkISBN)
 if(sum(idx) > 0){
-    b$prof[idx] <- paste("\\rowcolor{ninval}", b$prof[idx])
-    erros <- c(erros, "\\rowcolor{ninval}O ISBN é inválido. Confira se todos os algarismos estão corretos.")
+    b$erro[idx] <- "ninval"
 }
 
 
@@ -911,18 +899,18 @@ dup$producao <- gsub("[[:space:]]", "", dup$producao)
 dup$producao <- sub("^(........................).*", "\\1", dup$producao)
 idx <- duplicated(dup)
 if(sum(idx) > 0){
-    b$prof[idx] <- paste("\\rowcolor{duplic}", b$prof[idx])
-    erros <- c(erros, "\\rowcolor{duplic}Produção registrada mais de uma vez.")
+    b$erro[idx] <- "duplic"
 }
 rm(idx, dup, checkISBN)
 
-b$livro.ou.periodico <- xtable::sanitize(b$livro.ou.periodico)
-b$producao <- xtable::sanitize(b$producao)
+# b$livro.ou.periodico <- xtable::sanitize(b$livro.ou.periodico)
+# b$producao <- xtable::sanitize(b$producao)
 
 levels(b$qualis) <- sub("Nada", " ", levels(b$qualis))
 names(b) <- c("Professor", "Produção (títulos truncados)", "Ano", "Qualis", "SJR",
-              "SNIP", "Periódico ou Livro (títulos truncados)", "ISSN/ISBN")
+              "SNIP", "Periódico ou Livro (títulos truncados)", "ISSN/ISBN", "erro")
 proddet <- b
+proddet$SNIP <- round(proddet$SNIP, 3)
 rm(b)
 
 # TODO: Produzir tabela com periódicos que mais contribuíram para a pontuação

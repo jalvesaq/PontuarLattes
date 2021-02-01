@@ -10,13 +10,19 @@ if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 library("xtable")
 library("ineq")
-bold <- function(x) {paste('\\textbf{', x,'}', sep ='')}
+Bold <- function(x) {paste('\\textbf{', x,'}', sep ='')}
+SaniTex <- function(x)
+{
+    x <- gsub("&", "\\\\&", x)
+    x
+}
+
 options(xtable.table.placement = "H",
         xtable.caption.placement = "top",
         xtable.booktabs = TRUE,
         xtable.floating = FALSE,
         xtable.tabular.environment = "longtable",
-        xtable.sanitize.colnames.function = bold,
+        xtable.sanitize.colnames.function = Bold,
         format.args = list(big.mark = ".", decimal.mark = ","),
         OutDec = ",")
 source("gerar_tabelas.R")
@@ -562,30 +568,49 @@ for(n in names(mm)){
 
 
 <<printerros>>=
-if(TemCoautoria){
+if(sum(proddet$erro == "coautr") > 0){
     cat("\\textbf{Legenda de informação adicional indicada na Tabela \\ref{tab:proddet}}:\n\n")
     cat("\\begin{tabular}{p{23.5cm}}\n")
     cat("\\rowcolor{coautr}Produção realizada em coautoria por mais de um professor do programa.\\\\\n")
     cat("\\end{tabular}\n\n\n")
+    proddet$Professor[grepl("coautr", proddet$erro)] <- paste0("\\rowcolor{coautr}", proddet$Professor[grepl("coautr", proddet$erro)])
 }
 
-if(length(erros) > 0){
+if(sum(c("capdup", "ncarac", "ninval", "duplic") %in% proddet$erro)){
     cat("\\textbf{Legenda de erros de preenchimento do Lattes indicados na Tabela \\ref{tab:proddet}}:\n\n")
     cat("\\begin{tabular}{p{23.5cm}}\n")
-    for(e in erros)
-        cat(e, "\\\\\n")
+
+    if(sum(grepl("capdup", proddet$erro)) > 0){
+        cat("\\rowcolor{capdup}Capítulo indevidamente registrado porque pertence a livro do próprio professor.\\\\\n")
+        proddet$Professor[grepl("capdup", proddet$erro)] <- paste0("\\rowcolor{capdup}", proddet$Professor[grepl("capdup", proddet$erro)])
+    }
+    if(sum(grepl("ncarac", proddet$erro)) > 0){
+        cat("\\rowcolor{ncarac}ISSN ou ISBN com número inválido de caracteres. O ISSN deve ter 8 caracteres e o ISBN deve ter 13.\\\\\n")
+        proddet$Professor[grepl("ncarac", proddet$erro)] <- paste0("\\rowcolor{ncarac}", proddet$Professor[grepl("ncarac", proddet$erro)])
+    }
+    if(sum(grepl("ninval", proddet$erro)) > 0){
+        cat("\\rowcolor{ninval}O ISBN é inválido. Confira se todos os algarismos estão corretos.\\\\\n")
+        proddet$Professor[grepl("ninval", proddet$erro)] <- paste0("\\rowcolor{ninval}", proddet$Professor[grepl("ninval", proddet$erro)])
+    }
+    if(sum(grepl("duplic", proddet$erro)) > 0){
+        cat("\\rowcolor{duplic}Produção registrada mais de uma vez.\\\\\n")
+        proddet$Professor[grepl("duplic", proddet$erro)] <- paste0("\\rowcolor{duplic}", proddet$Professor[grepl("duplic", proddet$erro)])
+    }
     cat("\\end{tabular}\n")
-    rm(e)
 }
 @
 
 
 \small
 <<printTabProdDet>>=
-print(xtable(proddet, display = c("s", "s", "s", "d", "s", "f", "f", "s", "s"),
+prddt <- proddet
+prddt$erro <- NULL
+prddt[[2]] <- SaniTex(prddt[[2]])
+prddt[[7]] <- SaniTex(prddt[[7]])
+print(xtable(prddt, display = c("s", "s", "s", "d", "s", "f", "f", "s", "s"),
              align = "lllrrllrr", label = "tab:proddet",
              caption = "Produção detalhada"),
-      sanitize.text.function = function(x)x,
+      sanitize.text.function = function(x) x,
       tabular.environment = "longtable", floating = FALSE,
       include.rownames = FALSE)
 @
