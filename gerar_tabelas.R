@@ -707,28 +707,33 @@ if(nrow(ens)){
 }
 
 ## Registro do item “Extensão” no período
-ext <- do.call("rbind", extensao)
-ext <- as.data.frame(ext, stringsAsFactors = FALSE)
-names(ext) <- c("Professor", "Atividade", "MI", "AnoI", "MF", "AnoF")
-ext$Atividade <- sapply(ext$Atividade, html2txt)
-ext <- ext[(ext$AnoI >= as.character(Inicio) & ext$AnoF <= as.character(Fim)) |
-            ext$AnoF == "", ]
-if(nrow(ext)){
-    extensaoTab <- ext
+if(length(extensao)){
+    ext <- do.call("rbind", extensao)
+    ext <- as.data.frame(ext, stringsAsFactors = FALSE)
+    names(ext) <- c("Professor", "Atividade", "MI", "AnoI", "MF", "AnoF")
+    ext$Atividade <- sapply(ext$Atividade, html2txt)
+    ext <- ext[(ext$AnoI >= as.character(Inicio) & ext$AnoF <= as.character(Fim)) |
+               ext$AnoF == "", ]
+           if(nrow(ext)){
+               extensaoTab <- ext
+           } else {
+               extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período")
+           }
+
+           ## Registro do item “Projeto de Extensão” no período
+           ext <- do.call("rbind", projext)
+           ext <- as.data.frame(ext, stringsAsFactors = FALSE)
+           names(ext) <- c("Professor", "Projeto", "MI", "AnoI", "MF", "AnoF")
+           ext$Projeto <- sapply(ext$Projeto, html2txt)
+           ext <- ext[(ext$AnoI >= as.character(Inicio) & ext$AnoF <= as.character(Fim)) |
+                      ext$AnoF == "", ]
+                  if(nrow(ext)){
+                      projextTab <- ext
+                  } else {
+                      projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período")
+                  }
 } else {
     extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período")
-}
-
-## Registro do item “Projeto de Extensão” no período
-ext <- do.call("rbind", projext)
-ext <- as.data.frame(ext, stringsAsFactors = FALSE)
-names(ext) <- c("Professor", "Projeto", "MI", "AnoI", "MF", "AnoF")
-ext$Projeto <- sapply(ext$Projeto, html2txt)
-ext <- ext[(ext$AnoI >= as.character(Inicio) & ext$AnoF <= as.character(Fim)) |
-           ext$AnoF == "", ]
-if(nrow(ext)){
-    projextTab <- ext
-} else {
     projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período")
 }
 
