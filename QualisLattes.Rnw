@@ -112,10 +112,7 @@ avaliação.
 \section{Data do currículo}
 
 <<printDataLattes>>=
-tab <- cbind(doutor[, c("Professor", "DataCV")],
-             "Dias" = as.Date(Sys.time()) - as.Date(doutor[, "DataCV"], "%d/%m/%Y"))
-
-print(xtable(tab, align = "llcr", caption = "Data de atualização do Currículo Lattes"),
+print(xtable(quando[, c("Professor", "Dias")], align = "llr", caption = "Data de atualização do Currículo Lattes"),
       include.rownames = FALSE)
 @
 
@@ -123,21 +120,22 @@ print(xtable(tab, align = "llcr", caption = "Data de atualização do Currículo
 
 \section{Títulos e prêmios}
 
-\begin{longtable}{p{7cm}p{7cm}p{7cm}cc}
-\caption{Curso de doutorado} \\
-  \toprule
 <<tabelaGeral>>=
-doutor <- doutor[order(doutor[, "Ano"]), ]
-tab <- cbind(doutor[, 1:4],
-             "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor[, "Ano"]))
-print(xtable(tab), booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
+if(!is.null(doutor)){
+    cat("\\begin{longtable}{p{7cm}p{7cm}p{7cm}cc}\n")
+    cat("\\caption{Curso de doutorado} \\\\\n")
+    cat("  \\toprule\n")
+    doutor <- doutor[order(doutor[, "Ano"]), ]
+    tab <- cbind(doutor[, 1:4],
+                 "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor[, "Ano"]))
+    print(xtable(tab), booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
+    cat("    \\multicolumn{4}{l}{Tempo médio de titulação}  & ", round(mean(as.numeric(tab[, 5]))), "\\\\\n")
+    cat("   \\bottomrule\n")
+    cat("\\end{longtable}\n")
+    cat("\n")
+    cat("\\newpage\n")
+}
 @
-    \multicolumn{4}{l}{Tempo médio de titulação}  &
-    \Sexpr{round(mean(as.numeric(tab[, 5])))} \\
-   \bottomrule
-\end{longtable}
-
-\newpage
 
 \begin{longtable}{lrr}
 \caption{Área de titulação} \\

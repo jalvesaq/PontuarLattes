@@ -70,10 +70,7 @@ avaliação.
 # Data do currículo
 
 ```{r printDataLattes}
-tab <- cbind(doutor[, c("Professor", "DataCV")],
-             "Dias" = as.Date(Sys.time()) - as.Date(doutor[, "DataCV"], "%d/%m/%Y"))
-
-kable(tab, align = c("l", "c", "r"),
+kable(quando[, c("Professor", "Dias")], align = c("l", "c", "r"),
       caption = "Data de atualização do Currículo Lattes") %>%
     kable_classic(full_width = F)
 ```
@@ -81,13 +78,15 @@ kable(tab, align = c("l", "c", "r"),
 # Títulos e prêmios
 
 ```{r tabelaGeral}
-doutor <- doutor[order(doutor[, "Ano"]), ]
-tab <- cbind(doutor[, 1:4],
-             "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor[, "Ano"]))
-tab <- rbind(tab, c("Tempo médio de titulação", "", "", "", round(mean(as.numeric(tab[, 5])))))
-kable(tab, align = c("l", "l", "l", "c", "r"), caption = "Curso de doutorado") %>%
-    kable_classic(full_width = F) %>%
-    row_spec(nrow(tab) - 1, extra_css = "border-bottom: 1px solid")
+if(!is.null(doutor)){
+    doutor <- doutor[order(doutor[, "Ano"]), ]
+    tab <- cbind(doutor[, 1:4],
+                 "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor[, "Ano"]))
+    tab <- rbind(tab, c("Tempo médio de titulação", "", "", "", round(mean(as.numeric(tab[, 5])))))
+    kable(tab, align = c("l", "l", "l", "c", "r"), caption = "Curso de doutorado") %>%
+        kable_classic(full_width = F) %>%
+        row_spec(nrow(tab) - 1, extra_css = "border-bottom: 1px solid")
+}
 ```
 
 ```{r areaTitulo}

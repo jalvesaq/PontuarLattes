@@ -96,6 +96,7 @@ AbreviarInstituicao <- function(x)
 
 # Ler currículos
 
+datacv <- list()
 doutorado <- list()
 posdoc <- list()
 premios <- list()
@@ -125,13 +126,14 @@ obter.producao <- function(arquivo)
 
     da <- sub("(..)(..)(....)", "\\1/\\2/\\3",
               xl$attributes[["DATA-ATUALIZACAO"]])
+    datacv[[length(datacv)+1]] <<- c("Professor" = nomep, "DataCV" = da)
 
     if("DOUTORADO" %in% names(prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children)){
         xx <- prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children
         for(ii in 1:length(xx)){
             if("DOUTORADO" == names(xx)[ii]){
                 yy <- xx[[ii]]$attributes[c("NOME-INSTITUICAO", "NOME-CURSO", "ANO-DE-CONCLUSAO")]
-                doutorado[[length(doutorado)+1]] <<- c("Professor" = nomep, yy, "DataCV" = da)
+                doutorado[[length(doutorado)+1]] <<- c("Professor" = nomep, yy)
             }
         }
     }
@@ -429,18 +431,24 @@ if(sum(is.na(p$pontos)) > 0){
     cat("\\end{verbatim}\n\n")
 }
 
-# Informações sobre professores
-doutor <- do.call("rbind", doutorado)
-doutor[, 2] <- NomeSigla(sapply(doutor[, 2], html2txt))
-colnames(doutor) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano", "DataCV")
-# Reter somente último doutorado concluído:
-doutor <- doutor[order(doutor[, "Ano"], decreasing = TRUE), ]
-notdup <- !duplicated(doutor[, "Professor"])
-doutor <- doutor[notdup, ]
+# Data de atualização do currículo
+quando <- as.data.frame(do.call("rbind", datacv))
+quando$DataCV <- as.Date(quando$DataCV, format = "%d/%m/%Y")
+quando <- quando[order(quando$DataCV), ]
+quando$Dias <- as.integer(as.Date(Sys.time()) - quando$DataCV)
 
-quando <- as.Date(doutor[, "DataCV"], format = "%d/%m/%Y")
-doutor <- doutor[order(quando), ]
-rm(quando)
+# Informações sobre doutorado
+if(length(doutorado) > 1){
+    doutor <- do.call("rbind", doutorado)
+    doutor[, 2] <- NomeSigla(sapply(doutor[, 2], html2txt))
+    colnames(doutor) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano")
+    # Reter somente último doutorado concluído:
+    doutor <- doutor[order(doutor[, "Ano"], decreasing = TRUE), ]
+    notdup <- !duplicated(doutor[, "Professor"])
+    doutor <- doutor[notdup, ]
+} else {
+    doutor <- NULL
+}
 
 p$prof <- factor(p$prof)
 
@@ -450,9 +458,9 @@ TabProd <- function(d, v, g = FALSE)
     tab <- tapply(pontos, list(d$prof, d$ano), sum, na.rm = TRUE)
 
     # Adicionar professores que não produziram no período
-    falta <- !(doutor[, "Professor"] %in% rownames(tab))
+    falta <- !(quando[, "Professor"] %in% rownames(tab))
     if(sum(falta) > 0){
-        falta <- doutor[falta, "Professor"]
+        falta <- quando[falta, "Professor"]
         ftab <- matrix(nrow = length(falta), ncol = ncol(tab))
         rownames(ftab) <- falta
         colnames(ftab) <- colnames(tab)
@@ -554,65 +562,70 @@ if(is.null(posdoc)){
 colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
 
 # Orientações concluídas
-oc <- do.call("rbind", oriconc)
-colnames(oc) <- c("Professor", "Natureza", "Ano", "Instituição", "Curso", "Orientado")
-oc[, 4] <- NomeSigla(sapply(oc[, 4], html2txt))
-oc <- as.data.frame(oc, stringsAsFactors = FALSE)
-oc$Instituição <- sapply(oc$Instituição, html2txt)
-oc$Ano <- as.numeric(as.character(oc$Ano))
-oc <- oc[oc$Ano >= Inicio & oc$Ano <= Fim, ]
+if(length(oriconc)){
+    oc <- do.call("rbind", oriconc)
+    colnames(oc) <- c("Professor", "Natureza", "Ano", "Instituição", "Curso", "Orientado")
+    oc[, 4] <- NomeSigla(sapply(oc[, 4], html2txt))
+    oc <- as.data.frame(oc, stringsAsFactors = FALSE)
+    oc$Instituição <- sapply(oc$Instituição, html2txt)
+    oc$Ano <- as.numeric(as.character(oc$Ano))
+    oc <- oc[oc$Ano >= Inicio & oc$Ano <= Fim, ]
 
-oc$Natureza <- sapply(oc$Natureza, html2txt)
-oc$Natureza <- sub("Dissertação de mestrado", "M", oc$Natureza)
-oc$Natureza <- sub("INICIACAO_CIENTIFICA", "IC", oc$Natureza)
-oc$Natureza <-
-    sub("MONOGRAFIA_DE_CONCLUSAO_DE_CURSO_APERFEICOAMENTO_E_ESPECIALIZACAO", "E",
-        oc$Natureza)
-oc$Natureza <- sub("ORIENTACAO-DE-OUTRA-NATUREZA", "O", oc$Natureza)
-oc$Natureza <- sub("Supervisão de pós-doutorado", "PD", oc$Natureza)
-oc$Natureza <- sub("Tese de doutorado", "D", oc$Natureza)
-oc$Natureza <- sub("TRABALHO_DE_CONCLUSAO_DE_CURSO_GRADUACAO", "G",
-                                oc$Natureza)
-oc$Natureza <- factor(oc$Natureza)
-oc$um <- 1
+    oc$Natureza <- sapply(oc$Natureza, html2txt)
+    oc$Natureza <- sub("Dissertação de mestrado", "M", oc$Natureza)
+    oc$Natureza <- sub("INICIACAO_CIENTIFICA", "IC", oc$Natureza)
+    oc$Natureza <-
+        sub("MONOGRAFIA_DE_CONCLUSAO_DE_CURSO_APERFEICOAMENTO_E_ESPECIALIZACAO", "E",
+            oc$Natureza)
+    oc$Natureza <- sub("ORIENTACAO-DE-OUTRA-NATUREZA", "O", oc$Natureza)
+    oc$Natureza <- sub("Supervisão de pós-doutorado", "PD", oc$Natureza)
+    oc$Natureza <- sub("Tese de doutorado", "D", oc$Natureza)
+    oc$Natureza <- sub("TRABALHO_DE_CONCLUSAO_DE_CURSO_GRADUACAO", "G",
+                       oc$Natureza)
+    oc$Natureza <- factor(oc$Natureza)
+    oc$um <- 1
 
-oriconcTab <- tapply(oc$um, list(oc$Professor, oc$Natureza), sum)
-oriconcTab[is.na(oriconcTab)] <- 0
+    oriconcTab <- tapply(oc$um, list(oc$Professor, oc$Natureza), sum)
+    oriconcTab[is.na(oriconcTab)] <- 0
 
-
-# Ordenar colunas (nem todos os programas têm todos os tipos de orientações)
-ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
-faltaCol <- !(levels(oc$Natureza) %in% ordem)
-if(sum(faltaCol)){
-    print(levels(oc$Natureza))
-    stop(paste0("Tipo de orientação não reconhecida: ", levels(oc$Natureza)[faltaCol]))
-}
-
-ordem <- ordem[ordem %in% levels(oc$Natureza)]
-
-ro <- 1:nrow(oriconcTab)
-if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
-    ro <- order(oriconcTab[, "PD"], oriconcTab[, "D"], oriconcTab[, "M"],
-                decreasing = TRUE)
-} else {
-    if("D" %in% ordem & "M" %in% ordem){
-        ro <- order(oriconcTab[, "D"], oriconcTab[, "M"], decreasing = TRUE)
-    } else {
-        if("M" %in% ordem)
-            ro <- order(oriconcTab[, "M"], decreasing = TRUE)
+    # Ordenar colunas (nem todos os programas têm todos os tipos de orientações)
+    ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
+    faltaCol <- !(levels(oc$Natureza) %in% ordem)
+    if(sum(faltaCol)){
+        print(levels(oc$Natureza))
+        stop(paste0("Tipo de orientação não reconhecida: ", levels(oc$Natureza)[faltaCol]))
     }
+
+    ordem <- ordem[ordem %in% levels(oc$Natureza)]
+
+    ro <- 1:nrow(oriconcTab)
+    if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
+        ro <- order(oriconcTab[, "PD"], oriconcTab[, "D"], oriconcTab[, "M"],
+                    decreasing = TRUE)
+    } else {
+        if("D" %in% ordem & "M" %in% ordem){
+            ro <- order(oriconcTab[, "D"], oriconcTab[, "M"], decreasing = TRUE)
+        } else {
+            if("M" %in% ordem)
+                ro <- order(oriconcTab[, "M"], decreasing = TRUE)
+        }
+    }
+
+    if(nrow(oriconcTab) > 1)
+        oriconcTab <- oriconcTab[ro, ordem]
+
+    # Detalhamento das orientações concluídas
+    oc$Professor <- sub(" .* ", " ", oc$Professor)
+    oc$Orientado <- sub(" .* ", " ", oc$Orientado)
+    oc$Instituição <- AbreviarInstituicao(oc$Instituição)
+    oc$Curso <- AbreviarInstituicao(oc$Curso)
+    oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
+             c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
+} else {
+    oriconcTab <- data.frame()
 }
 
-if(nrow(oriconcTab) > 1)
-    oriconcTab <- oriconcTab[ro, ordem]
 
-# Detalhamento das orientações concluídas
-oc$Professor <- sub(" .* ", " ", oc$Professor)
-oc$Orientado <- sub(" .* ", " ", oc$Orientado)
-oc$Instituição <- AbreviarInstituicao(oc$Instituição)
-oc$Curso <- AbreviarInstituicao(oc$Curso)
-oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
-         c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
 
 # Prêmios
 if(length(premios)){
@@ -691,20 +704,22 @@ if(length(oriand)){
 
 
 ## Registro do item “Ensino” no período
-ens <- do.call("rbind", ensino)
-ens <- as.data.frame(ens, stringsAsFactors = FALSE)
-names(ens) <- c("Professor", "Tipo", "MI", "AnoI", "MF", "AnoF")
-ens <- ens[ens$AnoI >= as.character(Inicio) &
-                 (ens$AnoF <= as.character(Fim) | ens$AnoF == ""), ]
-if(nrow(ens)){
-    ens$um <- 1
-    ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum)
-    ensinoTab[is.na(ensinoTab)] <- 0
-    colnames(ensinoTab) <- sub("GRADUACAO", "Graduação", colnames(ensinoTab))
-    colnames(ensinoTab) <- sub("POS-", "Pós-", colnames(ensinoTab))
-} else {
-    ensinoTab <- data.frame("Atividade de ensino" = "Nenhuma atividade de ensino registrada com início e fim no período")
+if(length(ensino)){
+    ens <- do.call("rbind", ensino)
+    ens <- as.data.frame(ens, stringsAsFactors = FALSE)
+    names(ens) <- c("Professor", "Tipo", "MI", "AnoI", "MF", "AnoF")
+    ens <- ens[ens$AnoI >= as.character(Inicio) &
+               (ens$AnoF <= as.character(Fim) | ens$AnoF == ""), ]
+    if(nrow(ens)){
+        ens$um <- 1
+        ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum)
+        ensinoTab[is.na(ensinoTab)] <- 0
+        colnames(ensinoTab) <- sub("GRADUACAO", "Graduação", colnames(ensinoTab))
+        colnames(ensinoTab) <- sub("POS-", "Pós-", colnames(ensinoTab))
+    }
 }
+if(!exists("ensinoTab"))
+        ensinoTab <- data.frame("Atividade de ensino" = "Nenhuma atividade de ensino registrada com início e fim no período")
 
 ## Registro do item “Extensão” no período
 if(length(extensao)){
@@ -768,7 +783,7 @@ pm <- pcompleto[, c("tipo", "pontos", "ano")]
 
 pm$pontos[pm$tipo == "Artigo"] <- 0.7 * pm$pontos[pm$tipo == "Artigo"]
 pm$pontos[pm$tipo != "Artigo"] <- 0.3 * pm$pontos[pm$tipo != "Artigo"]
-media <- tapply(pm$pontos, pm$ano, function(x) sum(x) / nrow(doutor))
+media <- tapply(pm$pontos, pm$ano, function(x) sum(x) / nrow(quando))
 mediamovel <- rep(0, max(as.numeric(names(media))) - min(as.numeric(names(media))) + 1)
 names(mediamovel) <- as.character(as.numeric(min(names(media))):as.numeric(max(names(media))))
 for(n in names(media))
@@ -939,7 +954,7 @@ colnames(semqualis) <- c("ISSN", "Título do periódico")
 
 p$Country <- factor(p$Country)
 
-save(cnpqId, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
+save(cnpqId, quando, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
      pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")
 
 cnpqId <- cnpqId[order(cnpqId[, 1]), ]
