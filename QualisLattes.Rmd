@@ -295,6 +295,12 @@ kable(tab, digits = 3, label = "tab:pond",
     row_spec(nrow(tab) - 1, extra_css = "border-bottom: 1px solid")
 ```
 
+```{r art4}
+kable(pontuacaoArt4, digits = 0, align = "llr",
+      caption = "Professores classificados por pontuação (somente os quatro artigos com maior pontuação)") %>%
+    kable_classic(full_width = F)
+```
+
 ```{r producao_qualis}
 tab <- rbind(producao, "Total" = apply(producao, 2, sum, na.rm = TRUE))
 kable(tab, caption = "Produção segundo classificação Qualis") %>%

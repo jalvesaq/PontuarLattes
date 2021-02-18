@@ -549,6 +549,26 @@ pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR", TRUE)
 pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond", TRUE)
 pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond", TRUE)
 
+p4 <- p[p$tipo == "Artigo", c("prof", "ano", "pontos")]
+p4s <- split(p4, p4$prof)
+QuatroMaiores <- function(x)
+{
+    x <- x[order(x$pontos, decreasing = TRUE), ]
+    if(nrow(x) > 4)
+        x <- x[1:4, ]
+    x
+}
+p4s <- lapply(p4s, QuatroMaiores)
+p4 <- do.call("rbind", p4s)
+tab <- tapply(p4$pontos, p4$prof, sum)
+falta <- !(quando[, "Professor"] %in% names(tab))
+if(sum(falta) > 0){
+    zf <- rep(0, sum(falta))
+    names(zf) <- quando[falta, "Professor"]
+    tab <- c(tab, zf)
+}
+tab <- sort(tab, decreasing = TRUE)
+pontuacaoArt4 <- data.frame(Professor = names(tab), Pontos = unname(tab))
 
 # Lista de Pós-doutorados realizados
 posdoc <- do.call("rbind", posdoc)
