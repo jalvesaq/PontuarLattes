@@ -25,6 +25,7 @@ PesoLivros <- 0.3
 # Período do relatório
 Inicio <- 2017
 Fim <- 2019
+QualisPorTitulo <- FALSE
 
 # Carregar dados do SJR e SNIP
 load("SJR_SNIP.RData")
@@ -306,6 +307,31 @@ if(exists("equivalente")){
 
 
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
+
+# Adicionar Qualis por título
+if(QualisPorTitulo){
+    p2 <- p[p$tipo == "Artigo" & is.na(p$qualis), c("isxn", "livro.ou.periodico")]
+    names(p2) <- c("issn", "titulo")
+    p2 <- p2[!duplicated(p2$titulo) & !is.na(p2$issn) & p2$issn != "", ]
+    p2 <- p2[!duplicated(p2$issn), ]
+    q2 <- qualis
+    q2$titulo <- tolower(q2$titulo)
+    p2$titulo <- tolower(p2$titulo)
+    p2 <- merge(p2, q2, stringsAsFactors = FALSE)
+    if(nrow(p2) > 0){
+        for(i in 1:nrow(p2)){
+            p$qualis[p$isxn == p2$issn[i]] <- p2$qualis[i]
+            p$title.sjr[p$isxn == p2$issn[i]] <- p2$title.sjr[i]
+            p$SJR[p$isxn == p2$issn[i]] <- p2$SJR[i]
+            p$Country[p$isxn == p2$issn[i]] <- p2$Country[i]
+            p$cat.sjr[p$isxn == p2$issn[i]] <- p2$cat.sjr[i]
+            p$Source.title[p$isxn == p2$issn[i]] <- p2$Source.title[i]
+            p$SNIP[p$isxn == p2$issn[i]] <- p2$SNIP[i]
+            p$ASJC.field.IDs[p$isxn == p2$issn[i]] <- p2$ASJC.field.IDs[i]
+        }
+    }
+}
+
 
 # Organização de dossiês em periódicos:
 if(QNovo){

@@ -32,6 +32,9 @@ PontosQualis <- c("A1"  = 100,
                   "Org" =  70,
                   "Cap" =  15)
 
+# Procurar Qualis por título exato se não encontrar por ISSN?
+QualisPorTitulo <- FALSE
+
 # Pesos para cálculo da média ponderada
 PesoArtigos <- 0.7
 PesoLivros <- 0.3
