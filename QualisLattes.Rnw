@@ -402,7 +402,6 @@ print(xtable(tab, digits = 3, label = "tab:pond",
 <<ppg_pontos_art4>>=
 print(xtable(pontuacaoArt4, digits = 0, align = "llr",
              caption = "Professores classificados por pontuação (somente os quatro artigos com maior pontuação)"),
-      hline.after = c(-1, 0, nrow(pontuacaoArt4)-1, nrow(pontuacaoArt4)),
       include.rownames = FALSE)
 @
 
