@@ -113,8 +113,14 @@ colnames(cnpqId) <- c("Professor", "id")
 obter.producao <- function(arquivo)
 {
     if(grepl("zip", arquivo)){
-        unzip(paste0("lattes_xml/", arquivo), exdir = "/tmp/")
-        xl <- xmlTreeParse("/tmp/curriculo.xml", encoding = "latin1")
+        if(file.info(paste0("lattes_xml/", arquivo))[["size"]] == 0)
+            return(invisible(NULL))
+        z <- unzip(paste0("lattes_xml/", arquivo), exdir = "/tmp/")
+        if(length(z) == 1 && grepl("curriculo\\.xml", z)){
+            xl <- xmlTreeParse("/tmp/curriculo.xml", encoding = "latin1")
+        } else {
+            return(invisible(NULL))
+        }
     } else {
         xl <- xmlTreeParse(paste0("lattes_xml/", arquivo), encoding = "latin1")
     }
