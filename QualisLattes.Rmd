@@ -147,27 +147,20 @@ D = Tese de doutorado e
 PD = Supervisão de pós-doutorado.
 
 ```{r oriconc}
-tab <- rbind(oriconcTab, "Total" = apply(oriconcTab, 2, sum),
-             "Média" = round(apply(oriconcTab, 2, mean), 1))
-tab <- cbind("Orientador" = rownames(tab),
-             tab,
-             "Total" = apply(tab, 1, sum))
-aln <- c("l", rep("r", ncol(tab) - 1))
-kable(tab, align = aln, digits = 0, row.names = FALSE,
+aln <- c("l", rep("r", ncol(oriconcTab) - 1))
+if(nrow(oriconcTab) > 3){
+kable(oriconcTab, align = aln, digits = 0, row.names = FALSE,
              caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim)) %>%
     kable_classic(full_width = F) %>%
-    row_spec(nrow(tab) - 2, extra_css = "border-bottom: 1px solid")
+    row_spec(nrow(oriconcTab) - 2, extra_css = "border-bottom: 1px solid")
+} else {
+kable(oriconcTab, align = aln, digits = 0, row.names = FALSE,
+             caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim)) %>%
+    kable_classic(full_width = F)
+}
 ```
 
 ```{r detOriConc}
-oc$Professor <- sub(" .* ", " ", oc$Professor)
-oc$Orientado <- sub(" .* ", " ", oc$Orientado)
-oc$Instituição <- sub("Universidade", "U.", oc$Instituição)
-oc$Instituição <- sub("Federal", "F.", oc$Instituição)
-oc$Instituição <- sub("Estadual", "E.", oc$Instituição)
-oc$Curso <- sub("Programa de Pós-Graduação", "PPG", oc$Curso)
-oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
-         c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
 kable(oc, label = "tab:detoriconc", row.names = FALSE,
       digits = 0, caption = "Detalhamento das orientações") %>%
     kable_classic(full_width = F) %>%
@@ -175,17 +168,17 @@ kable(oc, label = "tab:detoriconc", row.names = FALSE,
 ```
 
 ```{r oriand}
-tab <- rbind(oriandTab, "Total" = apply(oriandTab, 2, sum),
-             "Média" = round(apply(oriandTab, 2, mean), 1))
-tab <- cbind("Orientador" = rownames(tab),
-             tab,
-             "Total" = apply(tab, 1, sum))
-aln <- c("l", rep("r", ncol(tab) - 1))
-
-kable(tab, align = aln, digits = 0, row.names = FALSE,
-      caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim)) %>%
+aln <- c("l", rep("r", ncol(oriandTab) - 1))
+if(nrow(oriandTab) > 2){
+    kable(oriandTab, align = aln, digits = 0, row.names = FALSE,
+          caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim)) %>%
     kable_classic(full_width = F) %>%
-    row_spec(nrow(tab) - 2, extra_css = "border-bottom: 1px solid")
+    row_spec(nrow(oriandTab) - 2, extra_css = "border-bottom: 1px solid")
+} else {
+    kable(oriandTab, align = aln, digits = 0, row.names = FALSE,
+          caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim)) %>%
+    kable_classic(full_width = F)
+}
 ```
 
 ```{r oriandTab}
@@ -408,15 +401,17 @@ if(length(mmmsg))
 ```
 
 ```{r mediamovel, fig.width=8, fig.height=3}
-par(mar = c(4, 4, 4, 0) + 0.1, cex = 0.75)
-mmMax <- max(sapply(mm, max))
+if(length(mm)){
+    par(mar = c(4, 4, 4, 0) + 0.1, cex = 0.75)
+    mmMax <- max(sapply(mm, max))
 
-for(n in names(mm)){
-    plot(as.numeric(names(mm[[n]])), mm[[n]], ylim = c(0, mmMax),
-         pch=20, main = n, xlab = "Ano", ylab = "Média")
-    lines(as.numeric(names(mediamovel)), mediamovel, col = "orange")
-    lines(as.numeric(names(mm[[n]])), mm[[n]])
-    cat("\n\n")
+    for(n in names(mm)){
+        plot(as.numeric(names(mm[[n]])), mm[[n]], ylim = c(0, mmMax),
+             pch=20, main = n, xlab = "Ano", ylab = "Média")
+        lines(as.numeric(names(mediamovel)), mediamovel, col = "orange")
+        lines(as.numeric(names(mm[[n]])), mm[[n]])
+        cat("\n\n")
+    }
 }
 ```
 

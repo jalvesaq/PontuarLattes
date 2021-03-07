@@ -215,29 +215,16 @@ D = Tese de doutorado e
 PD = Supervisão de pós-doutorado.
 
 <<oriconc>>=
-tab <- rbind(oriconcTab, "Total" = apply(oriconcTab, 2, sum),
-             "Média" = round(apply(oriconcTab, 2, mean), 1))
-tab <- cbind("Orientador" = rownames(tab),
-             tab,
-             "Total" = apply(tab, 1, sum))
-aln <- paste0("ll", paste0(rep("r", ncol(tab) - 1), collapse = ""))
-print(xtable(tab, align = aln, digits = 0, label = "tab:oriconc",
+aln <- paste0("ll", paste0(rep("r", ncol(oriconcTab) - 1), collapse = ""))
+print(xtable(oriconcTab, align = aln, digits = 0, label = "tab:oriconc",
              caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim)),
-      booktabs = TRUE, hline.after = c(-1, 0, nrow(tab) - 2, nrow(tab)),
+      booktabs = TRUE, hline.after = c(-1, 0, nrow(oriconcTab) - 2, nrow(oriconcTab)),
       include.rownames = FALSE)
 @
 
 \newpage
 
 <<detOriConc>>=
-oc$Professor <- sub(" .* ", " ", oc$Professor)
-oc$Orientado <- sub(" .* ", " ", oc$Orientado)
-oc$Instituição <- sub("Universidade", "U.", oc$Instituição)
-oc$Instituição <- sub("Federal", "F.", oc$Instituição)
-oc$Instituição <- sub("Estadual", "E.", oc$Instituição)
-oc$Curso <- sub("Programa de Pós-Graduação", "PPG", oc$Curso)
-oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
-         c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
 print(xtable(oc, align = "lcp{5.5cm}p{4cm}p{4cm}p{4cm}c", label = "tab:detoriconc",
          digits = 0, caption = "Detalhamento das orientações"),
       include.rownames = FALSE)
@@ -246,30 +233,21 @@ print(xtable(oc, align = "lcp{5.5cm}p{4cm}p{4cm}p{4cm}c", label = "tab:detoricon
 \newpage
 
 <<oriand>>=
-tab <- rbind(oriandTab, "Total" = apply(oriandTab, 2, sum),
-             "Média" = round(apply(oriandTab, 2, mean), 1))
-tab <- cbind("Orientador" = rownames(tab),
-             tab,
-             "Total" = apply(tab, 1, sum))
-aln <- paste0("ll", paste0(rep("r", ncol(tab) - 1), collapse = ""))
-print(xtable(tab, align = aln, digits = 0, label = "tab:oriand",
+aln <- paste0("ll", paste0(rep("r", ncol(oriandTab) - 1), collapse = ""))
+print(xtable(oriandTab, align = aln, digits = 0, label = "tab:oriand",
              caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim)),
-      hline.after = c(-1, 0, nrow(tab) - 2, nrow(tab)), include.rownames = FALSE)
+      hline.after = c(-1, 0, nrow(oriandTab) - 2, nrow(oriandTab)), include.rownames = FALSE)
 @
 
 \newpage
 
 <<oriandTab>>=
-
 tab <- capture.output(print(xtable(oa, align = "lcp{4.5cm}cp{8cm}p{8cm}",
                                    label = "tab:oriandDet",
              caption = "Detalhamento das orientações em andamento"),
       include.rownames = FALSE))
 tab <- sub("\\$\\\\backslash\\$rowcolor\\\\\\{yellow\\\\\\}", "\\\\rowcolor{yellow}", tab)
 cat(tab, sep = "\n")
-# print(xtable(oa, align = "lcp{4.5cm}cp{8cm}p{8cm}", label = "tab:oriandDet",
-#              caption = "Detalhamento das orientações em andamento"),
-#       include.rownames = FALSE)
 @
 
 \newpage
@@ -550,15 +528,17 @@ if(length(mmmsg))
 
 
 <<mediamovel, fig.width=8, fig.height=3>>=
-par(mar = c(4, 4, 4, 0) + 0.1, cex = 0.75)
-mmMax <- max(sapply(mm, max))
+if(length(mm)){
+    par(mar = c(4, 4, 4, 0) + 0.1, cex = 0.75)
+    mmMax <- max(sapply(mm, max))
 
-for(n in names(mm)){
-    plot(as.numeric(names(mm[[n]])), mm[[n]], ylim = c(0, mmMax),
-         pch=20, main = n, xlab = "Ano", ylab = "Média")
-    lines(as.numeric(names(mediamovel)), mediamovel, col = "orange")
-    lines(as.numeric(names(mm[[n]])), mm[[n]])
-    cat("\n\\vspace{0.5cm}\n")
+    for(n in names(mm)){
+        plot(as.numeric(names(mm[[n]])), mm[[n]], ylim = c(0, mmMax),
+             pch=20, main = n, xlab = "Ano", ylab = "Média")
+        lines(as.numeric(names(mediamovel)), mediamovel, col = "orange")
+        lines(as.numeric(names(mm[[n]])), mm[[n]])
+        cat("\n\\vspace{0.5cm}\n")
+    }
 }
 @
 

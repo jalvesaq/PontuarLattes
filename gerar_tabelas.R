@@ -657,8 +657,14 @@ if(length(oriconc)){
         }
     }
 
-    if(nrow(oriconcTab) > 1)
+    if(nrow(oriconcTab) > 1){
         oriconcTab <- oriconcTab[ro, ordem]
+        oriconcTab <- rbind(oriconcTab, "Total" = apply(oriconcTab, 2, sum),
+                            "Média" = round(apply(oriconcTab, 2, mean), 1))
+        oriconcTab <- cbind("Orientador" = rownames(oriconcTab),
+                            oriconcTab,
+                            "Total" = apply(oriconcTab, 1, sum))
+    }
 
     # Detalhamento das orientações concluídas
     oc$Professor <- sub(" .* ", " ", oc$Professor)
@@ -667,8 +673,17 @@ if(length(oriconc)){
     oc$Curso <- AbreviarInstituicao(oc$Curso)
     oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
              c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
+    oc$Professor <- sub(" .* ", " ", oc$Professor)
+    oc$Orientado <- sub(" .* ", " ", oc$Orientado)
+    oc$Instituição <- sub("Universidade", "U.", oc$Instituição)
+    oc$Instituição <- sub("Federal", "F.", oc$Instituição)
+    oc$Instituição <- sub("Estadual", "E.", oc$Instituição)
+    oc$Curso <- sub("Programa de Pós-Graduação", "PPG", oc$Curso)
+    oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
+             c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
 } else {
-    oriconcTab <- data.frame()
+    oriconcTab <- data.frame(Natureza = "", Instituição = "", Curso = "", Professor = "", Orientado = "", Ano = "")
+    oc <- data.frame(Natureza = "", Instituição = "", Curso = "", Professor = "", Orientado = "", Ano = "")
 }
 
 
@@ -737,6 +752,11 @@ if(length(oriand)){
 
     if(nrow(oriandTab) > 1)
         oriandTab <- oriandTab[ro, ordem]
+    oriandTab <- rbind(oriandTab, "Total" = apply(oriandTab, 2, sum),
+                 "Média" = round(apply(oriandTab, 2, mean), 1))
+    oriandTab <- cbind("Orientador" = rownames(oriandTab),
+                 oriandTab,
+                 "Total" = apply(oriandTab, 1, sum))
 
     # Detalhamento das orientações em andamento
     oa$um <- NULL
@@ -745,7 +765,10 @@ if(length(oriand)){
     oa$Professor <- sub(" .* ", " ", oa$Professor)
     oa$Ano <- as.numeric(as.character(oa$Ano))
 } else {
-    oriandTab <- data.frame()
+    oriandTab <- data.frame(Orientador = "", O = "", IC = "", G = "", M = "",
+                            D = "", PD = "", Total = "")
+    oa <- data.frame(Ano = "", Professor = "", Natureza = "", Instituição =
+                     "", Orientando = "")
 }
 
 
@@ -889,7 +912,9 @@ mm <- mm[!is.na(mm)]
 # Produção segundo classificação Qualis
 p$um <- 1
 producao <- tapply(p$um, list(p$prof, p$qualis), sum)
-producao <- producao[, !grepl("Nada", colnames(producao))]
+if(sum(grepl("Nada", colnames(producao)))){
+    producao <- producao[, !grepl("Nada", colnames(producao))]
+}
 
 p$producao <- sapply(p$producao, html2txt)
 p$livro.ou.periodico <- sapply(p$livro.ou.periodico, html2txt)
