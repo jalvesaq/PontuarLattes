@@ -69,7 +69,7 @@ if(sum(duplicated(qualis$isxn)))
 # http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
 # Convenience function to convert html codes
 html2txt <- function(x) {
-    if(is.na(x))
+    if(is.na(x) | x == "")
         return(NA)
     xpathApply(htmlParse(x, asText=TRUE, encoding = "UTF-8"),
                "//body//text()", xmlValue)[[1]]
@@ -779,6 +779,8 @@ if(length(extensao)){
     } else {
         extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período")
     }
+} else {
+    extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período")
 }
 
 ## Registro do item “Projeto de Extensão” no período
@@ -793,6 +795,8 @@ if(length(projext)){
     } else {
         projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período")
     }
+} else {
+    projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período")
 }
 
 # Produção bibliográfica (Livros e Artigos)
