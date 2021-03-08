@@ -58,6 +58,16 @@ Vale salientar que este relatório deve ser usado com cautela porque,
 embora ele seja útil para a identificação de problemas no programa de
 pós-graduação, não é um instrumento usado oficialmente pela CAPES.
 
+```{r qnovo}
+if(QNovo){
+    cat("<p>Observação: para cálculo da pontuação, está sendo usado Qualis
+        2017-2020 não oficial, parcial e provisório que circulou nas redes
+        sociais em 2019. Muitos periódicos ainda não fazem parte desse Qualis
+        e, mesmo os que fazem, podem vir a ter classificação diferente na versão
+        oficial.</p>\n")
+}
+```
+
 Os scripts para elaboração deste relatório ainda estão em desenvolvimento e
 solicitamos que nos sejam comunicados erros encontrados nas tabelas e
 gráficos.
