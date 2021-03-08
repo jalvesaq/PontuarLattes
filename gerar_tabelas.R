@@ -45,8 +45,10 @@ if(sum(grepl("A3", names(PontosQualis)))){
         qualis <- qualis[[NomeComite]]
     } else {
         writeLines(names(qualis), "nomes_validos.txt")
-        stop(paste0("Variável 'NomeComite' inválida: '", NomeComite,
-                    "'.\nVeja o arquivo 'nomes_validos.txt'."))
+        cat(paste0("Variável 'NomeComite' inválida: '", NomeComite,
+                    "'.\nVeja o arquivo 'nomes_validos.txt'.\n"), file = stderr())
+        if(!interactive())
+            quit(save = "no", status = 1)
     }
     QNovo <- FALSE
 }
@@ -62,8 +64,11 @@ sum(duplicated(sjrsnip$isxn))
 qualis <- merge(qualis, sjrsnip, all = TRUE)
 qualis[duplicated(qualis$isxn), ]
 
-if(sum(duplicated(qualis$isxn)))
-    stop("ISSN duplicado")
+if(sum(duplicated(qualis$isxn))){
+    cat("ISSN duplicado\n", file = stderr())
+    if(!interactive())
+        quit(save = "no", status = 1)
+}
 
 
 # http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
@@ -295,8 +300,11 @@ obter.producao <- function(arquivo)
 }
 
 lsxml <- c(dir("lattes_xml", pattern = "*.zip"), dir("lattes_xml", pattern = "*.xml"))
-if(length(lsxml) == 0)
-    stop("Nenhum currículo encontrado na pasta 'lattes_xml'")
+if(length(lsxml) == 0){
+    cat("Nenhum currículo encontrado na pasta 'lattes_xml'\n", file = stderr())
+    if(!interactive())
+        quit(save = "no", status = 1)
+}
 xx <- lapply(lsxml, obter.producao)
 xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
@@ -313,6 +321,14 @@ if(exists("equivalente")){
 
 
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
+
+if(nrow(p) == 0){
+    cat("\nNenhuma publicação encontrada nos currículos de:\n",
+        paste(sapply(datacv, function(x) x[[1]]), collapse = "\n   "),
+        sep = "\n   ", file = stderr())
+    if(!interactive())
+        quit(save = "no", status = 1)
+}
 
 # Adicionar Qualis por título
 if(QualisPorTitulo){
@@ -645,7 +661,10 @@ if(length(oriconc)){
     faltaCol <- !(levels(oc$Natureza) %in% ordem)
     if(sum(faltaCol)){
         print(levels(oc$Natureza))
-        stop(paste0("Tipo de orientação não reconhecida: ", levels(oc$Natureza)[faltaCol]))
+        cat(paste0("Tipo de orientação não reconhecida: ",
+                   levels(oc$Natureza)[faltaCol]), file = stderr())
+        if(!interactive())
+            quit(save = "no", status = 1)
     }
 
     ordem <- ordem[ordem %in% levels(oc$Natureza)]
@@ -738,8 +757,10 @@ if(length(oriand)){
     faltaCol <- !(levels(oa$Natureza) %in% ordem)
     if(sum(faltaCol)){
         print(levels(oa$Natureza))
-        stop(paste0("Tipo de orientação desconhecida: ",
-                    levels(oa$Natureza)[faltaCol]))
+        cat(paste0("Tipo de orientação desconhecida: ",
+                    levels(oa$Natureza)[faltaCol]), file = stderr())
+        if(!interactive())
+            quit(save = "no", status = 1)
     }
     ordem <- ordem[ordem %in% levels(oa$Natureza)]
 
