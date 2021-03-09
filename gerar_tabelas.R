@@ -119,19 +119,21 @@ obter.producao <- function(arquivo)
 {
     if(grepl("zip", arquivo)){
         if(file.info(paste0("lattes_xml/", arquivo))[["size"]] == 0)
-            return(invisible(NULL))
+            stop(paste("Arquivo vazio:", arquivo), call. = FALSE)
         z <- unzip(paste0("lattes_xml/", arquivo), exdir = "/tmp/")
         if(length(z) == 1 && grepl("curriculo\\.xml", z)){
             xl <- xmlTreeParse("/tmp/curriculo.xml", encoding = "latin1")
         } else {
-            return(invisible(NULL))
+            stop(paste("Currículo não encontrado em:", arquivo), call. = FALSE)
         }
     } else {
         xl <- xmlTreeParse(paste0("lattes_xml/", arquivo), encoding = "latin1")
     }
     if("ERRO" %in% names(xl$doc$children))
-        stop(paste0("O currículo ", arquivo, " contém ERRO. Verifique se usou o link correto para baixar o arquivo."))
+        stop(paste0('O currículo do arquivo "', arquivo, '" contém ERRO. Verifique se usou o link correto para baixar o arquivo.'), call. = FALSE)
     xl <- xl$doc$children$`CURRICULO-VITAE`
+    if(is.null(xl))
+        stop(paste0('O arquivo "', arquivo, '" não inclui um currículo Lattes.'), call. = FALSE)
     prof <- xl$children$`DADOS-GERAIS`
     nomep <- prof$attributes[["NOME-COMPLETO"]]
     cnpqId <<- rbind(cnpqId, c(nomep, xl$attributes[["NUMERO-IDENTIFICADOR"]]))
