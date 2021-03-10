@@ -140,6 +140,7 @@ if(!is.null(doutor)){
     tab <- cbind(doutor[, 1:4],
                  "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor[, "Ano"]))
     print(xtable(tab), booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
+    cat("    \\multicolumn{4}{l}{Tempo mediano de titulação}  & ", round(median(as.numeric(tab[, 5]))), "\\\\\n")
     cat("    \\multicolumn{4}{l}{Tempo médio de titulação}  & ", round(mean(as.numeric(tab[, 5]))), "\\\\\n")
     cat("   \\bottomrule\n")
     cat("\\end{longtable}\n")
@@ -229,7 +230,7 @@ PD = Supervisão de pós-doutorado.
 aln <- paste0("ll", paste0(rep("r", ncol(oriconcTab) - 1), collapse = ""))
 print(xtable(oriconcTab, align = aln, digits = 0, label = "tab:oriconc",
              caption = paste0("Orientações concluídas no período ", Inicio, "--", Fim)),
-      booktabs = TRUE, hline.after = c(-1, 0, nrow(oriconcTab) - 2, nrow(oriconcTab)),
+      booktabs = TRUE, hline.after = c(-1, 0, nrow(oriconcTab) - 3, nrow(oriconcTab)),
       include.rownames = FALSE)
 @
 
@@ -247,7 +248,7 @@ print(xtable(oc, align = "lcp{5.5cm}p{4cm}p{4cm}p{4cm}c", label = "tab:detoricon
 aln <- paste0("ll", paste0(rep("r", ncol(oriandTab) - 1), collapse = ""))
 print(xtable(oriandTab, align = aln, digits = 0, label = "tab:oriand",
              caption = paste0("Orientações em andamento no período ", Inicio, "--", Fim)),
-      hline.after = c(-1, 0, nrow(oriandTab) - 2, nrow(oriandTab)), include.rownames = FALSE)
+      hline.after = c(-1, 0, nrow(oriandTab) - 3, nrow(oriandTab)), include.rownames = FALSE)
 @
 
 \newpage
@@ -356,7 +357,7 @@ valores, a soma ponderada das médias é de
 print(xtable(pontuacaoLvr, digits = 0,
              align = paste0("l", paste0(rep("r", ncol(pontuacaoLvr)), collapse = "")),
              caption = "Professores classificados por pontuação (Livros)"),
-      hline.after = c(-1, 0, nrow(pontuacaoLvr)-1, nrow(pontuacaoLvr)))
+      hline.after = c(-1, 0, nrow(pontuacaoLvr)-2, nrow(pontuacaoLvr)))
 @
 
 \clearpage
@@ -365,7 +366,7 @@ print(xtable(pontuacaoLvr, digits = 0,
 print(xtable(pontuacaoArt, digits = 0,
              align = paste0("l", paste0(rep("r", ncol(pontuacaoArt)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos)"),
-      hline.after = c(-1, 0, nrow(pontuacaoArt)-1, nrow(pontuacaoArt)))
+      hline.after = c(-1, 0, nrow(pontuacaoArt)-2, nrow(pontuacaoArt)))
 @
 
 \clearpage
@@ -414,7 +415,7 @@ de cada publicação.
 print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
              align = paste0("l", paste0(rep("r", ncol(pontuacaoSJR)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos, SJR)"),
-      hline.after = c(-1, 0, nrow(pontuacaoSJR) - 2, nrow(pontuacaoSJR)))
+      hline.after = c(-1, 0, nrow(pontuacaoSJR) - 3, nrow(pontuacaoSJR)))
 @
 
 \clearpage
@@ -443,7 +444,7 @@ print(xtable(SJRPond, label = "tab:sjrpesos",
 print(xtable(pontuacaoSJRPond, digits = 3, label = "tab:sjrpond",
              align = paste0("l", paste0(rep("r", ncol(pontuacaoSJRPond)), collapse = "")),
              caption = "Professores classificados por pontuação ponderada pelo escopo do periódico (Artigos, SJRPond)"),
-      hline.after = c(-1, 0, nrow(pontuacaoSJRPond) - 2, nrow(pontuacaoSJRPond)))
+      hline.after = c(-1, 0, nrow(pontuacaoSJRPond) - 3, nrow(pontuacaoSJRPond)))
 @
 
 \clearpage
@@ -470,7 +471,7 @@ SNIP de cada publicação:
 print(xtable(pontuacaoSNIP, digits = 3, label = "tab:snip",
              align = paste0("l", paste0(rep("r", ncol(pontuacaoSNIP)), collapse = "")),
              caption = "Professores classificados por pontuação (Artigos, SNIP)"),
-      hline.after = c(-1, 0, nrow(pontuacaoSNIP) - 2, nrow(pontuacaoSNIP)))
+      hline.after = c(-1, 0, nrow(pontuacaoSNIP) - 3, nrow(pontuacaoSNIP)))
 @
 
 \clearpage
@@ -499,23 +500,9 @@ print(xtable(SNIPPond, label = "tab:snippesos",
 print(xtable(pontuacaoSNIPPond, digits = 3, label = "tab:snippond",
              align = paste0("l", paste0(rep("r", ncol(pontuacaoSNIPPond)), collapse = "")),
              caption = "Professores classificados por pontuação ponderada pelo escopo do periódico (Artigos, SNIPPond)"),
-      hline.after = c(-1, 0, nrow(pontuacaoSNIPPond) - 2, nrow(pontuacaoSNIPPond)))
+      hline.after = c(-1, 0, nrow(pontuacaoSNIPPond) - 3, nrow(pontuacaoSNIPPond)))
 @
 
-
-%\clearpage
-%
-%A Tabela~\ref{tab:ggl} mostra a pontuação calculada como a soma do Fator de
-%Impacto de cada publicação calculado pelo Google:
-%
-%<<ppg_pontos_ggl>>=
-%print(xtable(pontuacaoGgl, align = paste0("l", paste0(rep("r", ncol(pontuacaoGgl)), collapse = "")),
-%             digits = 3, label = "tab:ggl",
-%             caption = "Professores classificados por pontuação (Artigos, Fator de Impacto do Google Scholar)"),
-%      hline.after = c(-1, 0, nrow(pontuacaoGgl) - 1, nrow(pontuacaoGgl)))
-%@
-%
-%
 
 \clearpage
 

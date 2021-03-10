@@ -27,6 +27,8 @@ source("gerar_tabelas.R")
 
 # Apresentação
 
+OBSERVAÇÃO: ESTA VERSÃO EM MARKDOWN NÃO ESTÁ MAIS SENDO MANTIDA.
+
 Este relatório foi produzido com scripts desenvolvidos por Jakson Alves de
 Aquino^[Professor do Departamento de Ciências Sociais da Universidade
 Federal do Ceará. E-mail: jaa@ufc.br] e disponibilizados em

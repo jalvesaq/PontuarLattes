@@ -35,6 +35,9 @@ PontosQualis <- c("A1"  = 100,
 # Procurar Qualis por título exato se não encontrar por ISSN?
 QualisPorTitulo <- FALSE
 
+# Ordenar tabela com número de orientandos por nome?
+OrdenarOrientacaoPorNome <- FALSE
+
 # Pesos para cálculo da média ponderada
 PesoArtigos <- 0.7
 PesoLivros <- 0.3

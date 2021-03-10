@@ -26,6 +26,7 @@ PesoLivros <- 0.3
 Inicio <- 2017
 Fim <- 2019
 QualisPorTitulo <- FALSE
+OrdenarOrientacaoPorNome <- FALSE
 
 # Carregar dados do SJR e SNIP
 load("SJR_SNIP.RData")
@@ -530,6 +531,7 @@ TabProd <- function(d, v, g = FALSE)
         colnames(tab) <- cn
     }
     media <- apply(tab, 2, mean)
+    mediana <- apply(tab, 2, median)
     mrow <- max(media)
     if(mrow > 10){
         rr <- 1
@@ -540,6 +542,7 @@ TabProd <- function(d, v, g = FALSE)
             rr <- 3
         }
     }
+    tab <- rbind(tab, "Mediana" = round(mediana, rr))
     tab <- rbind(tab, "Média" = round(media, rr))
     if(g){
         tab <- rbind(tab, "Gini" = apply(tab, 2, Gini))
@@ -671,26 +674,31 @@ if(length(oriconc)){
 
     ordem <- ordem[ordem %in% levels(oc$Natureza)]
 
-    ro <- 1:nrow(oriconcTab)
-    if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
-        ro <- order(oriconcTab[, "PD"], oriconcTab[, "D"], oriconcTab[, "M"],
-                    decreasing = TRUE)
+    if(OrdenarOrientacaoPorNome){
+        ro <- order(rownames(oriconcTab))
     } else {
-        if("D" %in% ordem & "M" %in% ordem){
-            ro <- order(oriconcTab[, "D"], oriconcTab[, "M"], decreasing = TRUE)
+        ro <- 1:nrow(oriconcTab)
+        if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
+            ro <- order(oriconcTab[, "PD"], oriconcTab[, "D"], oriconcTab[, "M"],
+                        decreasing = TRUE)
         } else {
-            if("M" %in% ordem)
-                ro <- order(oriconcTab[, "M"], decreasing = TRUE)
+            if("D" %in% ordem & "M" %in% ordem){
+                ro <- order(oriconcTab[, "D"], oriconcTab[, "M"], decreasing = TRUE)
+            } else {
+                if("M" %in% ordem)
+                    ro <- order(oriconcTab[, "M"], decreasing = TRUE)
+            }
         }
     }
 
-    if(nrow(oriconcTab) > 1){
+    if(nrow(oriconcTab) > 2){
         oriconcTab <- oriconcTab[ro, ordem]
-        oriconcTab <- rbind(oriconcTab, "Total" = apply(oriconcTab, 2, sum),
-                            "Média" = round(apply(oriconcTab, 2, mean), 1))
-        oriconcTab <- cbind("Orientador" = rownames(oriconcTab),
-                            oriconcTab,
-                            "Total" = apply(oriconcTab, 1, sum))
+        oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab, 1, sum))
+        total <- apply(oriconcTab, 2, sum)
+        mediana <- round(apply(oriconcTab, 2, median), 1)
+        media  <- round(apply(oriconcTab, 2, mean), 1)
+        oriconcTab <- rbind(oriconcTab, "Total" = total, "Mediana" = mediana, "Média"= media)
+        oriconcTab <- cbind("Orientador" = rownames(oriconcTab), oriconcTab)
     }
 
     # Detalhamento das orientações concluídas
@@ -766,26 +774,32 @@ if(length(oriand)){
     }
     ordem <- ordem[ordem %in% levels(oa$Natureza)]
 
-    ro <- 1:nrow(oriandTab)
-    if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
-        ro <- order(oriandTab[, "PD"], oriandTab[, "D"], oriandTab[, "M"],
-                    decreasing = TRUE)
+    if(OrdenarOrientacaoPorNome){
+        ro <- order(rownames(oriandTab))
     } else {
-        if("D" %in% ordem & "M" %in% ordem){
-            ro <- order(oriandTab[, "D"], oriandTab[, "M"], decreasing = TRUE)
+        ro <- 1:nrow(oriandTab)
+        if("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem){
+            ro <- order(oriandTab[, "PD"], oriandTab[, "D"], oriandTab[, "M"],
+                        decreasing = TRUE)
         } else {
-            if("M" %in% ordem)
-                ro <- order(oriandTab[, "M"], decreasing = TRUE)
+            if("D" %in% ordem & "M" %in% ordem){
+                ro <- order(oriandTab[, "D"], oriandTab[, "M"], decreasing = TRUE)
+            } else {
+                if("M" %in% ordem)
+                    ro <- order(oriandTab[, "M"], decreasing = TRUE)
+            }
         }
     }
 
-    if(nrow(oriandTab) > 1)
+    if(nrow(oriandTab) > 2){
         oriandTab <- oriandTab[ro, ordem]
-    oriandTab <- rbind(oriandTab, "Total" = apply(oriandTab, 2, sum),
-                 "Média" = round(apply(oriandTab, 2, mean), 1))
-    oriandTab <- cbind("Orientador" = rownames(oriandTab),
-                 oriandTab,
-                 "Total" = apply(oriandTab, 1, sum))
+        oriandTab <- cbind(oriandTab, "Total" = apply(oriandTab, 1, sum))
+        total <- apply(oriandTab, 2, sum)
+        mediana <- round(apply(oriandTab, 2, median), 1)
+        media  <- round(apply(oriandTab, 2, mean), 1)
+        oriandTab <- rbind(oriandTab, "Total" = total, "Mediana" = mediana, "Média"= media)
+        oriandTab <- cbind("Orientador" = rownames(oriandTab), oriandTab)
+    }
 
     # Detalhamento das orientações em andamento
     oa$um <- NULL
