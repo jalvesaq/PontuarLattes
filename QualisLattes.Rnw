@@ -10,7 +10,7 @@ if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 library("xtable")
 library("ineq")
-Bold <- function(x) {paste('\\textbf{', x,'}', sep ='')}
+Bold <- function(x) {paste('\\textbf{', sub("%", "\\\\%", x), '}', sep ='')}
 SaniTex <- function(x)
 {
     x <- gsub("&", "\\\\&", x)
@@ -155,7 +155,7 @@ if(!is.null(doutor)){
 <<areaTitulo>>=
 tab <- sort(table(doutor[, "Nome do curso"]), decreasing = TRUE)
 tab <- cbind("Área" = sub("^$", "(não especificado)", rownames(tab)),
-             "Frequência" = tab, "\\%" = sub("\\.", ",",
+             "Frequência" = tab, "%" = sub("\\.", ",",
                                            sprintf("%0.1f", 100 * tab / sum(tab))))
 print(xtable(tab),
       booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
@@ -174,7 +174,7 @@ print(xtable(tab),
 <<localTitulo>>=
 tab <- sort(table(doutor[, "Instituição doutorado"]), decreasing = TRUE)
 tab <- cbind("Instituição" = sub("^$", "(não especificado)", rownames(tab)),
-             "Frequência" = tab, "\\%" = sub("\\.", ",",
+             "Frequência" = tab, "%" = sub("\\.", ",",
                                            sprintf("%0.1f", 100 * tab / sum(tab))))
 print(xtable(tab),
       booktabs = FALSE, only.contents = TRUE, include.rownames = FALSE)
@@ -408,8 +408,18 @@ print(xtable(tab, align = paste(c("l", rep("r", ncol(producao))), collapse = "|"
 
 \clearpage
 
-A Tabela~\ref{tab:sjr} mostra a pontuação calculada como a soma do índice SJR
-de cada publicação.
+A Tabela~\ref{tab:nsjr} mostra o percentual de artigos publicados em
+periódicos com SJR por professor e a Tabela~\ref{tab:sjr} mostra a pontuação
+calculada como a soma do índice SJR de cada publicação.
+
+<<nSjr>>=
+print(xtable(nSJR, digits = 0, label = "tab:nsjr",
+             align = paste0("l", paste0(rep("r", ncol(nSJR)), collapse = "")),
+             caption = "Percentual de artigos publicados em periódicos com SJR"),
+      hline.after = c(-1, 0, nrow(nSJR) - 2, nrow(nSJR)))
+@
+
+\clearpage
 
 <<ppg_pontos_sjr>>=
 print(xtable(pontuacaoSJR, digits = 3, label = "tab:sjr",
@@ -464,8 +474,18 @@ print(xtable(pais, align = "llr", label = "tab:pais",
 
 \clearpage
 
-A Tabela~\ref{tab:snip} mostra a pontuação calculada como a soma do índice
-SNIP de cada publicação:
+A Tabela~\ref{tab:nSnip} mostra o percentual de artigos publicados em
+periódicos com SNIP por professor e a Tabela~\ref{tab:snip} mostra a pontuação
+calculada como a soma do índice SNIP de cada publicação:
+
+<<nSnip>>=
+print(xtable(nSnip, digits = 0, label = "tab:nSnip",
+             align = paste0("l", paste0(rep("r", ncol(nSnip)), collapse = "")),
+             caption = "Percentual de artigos publicados em periódicos com SNIP"),
+      hline.after = c(-1, 0, nrow(nSnip) - 2, nrow(nSnip)))
+@
+
+\clearpage
 
 <<ppg_pontos_snip>>=
 print(xtable(pontuacaoSNIP, digits = 3, label = "tab:snip",

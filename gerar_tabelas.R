@@ -264,7 +264,8 @@ obter.producao <- function(arquivo)
           dl[["SERIE"]],
           dl[["PAGINA-INICIAL"]],
           dl[["PAGINA-FINAL"]],
-          dl[["ISSN"]])
+          dl[["ISSN"]],
+          db[["DOI"]])
     }
 
     pegar.capitulo <- function(p, prof)
@@ -276,7 +277,8 @@ obter.producao <- function(arquivo)
           dl[["TITULO-DO-LIVRO"]], NA, NA,
           dl[["PAGINA-INICIAL"]],
           dl[["PAGINA-FINAL"]],
-          dl[["ISBN"]])
+          dl[["ISBN"]],
+          db[["DOI"]])
     }
 
     pegar.livro <- function(p, prof)
@@ -287,7 +289,7 @@ obter.producao <- function(arquivo)
         dl <- dl$attributes
         c(prof, db[["ANO"]],
           ifelse(db[["TIPO"]] == "LIVRO_ORGANIZADO_OU_EDICAO", "Org", "Lvr"),
-          db[["TITULO-DO-LIVRO"]], NA, NA, NA, NA, NA, dl[["ISBN"]])
+          db[["TITULO-DO-LIVRO"]], NA, NA, NA, NA, NA, dl[["ISBN"]], db[["DOI"]])
     }
 
     b <- rbind(do.call("rbind", lapply(artigos,   pegar.artigo,   nomep)),
@@ -298,7 +300,7 @@ obter.producao <- function(arquivo)
     # b = NULL se o autor do currículo nunca tiver publicado nada:
     if(!is.null(b))
         colnames(b) <- c("prof", "ano", "tipo", "producao", "livro.ou.periodico",
-                         "vol", "num", "pini", "pfim", "isxn")
+                         "vol", "num", "pini", "pfim", "isxn", "doi")
     b
 }
 
@@ -412,55 +414,6 @@ if(QNovo){
 
 p <- merge(p, pontos, all.x = TRUE, stringsAsFactors = FALSE)
 p$pontos[p$tipo == "NãoArt"] <- 0
-
-# # Adicionar Fator de Impacto do Google Scholar
-# # Guardar dados coletados em arquivo para evitar necessidade de baixar dados
-# # cada vez que este script for executado
-# if(!dir.exists("~/.cache"))
-#     dir.create("~/.cache")
-# if(file.exists("~/.cache/PontuarLattes_GoogleScholar")){
-#     g <- read.delim("~/.cache/PontuarLattes_GoogleScholar", stringsAsFactors = FALSE)
-# } else {
-#     g <- data.frame(tituloUP = character(),
-#                     tituloG = character(),
-#                     cites = numeric(),
-#                     ImpactFactor = numeric(),
-#                     Eigenfactor = numeric(),
-#                     stringsAsFactors = FALSE)
-# }
-#
-# # Listar títulos não coletados ainda
-# p$tituloUP <- toupper(p$titulo)
-# titulos <- levels(factor(p$tituloUP[p$tipo == "Artigo"]))
-# coletar <- rep(FALSE, length(titulos))
-# for(i in 1:length(titulos)){
-#     if(titulos[i] %in% g$tituloUP == FALSE)
-#         coletar[i] <- TRUE
-# }
-# titulos <- titulos[coletar]
-#
-# if(length(titulos)){
-#     # Coletar dados dos títulos cujos dados ainda não foram coletados
-#     gif <- lapply(titulos, get_impactfactor)
-#     for(i in 1:length(titulos)){
-#         if(titulos[i] %in% g$titulo == FALSE)
-#             g <- rbind(g,
-#                        data.frame(tituloUP = titulos[i],
-#                                   tituloG = gif[[i]][[1]],
-#                                   cites = gif[[i]][[2]],
-#                                   ImpactFactor = gif[[i]][[3]],
-#                                   Eigenfactor = gif[[i]][[4]],
-#                                   stringsAsFactors = FALSE))
-#     }
-#     write.table(g, "~/.cache/PontuarLattes_GoogleScholar",
-#                 quote = FALSE, sep = "\t", row.names = FALSE)
-#     rm(gif)
-# }
-# rm(titulos, coletar)
-#
-# p <- merge(p, g, all.x = TRUE, stringsAsFactors = FALSE)
-# p$tituloUP <- NULL
-
 
 # Especificar o período do relatório
 p <- p[p$ano > "1900" & p$ano < "2100", ] # O ano pode não estar especificado
@@ -601,6 +554,26 @@ pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP", TRUE)
 pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR", TRUE)
 pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond", TRUE)
 pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond", TRUE)
+
+nSJR <- cbind("Não" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
+                              function(x) sum(is.na(x))),
+              "Sim" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
+                             function(x) sum(!is.na(x))))
+nSJR <- cbind(nSJR, "%" = round(100 * nSJR[, 2] / (nSJR[, 1] + nSJR[, 2])))
+nSJR <- nSJR[order(nSJR[, 3], decreasing = TRUE), ]
+mediana <- sprintf("%0.1f", round(apply(nSJR, 2, median), 2))
+media <- sprintf("%0.1f", round(apply(nSJR, 2, mean), 2))
+nSJR <- rbind(format(nSJR), "Mediana" = mediana, "Média" = media)
+
+nSnip <- cbind("Não" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
+                              function(x) sum(is.na(x))),
+              "Sim" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
+                             function(x) sum(!is.na(x))))
+nSnip <- cbind(nSnip, "%" = round(100 * nSnip[, 2] / (nSnip[, 1] + nSnip[, 2])))
+nSnip <- nSnip[order(nSnip[, 3], decreasing = TRUE), ]
+mediana <- sprintf("%0.1f", round(apply(nSnip, 2, median), 2))
+media <- sprintf("%0.1f", round(apply(nSnip, 2, mean), 2))
+nSnip <- rbind(format(nSnip), "Mediana" = mediana, "Média" = media)
 
 p4 <- p[p$tipo == "Artigo", c("prof", "ano", "pontos")]
 p4s <- split(p4, p4$prof)
