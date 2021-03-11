@@ -472,6 +472,7 @@ UERR	Universidade Estadual de Roraima
 UESPI	Universidade Estadual do Piauí
 UEZO	Universidade Estadual da Zona Oeste
 UFABC	Universidade Federal do ABC
+UFBA	Universidade Federal da Bahia
 UFC	Universidade Federal do Ceará
 UFCA	Universidade Federal do Cariri
 UFCG	Universidade Federal de Campina Grande
