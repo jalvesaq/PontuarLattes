@@ -103,7 +103,8 @@ AbreviarInstituicao <- function(x)
 
 # Ler currículos
 
-datacv <- list()
+datacv <- matrix(character(), ncol = 4, nrow = 0)
+colnames(datacv) <- c("Professor", "cnpqId", "orcid", "DataCV")
 doutorado <- list()
 posdoc <- list()
 premios <- list()
@@ -113,8 +114,6 @@ ensino <- list()
 extensao <- list()
 projext <- list()
 nlist <- list()
-cnpqId <- matrix(character(), ncol = 2, nrow = 0)
-colnames(cnpqId) <- c("Professor", "id")
 
 obter.producao <- function(arquivo)
 {
@@ -137,11 +136,12 @@ obter.producao <- function(arquivo)
         stop(paste0('O arquivo "', arquivo, '" não inclui um currículo Lattes.'), call. = FALSE)
     prof <- xl$children$`DADOS-GERAIS`
     nomep <- prof$attributes[["NOME-COMPLETO"]]
-    cnpqId <<- rbind(cnpqId, c(nomep, xl$attributes[["NUMERO-IDENTIFICADOR"]]))
+    orcid <- prof$attributes[["ORCID-ID"]]
+    cnpqId <- xl$attributes[["NUMERO-IDENTIFICADOR"]]
 
     da <- sub("(..)(..)(....)", "\\1/\\2/\\3",
               xl$attributes[["DATA-ATUALIZACAO"]])
-    datacv[[length(datacv)+1]] <<- c("Professor" = nomep, "DataCV" = da)
+    datacv <<- rbind(datacv, c(nomep, cnpqId, orcid, da))
 
     if("DOUTORADO" %in% names(prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children)){
         xx <- prof$children$`FORMACAO-ACADEMICA-TITULACAO`$children
@@ -329,7 +329,7 @@ p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
 if(nrow(p) == 0){
     cat("\nNenhuma publicação encontrada nos currículos de:\n",
-        paste(sapply(datacv, function(x) x[[1]]), collapse = "\n   "),
+        paste(sort(datacv[, "Professor"]), collapse = "\n   "),
         sep = "\n   ", file = stderr())
     if(!interactive())
         quit(save = "no", status = 1)
@@ -436,7 +436,7 @@ if(sum(is.na(p$pontos)) > 0){
 }
 
 # Data de atualização do currículo
-quando <- as.data.frame(do.call("rbind", datacv))
+quando <- as.data.frame(datacv)
 quando$DataCV <- as.Date(quando$DataCV, format = "%d/%m/%Y")
 quando <- quando[order(quando$DataCV), ]
 quando$Dias <- as.integer(as.Date(Sys.time()) - quando$DataCV)
@@ -942,6 +942,7 @@ b <- b[order(p$prof, p$ano, p$producao), ]
 b$prof <- sub(" .* ", " ", b$prof)
 b$prof <- sub("^(...................).*", "\\1", b$prof)
 b$producao <- sapply(b$producao, html2txt)
+b$producao <- gsub("_", "\\\\_", b$producao)
 b$livro.ou.periodico <- gsub("_", "\\\\_", b$livro.ou.periodico)
 
 bp <- split(b, b$prof)
@@ -1042,10 +1043,10 @@ colnames(semqualis) <- c("ISSN", "Título do periódico")
 
 p$Country <- factor(p$Country)
 
-save(cnpqId, quando, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
+save(datacv, quando, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
      pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")
 
-cnpqId <- cnpqId[order(cnpqId[, 1]), ]
+cnpqId <- datacv[order(datacv[, "Professor"]), ]
 sink("lattes_xml/ultima_lista.html")
 cat('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n')
 cat('<html xmlns="http://www.w3.org/1999/xhtml">\n')
@@ -1058,7 +1059,7 @@ cat('<p><strong>Lista dos currículos incluídos no relatório gerado mais recen
 cat('<ol>\n')
 for(i in 1:nrow(cnpqId)){
     cat('  <li><a href="http://buscatextual.cnpq.br/buscatextual/download.do?metodo=apresentar&idcnpq=',
-        cnpqId[i, 2], '">', cnpqId[i, 1], '</a></li>\n', sep = "")
+        cnpqId[i, "cnpqId"], '">', cnpqId[i, "Professor"], '</a></li>\n', sep = "")
 }
 cat('</ol>\n')
 cat('</body>\n')

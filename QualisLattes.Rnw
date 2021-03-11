@@ -122,10 +122,22 @@ avaliação.
 
 \section{Data do currículo}
 
+\begin{longtable}{cclr}
+\caption{Links para ORCID e Lattes e data de atualização do Currículo Lattes} \\
+  \toprule
+    \multicolumn{2}{c}{\textbf{Links}} & \textbf{Professor} & \textbf{Dias} \\
 <<printDataLattes>>=
-print(xtable(quando[, c("Professor", "Dias")], align = "llr", caption = "Data de atualização do Currículo Lattes"),
-      include.rownames = FALSE)
+dias <- cbind("ORCID" = paste0("\\href{", quando[, "orcid"], "}{\\includegraphics[width=4mm]{orcid.png}}"),
+              "Lattes" = paste0("\\href{http://lattes.cnpq.br/", quando[, "cnpqId"], "}{\\includegraphics[width=4mm]{lattes.png}}"),
+              "Professor" = quando[, "Professor"],
+              "Dias" = quando[, "Dias"])
+dias[quando[, "orcid"] == "", "ORCID"] <- ""
+out <- capture.output(print(xtable(dias, align = "lcclr", caption = "Links para ORCID e Lattes e data de atualização do Currículo Lattes"),
+                     booktabs = TRUE, only.contents = TRUE, sanitize.text.function = function(x) x, include.rownames = FALSE))
+out <- out[4:length(out)]
+cat(out, sep = "\n")
 @
+\end{longtable}
 
 \clearpage
 
