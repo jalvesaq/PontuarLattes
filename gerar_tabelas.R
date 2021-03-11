@@ -136,7 +136,11 @@ obter.producao <- function(arquivo)
         stop(paste0('O arquivo "', arquivo, '" não inclui um currículo Lattes.'), call. = FALSE)
     prof <- xl$children$`DADOS-GERAIS`
     nomep <- prof$attributes[["NOME-COMPLETO"]]
-    orcid <- prof$attributes[["ORCID-ID"]]
+    # Currículos não atualizados há muito tempo não têm o campo ORCID-ID
+    if(sum(grepl("ORCID-ID", names(prof$attributes))) > 0)
+        orcid <- prof$attributes[["ORCID-ID"]]
+    else
+        orcid <- ""
     cnpqId <- xl$attributes[["NUMERO-IDENTIFICADOR"]]
 
     da <- sub("(..)(..)(....)", "\\1/\\2/\\3",
