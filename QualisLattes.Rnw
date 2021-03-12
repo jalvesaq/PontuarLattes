@@ -11,17 +11,13 @@ opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="c
 library("xtable")
 library("ineq")
 Bold <- function(x) {paste('\\textbf{', sub("%", "\\\\%", x), '}', sep ='')}
-SaniTex <- function(x)
-{
-    x <- gsub("&", "\\\\&", x)
-    x
-}
 
 options(xtable.table.placement = "H",
         xtable.caption.placement = "top",
         xtable.booktabs = TRUE,
         xtable.floating = FALSE,
         xtable.tabular.environment = "longtable",
+        xtable.sanitize.text.function = function(x) x,
         xtable.sanitize.colnames.function = Bold,
         format.args = list(big.mark = ".", decimal.mark = ","),
         OutDec = ",")
@@ -35,6 +31,7 @@ source("gerar_tabelas.R")
 \usepackage{longtable}
 \usepackage{colortbl}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{indentfirst}
 \usepackage[unicode=true,
   pdfsubject={},
@@ -43,6 +40,11 @@ source("gerar_tabelas.R")
   bookmarks=false,
   pdfborder={0 0 0},
 ]{hyperref}
+
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
 \title{\Sexpr{paste0(TituloDoc, " (", Inicio, "-", Fim, ")")}}
 \author{\Sexpr{Autor}}
@@ -133,7 +135,7 @@ dias <- cbind("ORCID" = paste0("\\href{", quando[, "orcid"], "}{\\includegraphic
               "Dias" = quando[, "Dias"])
 dias[quando[, "orcid"] == "", "ORCID"] <- ""
 out <- capture.output(print(xtable(dias, align = "lcclr", caption = "Links para ORCID e Lattes e data de atualização do Currículo Lattes"),
-                     booktabs = TRUE, only.contents = TRUE, sanitize.text.function = function(x) x, include.rownames = FALSE))
+                     booktabs = TRUE, only.contents = TRUE, include.rownames = FALSE))
 out <- out[4:length(out)]
 cat(out, sep = "\n")
 @
@@ -143,9 +145,9 @@ cat(out, sep = "\n")
 
 \section{Títulos e prêmios}
 
-<<tabelaGeral>>=
+<<tabelaGeral, warning=FALSE>>=
 if(!is.null(doutor)){
-    cat("\\begin{longtable}{p{7cm}p{7cm}p{7cm}cc}\n")
+    cat("\\begin{longtable}{L{7cm}L{7cm}L{7cm}cc}\n")
     cat("\\caption{Curso de doutorado} \\\\\n")
     cat("  \\toprule\n")
     doutor <- doutor[order(doutor[, "Ano"]), ]
@@ -201,8 +203,8 @@ Como pode ser visto na Tabela~\ref{tab:posdoc}, dos \Sexpr{nrow(doutor)}
 professores do programa, \Sexpr{length(levels(factor(posdoc[, 1])))}
 realizaram pós-doutorado pelo menos uma vez.
 
-<<posdoc>>=
-print(xtable(posdoc, align = "lp{55mm}p{13cm}cc", label = "tab:posdoc",
+<<posdoc, warning=FALSE>>=
+print(xtable(posdoc, align = "lL{55mm}L{13cm}cc", label = "tab:posdoc",
              caption = "Lista de Pós-doutorados realizados"),
       floating = FALSE, tabular.environment = "longtable",
       include.rownames = FALSE)
@@ -210,14 +212,14 @@ print(xtable(posdoc, align = "lp{55mm}p{13cm}cc", label = "tab:posdoc",
 
 \clearpage
 
-<<premios>>=
+<<premios, warning=FALSE>>=
 if(length(premios) == 0){
     cat("Nenhum prêmio recebido.\n")
 } else {
     if(nrow(premios) == 0){
         cat("Nenhum prêmio recebido no período.\n")
     } else {
-        print(xtable(premios, align = "llp{10cm}p{7.5cm}c",
+        print(xtable(premios, align = "llL{10cm}L{7.5cm}c",
                      caption = "Lista de Prêmios recebidos"),
               include.rownames = FALSE)
     }
@@ -248,8 +250,8 @@ print(xtable(oriconcTab, align = aln, digits = 0, label = "tab:oriconc",
 
 \newpage
 
-<<detOriConc>>=
-print(xtable(oc, align = "lcp{5.5cm}p{4cm}p{4cm}p{4cm}c", label = "tab:detoriconc",
+<<detOriConc, warning=FALSE>>=
+print(xtable(oc, align = "lcL{5.5cm}L{4cm}L{4cm}L{4cm}c", label = "tab:detoriconc",
          digits = 0, caption = "Detalhamento das orientações"),
       include.rownames = FALSE)
 @
@@ -265,8 +267,8 @@ print(xtable(oriandTab, align = aln, digits = 0, label = "tab:oriand",
 
 \newpage
 
-<<oriandTab>>=
-tab <- capture.output(print(xtable(oa, align = "lcp{4.5cm}cp{8cm}p{8cm}",
+<<oriandTab, warning=FALSE>>=
+tab <- capture.output(print(xtable(oa, align = "lcL{4.5cm}cL{8cm}L{8cm}",
                                    label = "tab:oriandDet",
              caption = "Detalhamento das orientações em andamento"),
       include.rownames = FALSE))
@@ -294,14 +296,14 @@ xtable(ensinoTab, align = aln, label = "tab:ensino", digits = 0,
 A Tabela \ref{tab:extensao} mostra o número de vezes que o item ``Atividades
 de Extensão'' foi registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
 
-<<tabExtensao>>=
+<<tabExtensao, warning=FALSE>>=
 if(ncol(extensaoTab) == 1){
     print(xtable(extensaoTab, label = "tab:extensao",
                  caption = paste0("Registro de ``Atividades de Extensão'' no período ",
                                   Inicio, "--", Fim)),
           include.rownames = FALSE)
 } else {
-    aln <- paste0("llp{10cm}", paste0(rep("r", ncol(extensaoTab)-2), collapse = ""))
+    aln <- paste0("llL{10cm}", paste0(rep("r", ncol(extensaoTab)-2), collapse = ""))
     xtable(extensaoTab, align = aln, label = "tab:extensao", digits = 0,
            caption = paste0("Registro de ``Atividades de Extensão'' no período ", Inicio, "--", Fim))
 }
@@ -311,14 +313,14 @@ if(ncol(extensaoTab) == 1){
 A Tabela \ref{tab:projext} mostra o número de vezes que o item ``Projeto de Extensão'' foi
 registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
 
-<<tabProjExt>>=
-if(ncol(extensaoTab) == 1){
-    print(xtable(extensaoTab, label = "tab:projext",
+<<tabProjExt, warning=FALSE>>=
+if(ncol(projextTab) == 1){
+    print(xtable(projextTab, label = "tab:projext",
                  caption = paste0("Registro de ``Projetos de Extensão'' no período ",
                                   Inicio, "--", Fim)),
           include.rownames = FALSE)
 } else {
-    aln <- paste0("llp{10cm}", paste0(rep("r", ncol(projextTab)-2), collapse = ""))
+    aln <- paste0("llL{10cm}", paste0(rep("r", ncol(projextTab)-2), collapse = ""))
     xtable(projextTab, align = aln, label = "tab:projext", digits = 0,
            caption = paste0("Registro de ``Projetos de Extensão'' no período ", Inicio, "--", Fim))
 }
@@ -414,8 +416,7 @@ tab <- rbind(producao, "Total" = apply(producao, 2, sum, na.rm = TRUE))
 print(xtable(tab, align = paste(c("l", rep("r", ncol(producao))), collapse = "|"),
              display = c("s", rep("d", ncol(producao))),
              caption = "Produção segundo classificação Qualis"),
-      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)),
-      sanitize.rownames.function = function(x) x)
+      hline.after = c(-1, 0, nrow(tab) - 1, nrow(tab)))
 @
 
 \clearpage
@@ -576,6 +577,47 @@ if(length(mm)){
 
 \section{Apêndices}
 
+A Tabela \ref{tab:ncoaut} lista a produção com coautoria entre professores do
+programa e, nas três últimas colunas, mostra o número de autores, sendo a
+coautoria identificada de acordo com três métodos:
+
+\vspace{2mm}
+
+\begin{tabular}{crl}
+ ~~~~~~~~~ &  \textbf{N} & Nome completo dos autores.\\
+ ~~~~~~~~~ &  \textbf{C} & Código do CNPq dos autores.\\
+ ~~~~~~~~~ &  \textbf{V} & Coincidência de ISSN/ISBN, ano, tipo de produção
+    (livro, artigo ou capítulo), volume, número e página inicial. \\
+\end{tabular}
+
+\begin{longtable}{|L{3cm}|L{6cm}|c|L{5cm}|r|r|r|r|}
+\caption{Trabalhos produzidos em coautoria} \\
+  \hline
+    \multirow{2}{*}{\textbf{Professor}} & \multirow{2}{*}{\textbf{Produção}} &
+    \multirow{2}{*}{\textbf{Ano}} & \multirow{2}{*}{\textbf{Livro ou
+    periódico}} & \multirow{2}{*}{\textbf{ISSN ou ISBN}} & \multicolumn{3}{c|}{\textbf{N. Aut.}} \\
+    \cline{6-8}                         &                                    &                               &                                              &                                & \textbf{N} & \textbf{C} & \textbf{V} \\
+  \hline
+\endfirsthead
+
+  \hline
+    \multirow{2}{*}{\textbf{Professor}} & \multirow{2}{*}{\textbf{Produção}} &
+    \multirow{2}{*}{\textbf{Ano}} & \multirow{2}{*}{\textbf{Livro ou
+    periódico}} & \multirow{2}{*}{\textbf{ISSN ou ISBN}} & \multicolumn{3}{c|}{\textbf{N. Aut.}} \\
+    \cline{6-8}                         &                                    &                               &                                              &                                & \textbf{N} & \textbf{C} & \textbf{V} \\
+  \hline
+\endhead
+<<coautoria>>=
+cat(paste(apply(coaut, 1, paste, collapse = " & "), "\\\\\n\\hline"), sep = "\n")
+@
+\hline
+\label{tab:ncoaut}
+\end{longtable}
+
+\clearpage
+
+
+
 \definecolor{coautr}{rgb}{0.5,1.0,0.7}
 \definecolor{ncarac}{rgb}{1,0.7,0.7}
 \definecolor{ninval}{rgb}{1,1,0.5}
@@ -583,10 +625,10 @@ if(length(mm)){
 \definecolor{capdup}{rgb}{1,0.5,1}
 
 
-<<printerros>>=
+<<printerros, warning=FALSE>>=
 if(sum(proddet$erro == "coautr") > 0){
     cat("\\textbf{Legenda de informação adicional indicada na Tabela \\ref{tab:proddet}}:\n\n")
-    cat("\\begin{tabular}{p{23.5cm}}\n")
+    cat("\\begin{tabular}{L{23.5cm}}\n")
     cat("\\rowcolor{coautr}Produção realizada em coautoria por mais de um professor do programa.\\\\\n")
     cat("\\end{tabular}\n\n\n")
     proddet$Professor[grepl("coautr", proddet$erro)] <- paste0("\\rowcolor{coautr}", proddet$Professor[grepl("coautr", proddet$erro)])
@@ -594,7 +636,7 @@ if(sum(proddet$erro == "coautr") > 0){
 
 if(sum(c("capdup", "ncarac", "ninval", "duplic") %in% proddet$erro)){
     cat("\\textbf{Legenda de erros de preenchimento do Lattes indicados na Tabela \\ref{tab:proddet}}:\n\n")
-    cat("\\begin{tabular}{p{23.5cm}}\n")
+    cat("\\begin{tabular}{L{23.5cm}}\n")
 
     if(sum(grepl("capdup", proddet$erro)) > 0){
         cat("\\rowcolor{capdup}Capítulo indevidamente registrado porque pertence a livro do próprio professor.\\\\\n")
@@ -621,12 +663,9 @@ if(sum(c("capdup", "ncarac", "ninval", "duplic") %in% proddet$erro)){
 <<printTabProdDet>>=
 prddt <- proddet
 prddt$erro <- NULL
-prddt[[2]] <- SaniTex(prddt[[2]])
-prddt[[7]] <- SaniTex(prddt[[7]])
 print(xtable(prddt, display = c("s", "s", "s", "d", "s", "f", "f", "s", "s"),
              align = "lllrrllrr", label = "tab:proddet",
              caption = "Produção detalhada"),
-      sanitize.text.function = function(x) x,
       tabular.environment = "longtable", floating = FALSE,
       include.rownames = FALSE)
 @
@@ -634,8 +673,8 @@ print(xtable(prddt, display = c("s", "s", "s", "d", "s", "f", "f", "s", "s"),
 
 \clearpage
 
-<<apendice2>>=
-print(xtable(ttldif, align = "lp{13cm}p{10cm}",
+<<apendice2, warning=FALSE>>=
+print(xtable(ttldif, align = "lL{13cm}L{10cm}",
              caption = "Títulos de periódicos registrados nos currículos com alguma diferença dos títulos na planilha Qualis"),
       include.rownames = FALSE, floating = FALSE,
       tabular.environment = "longtable")

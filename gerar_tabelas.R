@@ -74,11 +74,17 @@ if(sum(duplicated(qualis$isxn))){
 
 # http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
 # Convenience function to convert html codes
-html2txt <- function(x) {
+html2tex <- function(x) {
     if(is.na(x) | x == "")
-        return(NA)
-    xpathApply(htmlParse(x, asText=TRUE, encoding = "UTF-8"),
-               "//body//text()", xmlValue)[[1]]
+        return(x)
+    x <- xpathApply(htmlParse(x, asText=TRUE, encoding = "UTF-8"),
+                    "//body//text()", xmlValue)[[1]]
+    x <- gsub(' "', '“', x)
+    x <- gsub('"', '”', x)
+    x <- gsub(" '", '‘', x)
+    x <- gsub("'", '’', x)
+    x <- xtable::sanitize(x)
+    x
 }
 
 
@@ -258,6 +264,18 @@ obter.producao <- function(arquivo)
 
     pegar.artigo <- function(p, prof)
     {
+        aa <- p$children[names(p$children) == "AUTORES"]
+        naut <- length(aa)
+        aam <- sapply(aa, function(x) x$attributes)
+        if(sum(grepl("NRO-ID-CNPQ", names(aam))) > 0 &&
+           sum(grepl("NOME-COMPLETO-DO-AUTOR", names(aam))) > 0){
+            nmcompl <- paste(aam["NOME-COMPLETO-DO-AUTOR", ], collapse = "+")
+            idcnpq <- paste(aam["NRO-ID-CNPQ", ], collapse = "+")
+        } else {
+            # Currículos não atualizados há muito tempo
+            nmcompl <- nomep
+            idcnpq <- cnpqId
+        }
         db <- p$children$`DADOS-BASICOS-DO-ARTIGO`$attributes
         dl <- p$children$`DETALHAMENTO-DO-ARTIGO`$attributes
         c(prof, db[["ANO-DO-ARTIGO"]],
@@ -269,11 +287,23 @@ obter.producao <- function(arquivo)
           dl[["PAGINA-INICIAL"]],
           dl[["PAGINA-FINAL"]],
           dl[["ISSN"]],
-          db[["DOI"]])
+          db[["DOI"]], naut, nmcompl, idcnpq)
     }
 
     pegar.capitulo <- function(p, prof)
     {
+        aa <- p$children[names(p$children) == "AUTORES"]
+        naut <- length(aa)
+        aam <- sapply(aa, function(x) x$attributes)
+        if(sum(grepl("NRO-ID-CNPQ", names(aam))) > 0 &&
+           sum(grepl("NOME-COMPLETO-DO-AUTOR", names(aam))) > 0){
+            nmcompl <- paste(aam["NOME-COMPLETO-DO-AUTOR", ], collapse = "+")
+            idcnpq <- paste(aam["NRO-ID-CNPQ", ], collapse = "+")
+        } else {
+            # Currículos não atualizados há muito tempo
+            nmcompl <- nomep
+            idcnpq <- cnpqId
+        }
         db <- p$children$`DADOS-BASICOS-DO-CAPITULO`$attributes
         dl <- p$children$`DETALHAMENTO-DO-CAPITULO`$attributes
         c(prof, db[["ANO"]], "Cap",
@@ -282,18 +312,31 @@ obter.producao <- function(arquivo)
           dl[["PAGINA-INICIAL"]],
           dl[["PAGINA-FINAL"]],
           dl[["ISBN"]],
-          db[["DOI"]])
+          db[["DOI"]], naut, nmcompl, idcnpq)
     }
 
     pegar.livro <- function(p, prof)
     {
+        aa <- p$children[names(p$children) == "AUTORES"]
+        naut <- length(aa)
+        aam <- sapply(aa, function(x) x$attributes)
+        if(sum(grepl("NRO-ID-CNPQ", names(aam))) > 0 &&
+           sum(grepl("NOME-COMPLETO-DO-AUTOR", names(aam))) > 0){
+            nmcompl <- paste(aam["NOME-COMPLETO-DO-AUTOR", ], collapse = "+")
+            idcnpq <- paste(aam["NRO-ID-CNPQ", ], collapse = "+")
+        } else {
+            # Currículos não atualizados há muito tempo
+            nmcompl <- nomep
+            idcnpq <- cnpqId
+        }
         db <- p$children$`DADOS-BASICOS-DO-LIVRO`
         db <- db$attributes
         dl <- p$children$`DETALHAMENTO-DO-LIVRO`
         dl <- dl$attributes
         c(prof, db[["ANO"]],
           ifelse(db[["TIPO"]] == "LIVRO_ORGANIZADO_OU_EDICAO", "Org", "Lvr"),
-          db[["TITULO-DO-LIVRO"]], NA, NA, NA, NA, NA, dl[["ISBN"]], db[["DOI"]])
+          db[["TITULO-DO-LIVRO"]], NA, NA, NA, NA, NA, dl[["ISBN"]],
+          db[["DOI"]], naut, nmcompl, idcnpq)
     }
 
     b <- rbind(do.call("rbind", lapply(artigos,   pegar.artigo,   nomep)),
@@ -304,7 +347,8 @@ obter.producao <- function(arquivo)
     # b = NULL se o autor do currículo nunca tiver publicado nada:
     if(!is.null(b))
         colnames(b) <- c("prof", "ano", "tipo", "producao", "livro.ou.periodico",
-                         "vol", "num", "pini", "pfim", "isxn", "doi")
+                         "vol", "num", "pini", "pfim", "isxn", "doi",
+                         "naut", "nmcompl", "idcnpq")
     b
 }
 
@@ -427,8 +471,29 @@ p$chave <- tolower(paste(p$isxn, p$ano, p$tipo, p$vol, p$num, p$pini))
 coaut <- table(p$chave)
 coaut <- data.frame(chave = names(coaut), ncoaut = as.numeric(coaut), stringsAsFactors = FALSE)
 p <- merge(p, coaut)
+rm(coaut)
+p$ncoaut[p$isxn == ""] <- 1 # Ignorar casos em que não há ISSN/ISBN
+
+# Detectar coautorias
+NAutores <- function(s)
+{
+    l <- strsplit(s, "\\+")[[1]]
+    n <- sum(l %in% datacv[, 1])
+    n
+}
+p$ncoaut.nm <- unname(sapply(p$nmcompl, NAutores))
+NAutores <- function(s)
+{
+    l <- strsplit(s, "\\+")[[1]]
+    n <- sum(l %in% datacv[, 2])
+    n
+}
+p$ncoaut.id <- unname(sapply(p$idcnpq, NAutores))
+p$ncoaut.id[p$ncoaut.id == 0] <- 1
+p$ncoaut.max <- apply(p[, c("ncoaut", "ncoaut.nm", "ncoaut.id")], 1, max)
 
 pcompleto <- p
+
 p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
 
 p$ano <- factor(as.numeric(p$ano), levels = Inicio:Fim, labels = as.character(Inicio:Fim))
@@ -448,7 +513,7 @@ quando$Dias <- as.integer(as.Date(Sys.time()) - quando$DataCV)
 # Informações sobre doutorado
 if(length(doutorado) > 1){
     doutor <- do.call("rbind", doutorado)
-    doutor[, 2] <- NomeSigla(sapply(doutor[, 2], html2txt))
+    doutor[, 2] <- NomeSigla(sapply(doutor[, 2], html2tex))
     colnames(doutor) <- c("Professor", "Instituição doutorado", "Nome do curso", "Ano")
     # Reter somente último doutorado concluído:
     doutor <- doutor[order(doutor[, "Ano"], decreasing = TRUE), ]
@@ -564,6 +629,7 @@ nSJR <- cbind("Não" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artig
               "Sim" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
                              function(x) sum(!is.na(x))))
 nSJR <- cbind(nSJR, "%" = round(100 * nSJR[, 2] / (nSJR[, 1] + nSJR[, 2])))
+nSJR[is.na(nSJR)] <- 0
 nSJR <- nSJR[order(nSJR[, 3], decreasing = TRUE), ]
 mediana <- sprintf("%0.1f", round(apply(nSJR, 2, median), 2))
 media <- sprintf("%0.1f", round(apply(nSJR, 2, mean), 2))
@@ -574,6 +640,7 @@ nSnip <- cbind("Não" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Art
               "Sim" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
                              function(x) sum(!is.na(x))))
 nSnip <- cbind(nSnip, "%" = round(100 * nSnip[, 2] / (nSnip[, 1] + nSnip[, 2])))
+nSnip[is.na(nSnip)] <- 0
 nSnip <- nSnip[order(nSnip[, 3], decreasing = TRUE), ]
 mediana <- sprintf("%0.1f", round(apply(nSnip, 2, median), 2))
 media <- sprintf("%0.1f", round(apply(nSnip, 2, mean), 2))
@@ -605,7 +672,7 @@ posdoc <- do.call("rbind", posdoc)
 if(is.null(posdoc)){
     posdoc <- matrix(NA, ncol = 4)
 } else {
-    posdoc[, 2] <- NomeSigla(sapply(posdoc[, 2], html2txt))
+    posdoc[, 2] <- NomeSigla(sapply(posdoc[, 2], html2tex))
     if(nrow(posdoc) > 1)
         posdoc <- posdoc[order(posdoc[, 4]), ]
 }
@@ -615,13 +682,14 @@ colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
 if(length(oriconc)){
     oc <- do.call("rbind", oriconc)
     colnames(oc) <- c("Professor", "Natureza", "Ano", "Instituição", "Curso", "Orientado")
-    oc[, 4] <- NomeSigla(sapply(oc[, 4], html2txt))
+    oc[, 4] <- NomeSigla(sapply(oc[, 4], html2tex))
     oc <- as.data.frame(oc, stringsAsFactors = FALSE)
-    oc$Instituição <- sapply(oc$Instituição, html2txt)
+    oc$Instituição <- sapply(oc$Instituição, html2tex)
     oc$Ano <- as.numeric(as.character(oc$Ano))
     oc <- oc[oc$Ano >= Inicio & oc$Ano <= Fim, ]
 
-    oc$Natureza <- sapply(oc$Natureza, html2txt)
+    oc$Natureza <- sapply(oc$Natureza, html2tex)
+    oc$Natureza <- gsub("\\\\_",  "_", oc$Natureza)
     oc$Natureza <- sub("Dissertação de mestrado", "M", oc$Natureza)
     oc$Natureza <- sub("INICIACAO_CIENTIFICA", "IC", oc$Natureza)
     oc$Natureza <-
@@ -712,6 +780,8 @@ if(length(premios)){
     premios[, "Professor"] <- sub(" .* ", " ", premios[, "Professor"])
     premios <- as.data.frame(premios, stringsAsFactors = FALSE)
     premios <- premios[premios[, "Ano"] >= Inicio & premios[, "Ano"] <= Fim, ]
+    premios$Prêmio <- sapply(premios$Prêmio, html2tex)
+    premios[[3]] <- sapply(premios[[3]], html2tex)
 }
 
 # Orientações em andamento
@@ -719,11 +789,11 @@ if(length(oriand)){
     oa <- do.call("rbind", oriand)
     oa <- as.data.frame(oa, stringsAsFactors = FALSE)
     colnames(oa) <- c("Professor", "Natureza", "Ano", "Orientando", "Instituição")
-    oa$Instituição <- sapply(oa$Instituição, html2txt)
-    oa$Instituição <- NomeSigla(sapply(oa$Instituição, html2txt))
+    oa$Instituição <- sapply(oa$Instituição, html2tex)
+    oa$Instituição <- NomeSigla(sapply(oa$Instituição, html2tex))
     oa$Instituição <- AbreviarInstituicao(oa$Instituição)
     oa <- oa[order(oa$Ano), ]
-    oa$Natureza <- sapply(oa$Natureza, html2txt)
+    oa$Natureza <- sapply(oa$Natureza, html2tex)
     oa$Natureza <- factor(oa$Natureza)
     levels(oa$Natureza) <- sub("Dissertação de mestrado", "M", levels(oa$Natureza))
     levels(oa$Natureza) <- sub("Iniciação Científica", "IC", levels(oa$Natureza))
@@ -815,7 +885,7 @@ if(length(extensao)){
     ext <- do.call("rbind", extensao)
     ext <- as.data.frame(ext, stringsAsFactors = FALSE)
     names(ext) <- c("Professor", "Atividade", "MI", "AnoI", "MF", "AnoF")
-    ext$Atividade <- sapply(ext$Atividade, html2txt)
+    ext$Atividade <- sapply(ext$Atividade, html2tex)
     ext <- ext[ext$AnoI <= as.character(Fim) & (ext$AnoF >= as.character(Inicio) | ext$AnoF == ""), ]
     if(nrow(ext)){
         extensaoTab <- ext
@@ -831,7 +901,7 @@ if(length(projext)){
     ext <- do.call("rbind", projext)
     ext <- as.data.frame(ext, stringsAsFactors = FALSE)
     names(ext) <- c("Professor", "Projeto", "MI", "AnoI", "MF", "AnoF")
-    ext$Projeto <- sapply(ext$Projeto, html2txt)
+    ext$Projeto <- sapply(ext$Projeto, html2tex)
     ext <- ext[ext$AnoI <= as.character(Fim) & (ext$AnoF >= as.character(Inicio) | ext$AnoF == ""), ]
     if(nrow(ext)){
         projextTab <- ext
@@ -936,18 +1006,21 @@ if(sum(grepl("Nada", colnames(producao)))){
     producao <- producao[, !grepl("Nada", colnames(producao))]
 }
 
-p$producao <- sapply(p$producao, html2txt)
-p$livro.ou.periodico <- sapply(p$livro.ou.periodico, html2txt)
+p$producao <- sapply(p$producao, html2tex)
+p$livro.ou.periodico <- sapply(p$livro.ou.periodico, html2tex)
+
+# Tabela com coautores
+coaut <- p[p$ncoaut.max > 1,
+           c("prof", "producao", "ano", "livro.ou.periodico", "isxn", "ncoaut.nm", "ncoaut.id", "ncoaut")]
+coaut <- coaut[order(coaut$producao, coaut$prof), ]
+coaut$livro.ou.periodico[is.na(coaut$livro.ou.periodico)] <- ""
 
 # Produção detalhada
-b <- p[, c("prof", "producao", "ano", "qualis", "SJR", "SNIP", "livro.ou.periodico", "isxn", "ncoaut")]
+b <- p[, c("prof", "producao", "ano", "qualis", "SJR", "SNIP", "livro.ou.periodico", "isxn", "ncoaut.max")]
 b <- b[order(p$prof, p$ano, p$producao), ]
 
 b$prof <- sub(" .* ", " ", b$prof)
 b$prof <- sub("^(...................).*", "\\1", b$prof)
-b$producao <- sapply(b$producao, html2txt)
-b$producao <- gsub("_", "\\\\_", b$producao)
-b$livro.ou.periodico <- gsub("_", "\\\\_", b$livro.ou.periodico)
 
 bp <- split(b, b$prof)
 ObterCapDup <- function(x)
@@ -969,11 +1042,11 @@ if(sum(idx) > 0){
     b$erro[idx] <- "ncarac"
 }
 
-idx <- b$ncoaut > 1
+idx <- b$ncoaut.max > 1
 if(sum(idx) > 0){
     b$erro[idx] <- "coautr"
 }
-b$ncoaut <- NULL
+b$ncoaut.max <- NULL
 
 # ISBN check digit
 checkISBN <- function(x){
@@ -1016,9 +1089,6 @@ if(sum(idx) > 0){
 }
 rm(idx, dup, checkISBN)
 
-# b$livro.ou.periodico <- xtable::sanitize(b$livro.ou.periodico)
-# b$producao <- xtable::sanitize(b$producao)
-
 levels(b$qualis) <- sub("Nada", " ", levels(b$qualis))
 names(b) <- c("Professor", "Produção (títulos truncados)", "Ano", "Qualis", "SJR",
               "SNIP", "Periódico ou Livro (títulos truncados)", "ISSN/ISBN", "erro")
@@ -1033,6 +1103,7 @@ rm(b)
 # títulos na planilha Qualis
 ttldif <- p[p$tipo == "Artigo", ]
 ttldif <- ttldif[!is.na(ttldif$titulo), ]
+ttldif$titulo <- sapply(ttldif$titulo, html2tex)
 ttldif <- ttldif[tolower(ttldif$titulo) != tolower(ttldif$livro.ou.periodico),
        c("titulo", "livro.ou.periodico")]
 ttldif <- ttldif[!duplicated(ttldif), ]
