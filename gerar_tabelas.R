@@ -363,6 +363,18 @@ xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
 rm(xx, obter.producao)
 
+datacv <- as.data.frame(datacv)
+load("pq.RData")
+pq <- pq[pq$inicio <= Sys.Date() & pq$termino >= Sys.Date(), ]
+
+# Somente uns 4 casos de nomes realmente repetidos:
+# pqdup <- pq[duplicated(pq$nome) | duplicated(pq$nome, fromLast = TRUE), ]
+# pqdup <- pqdup[order(pqdup$nome), ]
+# pqdup
+pq <- pq[!duplicated(pq$nome), ]
+colnames(pq) <- sub("nome", "Professor", colnames(pq))
+datacv <- merge(datacv, pq, all.x = TRUE)
+
 if(exists("equivalente")){
     for(i in 1:length(equivalente))
         if(sum(qualis$isxn == equivalente[i]) == 1){
@@ -377,7 +389,7 @@ p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
 if(nrow(p) == 0){
     cat("\nNenhuma publicação encontrada nos currículos de:\n",
-        paste(sort(datacv[, "Professor"]), collapse = "\n   "),
+        paste(sort(datacv$Professor), collapse = "\n   "),
         sep = "\n   ", file = stderr())
     if(!interactive())
         quit(save = "no", status = 1)
@@ -478,14 +490,14 @@ p$ncoaut[p$isxn == ""] <- 1 # Ignorar casos em que não há ISSN/ISBN
 NAutores <- function(s)
 {
     l <- strsplit(s, "\\+")[[1]]
-    n <- sum(l %in% datacv[, 1])
+    n <- sum(l %in% datacv$Professor)
     n
 }
 p$ncoaut.nm <- unname(sapply(p$nmcompl, NAutores))
 NAutores <- function(s)
 {
     l <- strsplit(s, "\\+")[[1]]
-    n <- sum(l %in% datacv[, 2])
+    n <- sum(l %in% datacv$cnpqId)
     n
 }
 p$ncoaut.id <- unname(sapply(p$idcnpq, NAutores))
@@ -505,7 +517,7 @@ if(sum(is.na(p$pontos)) > 0){
 }
 
 # Data de atualização do currículo
-quando <- as.data.frame(datacv)
+quando <- datacv
 quando$DataCV <- as.Date(quando$DataCV, format = "%d/%m/%Y")
 quando <- quando[order(quando$DataCV), ]
 quando$Dias <- as.integer(as.Date(Sys.time()) - quando$DataCV)
@@ -1121,7 +1133,7 @@ p$Country <- factor(p$Country)
 save(datacv, quando, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
      pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")
 
-cnpqId <- datacv[order(datacv[, "Professor"]), ]
+cnpqId <- datacv[order(datacv$Professor), ]
 sink("lattes_xml/ultima_lista.html")
 cat('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n')
 cat('<html xmlns="http://www.w3.org/1999/xhtml">\n')
@@ -1134,7 +1146,7 @@ cat('<p><strong>Lista dos currículos incluídos no relatório gerado mais recen
 cat('<ol>\n')
 for(i in 1:nrow(cnpqId)){
     cat('  <li><a href="http://buscatextual.cnpq.br/buscatextual/download.do?metodo=apresentar&idcnpq=',
-        cnpqId[i, "cnpqId"], '">', cnpqId[i, "Professor"], '</a></li>\n', sep = "")
+        cnpqId$cnpqId[i], '">', cnpqId$Professor[i], '</a></li>\n', sep = "")
 }
 cat('</ol>\n')
 cat('</body>\n')

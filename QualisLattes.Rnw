@@ -124,17 +124,20 @@ avaliação.
 
 \section{Data do currículo}
 
-\begin{longtable}{cclr}
-\caption{Links para ORCID e Lattes e data de atualização do Currículo Lattes} \\
+\begin{longtable}{cclrl}
+\caption{Links para ORCID e Lattes, atualização do Currículo Lattes e bolsa PQ} \\
   \toprule
-    \multicolumn{2}{c}{\textbf{Links}} & \textbf{Professor} & \textbf{Dias} \\
+    \multicolumn{2}{c}{\textbf{Links}} & \textbf{Professor} & \textbf{Dias} & \textbf{Bolsa PQ} \\
 <<printDataLattes>>=
+quando$nivelarea <- paste0(quando$nivel, " (", quando$area, ")")
+quando$nivelarea[is.na(quando$nivel)] <- NA
 dias <- cbind("ORCID" = paste0("\\href{", quando[, "orcid"], "}{\\includegraphics[width=4mm]{orcid.png}}"),
               "Lattes" = paste0("\\href{http://lattes.cnpq.br/", quando[, "cnpqId"], "}{\\includegraphics[width=4mm]{lattes.png}}"),
               "Professor" = quando[, "Professor"],
-              "Dias" = quando[, "Dias"])
+              "Dias" = quando[, "Dias"],
+              "Bolsa PQ" = quando$nivelarea)
 dias[quando[, "orcid"] == "", "ORCID"] <- ""
-out <- capture.output(print(xtable(dias, align = "lcclr", caption = "Links para ORCID e Lattes e data de atualização do Currículo Lattes"),
+out <- capture.output(print(xtable(dias, align = "lcclrl", caption = "Links para ORCID e Lattes e data de atualização do Currículo Lattes"),
                      booktabs = TRUE, only.contents = TRUE, include.rownames = FALSE))
 out <- out[4:length(out)]
 cat(out, sep = "\n")
