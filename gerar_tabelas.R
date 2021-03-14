@@ -537,7 +537,7 @@ if(length(doutorado) > 1){
 
 p$prof <- factor(p$prof)
 
-TabProd <- function(d, v, g = FALSE)
+TabProd <- function(d, v)
 {
     pontos <- d[[v]] / d$ncoaut
     tab <- tapply(pontos, list(d$prof, d$ano), sum, na.rm = TRUE)
@@ -564,24 +564,7 @@ TabProd <- function(d, v, g = FALSE)
         rownames(tab) <- rn
         colnames(tab) <- cn
     }
-    media <- apply(tab, 2, mean)
-    mediana <- apply(tab, 2, median)
-    mrow <- max(media)
-    if(mrow > 10){
-        rr <- 1
-    } else {
-        if(mrow > 1){
-            rr <- 2
-        } else {
-            rr <- 3
-        }
-    }
-    tab <- rbind(tab, "Mediana" = round(mediana, rr))
-    tab <- rbind(tab, "Média" = round(media, rr))
-    if(g){
-        tab <- rbind(tab, "Gini" = apply(tab, 2, Gini))
-    }
-
+    tab <- cbind("Professor" = rownames(tab), as.data.frame(tab))
     tab
 }
 
@@ -631,10 +614,10 @@ if(min(snip.cat$Peso) != max(snip.cat$Peso)){
 
 pontuacaoLvr  <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
 pontuacaoArt  <- TabProd(p[p$tipo == "Artigo", ], "pontos")
-pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP", TRUE)
-pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR", TRUE)
-pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond", TRUE)
-pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond", TRUE)
+pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP")
+pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR")
+pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond")
+pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond")
 
 nSJR <- cbind("Não" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
                               function(x) sum(is.na(x))),
@@ -643,8 +626,8 @@ nSJR <- cbind("Não" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artig
 nSJR <- cbind(nSJR, "%" = round(100 * nSJR[, 2] / (nSJR[, 1] + nSJR[, 2])))
 nSJR[is.na(nSJR)] <- 0
 nSJR <- nSJR[order(nSJR[, 3], decreasing = TRUE), ]
-mediana <- sprintf("%0.1f", round(apply(nSJR, 2, median), 2))
-media <- sprintf("%0.1f", round(apply(nSJR, 2, mean), 2))
+mediana <- sprintf("%0.1f", round(apply(nSJR, 2, median, na.rm = TRUE), 2))
+media <- sprintf("%0.1f", round(apply(nSJR, 2, mean, na.rm = TRUE), 2))
 nSJR <- rbind(format(nSJR), "Mediana" = mediana, "Média" = media)
 
 nSnip <- cbind("Não" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
@@ -654,8 +637,8 @@ nSnip <- cbind("Não" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Art
 nSnip <- cbind(nSnip, "%" = round(100 * nSnip[, 2] / (nSnip[, 1] + nSnip[, 2])))
 nSnip[is.na(nSnip)] <- 0
 nSnip <- nSnip[order(nSnip[, 3], decreasing = TRUE), ]
-mediana <- sprintf("%0.1f", round(apply(nSnip, 2, median), 2))
-media <- sprintf("%0.1f", round(apply(nSnip, 2, mean), 2))
+mediana <- sprintf("%0.1f", round(apply(nSnip, 2, median, na.rm = TRUE), 2))
+media <- sprintf("%0.1f", round(apply(nSnip, 2, mean, na.rm = TRUE), 2))
 nSnip <- rbind(format(nSnip), "Mediana" = mediana, "Média" = media)
 
 p4 <- p[p$tipo == "Artigo", c("prof", "ano", "pontos")]
@@ -715,7 +698,7 @@ if(length(oriconc)){
     oc$Natureza <- factor(oc$Natureza)
     oc$um <- 1
 
-    oriconcTab <- tapply(oc$um, list(oc$Professor, oc$Natureza), sum)
+    oriconcTab <- tapply(oc$um, list(oc$Professor, oc$Natureza), sum, na.rm = TRUE)
     oriconcTab[is.na(oriconcTab)] <- 0
 
     # Ordenar colunas (nem todos os programas têm todos os tipos de orientações)
@@ -750,10 +733,10 @@ if(length(oriconc)){
 
     if(nrow(oriconcTab) > 2){
         oriconcTab <- oriconcTab[ro, ordem]
-        oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab, 1, sum))
-        total <- apply(oriconcTab, 2, sum)
-        mediana <- round(apply(oriconcTab, 2, median), 1)
-        media  <- round(apply(oriconcTab, 2, mean), 1)
+        oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab, 1, sum, na.rm = TRUE))
+        total <- apply(oriconcTab, 2, sum, na.rm = TRUE)
+        mediana <- round(apply(oriconcTab, 2, median, na.rm = TRUE), 1)
+        media  <- round(apply(oriconcTab, 2, mean, na.rm = TRUE), 1)
         oriconcTab <- rbind(oriconcTab, "Total" = total, "Mediana" = mediana, "Média"= media)
         oriconcTab <- cbind("Orientador" = rownames(oriconcTab), oriconcTab)
     }
@@ -819,7 +802,7 @@ if(length(oriand)){
                                levels(oa$Natureza))
 
     oa$um <- 1
-    oriandTab <- tapply(oa$um, list(oa$Professor, oa$Natureza), sum)
+    oriandTab <- tapply(oa$um, list(oa$Professor, oa$Natureza), sum, na.rm = TRUE)
     oriandTab[is.na(oriandTab)] <- 0
 
     ordem <- c("O", "IC", "G", "E", "M", "D", "PD")
@@ -852,10 +835,10 @@ if(length(oriand)){
 
     if(nrow(oriandTab) > 2){
         oriandTab <- oriandTab[ro, ordem]
-        oriandTab <- cbind(oriandTab, "Total" = apply(oriandTab, 1, sum))
-        total <- apply(oriandTab, 2, sum)
-        mediana <- round(apply(oriandTab, 2, median), 1)
-        media  <- round(apply(oriandTab, 2, mean), 1)
+        oriandTab <- cbind(oriandTab, "Total" = apply(oriandTab, 1, sum, na.rm = TRUE))
+        total <- apply(oriandTab, 2, sum, na.rm = TRUE)
+        mediana <- round(apply(oriandTab, 2, median, na.rm = TRUE), 1)
+        media  <- round(apply(oriandTab, 2, mean, na.rm = TRUE), 1)
         oriandTab <- rbind(oriandTab, "Total" = total, "Mediana" = mediana, "Média"= media)
         oriandTab <- cbind("Orientador" = rownames(oriandTab), oriandTab)
     }
@@ -883,10 +866,13 @@ if(length(ensino)){
                (ens$AnoF <= as.character(Fim) | ens$AnoF == ""), ]
     if(nrow(ens)){
         ens$um <- 1
-        ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum)
+        ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum, na.rm = TRUE)
         ensinoTab[is.na(ensinoTab)] <- 0
+        colnames(ensinoTab) <- sub("APERFEICOAMENTO", "Aperfeiçoamento", colnames(ensinoTab))
+        colnames(ensinoTab) <- sub("ESPECIALIZACAO", "Especialização", colnames(ensinoTab))
         colnames(ensinoTab) <- sub("GRADUACAO", "Graduação", colnames(ensinoTab))
         colnames(ensinoTab) <- sub("POS-", "Pós-", colnames(ensinoTab))
+        ensinoTab <- as.data.frame(cbind("Professor" = rownames(ensinoTab), ensinoTab))
     }
 }
 if(!exists("ensinoTab"))
@@ -898,7 +884,11 @@ if(length(extensao)){
     ext <- as.data.frame(ext, stringsAsFactors = FALSE)
     names(ext) <- c("Professor", "Atividade", "MI", "AnoI", "MF", "AnoF")
     ext$Atividade <- sapply(ext$Atividade, html2tex)
-    ext <- ext[ext$AnoI <= as.character(Fim) & (ext$AnoF >= as.character(Inicio) | ext$AnoF == ""), ]
+    ext$MI <- as.numeric(ext$MI)
+    ext$MF <- as.numeric(ext$MF)
+    ext$AnoI <- as.numeric(ext$AnoI)
+    ext$AnoF <- as.numeric(ext$AnoF)
+    ext <- ext[ext$AnoI <= Fim & (ext$AnoF >= Inicio | is.na(ext$AnoF)), ]
     if(nrow(ext)){
         extensaoTab <- ext
     } else {
@@ -914,7 +904,11 @@ if(length(projext)){
     ext <- as.data.frame(ext, stringsAsFactors = FALSE)
     names(ext) <- c("Professor", "Projeto", "MI", "AnoI", "MF", "AnoF")
     ext$Projeto <- sapply(ext$Projeto, html2tex)
-    ext <- ext[ext$AnoI <= as.character(Fim) & (ext$AnoF >= as.character(Inicio) | ext$AnoF == ""), ]
+    ext$MI <- as.numeric(ext$MI)
+    ext$MF <- as.numeric(ext$MF)
+    ext$AnoI <- as.numeric(ext$AnoI)
+    ext$AnoF <- as.numeric(ext$AnoF)
+    ext <- ext[ext$AnoI <= Fim & (ext$AnoF >= Inicio | is.na(ext$AnoF)), ]
     if(nrow(ext)){
         projextTab <- ext
     } else {
@@ -926,26 +920,17 @@ if(length(projext)){
 
 # Produção bibliográfica (Livros e Artigos)
 colnames(pontos) <- c("Classe", "Abreviatura", "Pontos")
-pLvr <- data.frame(Professor = rownames(pontuacaoLvr)[1:(nrow(pontuacaoLvr)-1)],
-                   Livros = pontuacaoLvr[1:(nrow(pontuacaoLvr)-1), ncol(pontuacaoLvr)],
-                   stringsAsFactors = FALSE)
-pArt <- data.frame(Professor = rownames(pontuacaoArt)[1:(nrow(pontuacaoArt)-1)],
-                   Artigos = pontuacaoArt[1:(nrow(pontuacaoArt)-1), ncol(pontuacaoArt)],
-                   stringsAsFactors = FALSE)
+pLvr <- pontuacaoLvr[, c("Professor", "Total")]
+pArt <- pontuacaoArt[, c("Professor", "Total")]
+pLvr$Total <- pLvr$Total / max(pLvr$Total)
+pArt$Total <- pArt$Total / max(pArt$Total)
+colnames(pLvr) <- c("Professor", "Livros")
+colnames(pArt) <- c("Professor", "Artigos")
 
 # Professores classificados por pontuação ponderada
 pond <- merge(pLvr, pArt, all = TRUE, stringsAsFactors = FALSE)
-pond$Livros[is.na(pond$Livros)] <- 0
-pond$Artigos[is.na(pond$Artigos)] <- 0
-pond$Livros <- pond$Livros / max(pond$Livros, na.rm = TRUE)
-pond$Artigos <- pond$Artigos / max(pond$Artigos, na.rm = TRUE)
-if(PesoLivros > 0){
-    pond$Média <- PesoArtigos * pond$Artigos + PesoLivros * pond$Livros
-} else {
-    pond$Média <- pond$Artigos
-}
+pond$Média <- PesoArtigos * pond$Artigos + PesoLivros * pond$Livros
 pond <- pond[order(pond$Média, decreasing = TRUE), ]
-rownames(pond) <- as.character(1:nrow(pond))
 
 # Média móvel
 # Calcular média móvel geral
@@ -978,8 +963,8 @@ MediaMovel <- function(x)
         return(NA)
     }
 
-    sa <- tapply(x$pontos[x$tipo == "Artigo"], x$ano[x$tipo == "Artigo"], sum) * PesoArtigos
-    sl <- tapply(x$pontos[x$tipo != "Artigo"], x$ano[x$tipo != "Artigo"], sum) * PesoLivros
+    sa <- tapply(x$pontos[x$tipo == "Artigo"], x$ano[x$tipo == "Artigo"], sum, na.rm = TRUE) * PesoArtigos
+    sl <- tapply(x$pontos[x$tipo != "Artigo"], x$ano[x$tipo != "Artigo"], sum, na.rm = TRUE) * PesoLivros
     anos <- c(names(sa), names(sl))
     if(max(as.numeric(anos)) - min(as.numeric(anos)) < 3){
         mmmsg <- paste0(x$prof[1], ": não é possível calcular a média móvel porque a produção registrada não se estende por um mínimo de três anos.")
@@ -1132,6 +1117,44 @@ p$Country <- factor(p$Country)
 
 save(datacv, quando, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
      pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")
+
+MMG <- function(tab, r, g = FALSE)
+{
+    tab <- tab[, 2:ncol(tab)]
+    media <- apply(tab, 2, mean, na.rm = TRUE)
+    mediana <- apply(tab, 2, median, na.rm = TRUE)
+    gini <- format(round(apply(tab, 2, Gini), 2))
+    mrow <- max(media)
+    if(mrow > 10){
+        rr <- 1
+    } else {
+        if(mrow > 1){
+            rr <- 2
+        } else {
+            rr <- 3
+        }
+    }
+    mediana <- format(round(mediana, rr))
+    media <- format(round(media, rr))
+    if(missing(r))
+        tab <- format(tab)
+    else
+        tab <- format(round(tab, r))
+    tab <- rbind(tab, "Mediana" = mediana, "Média" = media)
+    if(g){
+        tab <- rbind(tab, "Gini" = gini)
+    }
+    tab <- cbind("Professor" = rownames(tab), tab)
+    rownames(tab) <- NULL
+    tab
+}
+
+pontuacaoLvr  <- MMG(pontuacaoLvr)
+pontuacaoArt  <- MMG(pontuacaoArt)
+pontuacaoSNIP <- MMG(pontuacaoSNIP, 3, g = TRUE)
+pontuacaoSJR  <- MMG(pontuacaoSJR, g = TRUE)
+pontuacaoSJRPond  <- MMG(pontuacaoSJRPond, g = TRUE)
+pontuacaoSNIPPond  <- MMG(pontuacaoSNIPPond, g = TRUE)
 
 cnpqId <- datacv[order(datacv$Professor), ]
 sink("lattes_xml/ultima_lista.html")
