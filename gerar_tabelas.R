@@ -621,13 +621,17 @@ nSJR <- cbind("Não" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artig
                              function(x) sum(!is.na(x))))
 nSJR <- as.data.frame(nSJR)
 nSJR <- cbind("Professor" = rownames(nSJR), nSJR, stringsAsFactors = FALSE)
+nSJR$Não[is.na(nSJR$Não)] <- 0
+nSJR$Sim[is.na(nSJR$Sim)] <- 0
 
 nSnip <- cbind("Não" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
-                              function(x) sum(is.na(x))),
+                              function(x) sum(is.na(x), na.rm = TRUE)),
               "Sim" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
-                             function(x) sum(!is.na(x))))
+                             function(x) sum(!is.na(x), na.rm = TRUE)))
 nSnip <- as.data.frame(nSnip)
 nSnip <- cbind("Professor" = rownames(nSnip), nSnip, stringsAsFactors = FALSE)
+nSnip$Não[is.na(nSnip$Não)] <- 0
+nSnip$Sim[is.na(nSnip$Sim)] <- 0
 
 p4 <- p[p$tipo == "Artigo", c("prof", "ano", "pontos")]
 p4s <- split(p4, p4$prof)
@@ -724,9 +728,9 @@ if(length(oriconc)){
 
     if(nrow(oriconcTab) > 2){
         oriconcTab <- oriconcTab[ro, ordem]
-        oriconcTab <- as.data.frame(oriconcTab, stringsAsFactors = FALSE)
-        oriconcTab <- cbind("Orientador" = rownames(oriconcTab), oriconcTab)
     }
+    oriconcTab <- as.data.frame(oriconcTab, stringsAsFactors = FALSE)
+    oriconcTab <- cbind("Orientador" = rownames(oriconcTab), oriconcTab)
 
     # Detalhamento das orientações concluídas
     oc$Professor <- sub(" .* ", " ", oc$Professor)
@@ -820,9 +824,9 @@ if(length(oriand)){
 
     if(nrow(oriandTab) > 2){
         oriandTab <- oriandTab[ro, ordem]
-        oriandTab <- as.data.frame(oriandTab, stringsAsFactors = FALSE)
-        oriandTab <- cbind("Orientador" = rownames(oriandTab), oriandTab)
     }
+    oriandTab <- as.data.frame(oriandTab, stringsAsFactors = FALSE)
+    oriandTab <- cbind("Orientador" = rownames(oriandTab), oriandTab)
 
     # Detalhamento das orientações em andamento
     oa$um <- NULL
@@ -872,10 +876,10 @@ if(length(extensao)){
     if(nrow(ext)){
         extensaoTab <- ext
     } else {
-        extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período")
+        extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período", check.names = FALSE)
     }
 } else {
-    extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período")
+    extensaoTab <- data.frame("Atividade de extensao" = "Nenhuma atividade de extensao registrada com início e fim no período", check.names = FALSE)
 }
 
 ## Registro do item “Projeto de Extensão” no período
@@ -892,10 +896,10 @@ if(length(projext)){
     if(nrow(ext)){
         projextTab <- ext
     } else {
-        projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período")
+        projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período", check.names = FALSE)
     }
 } else {
-    projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período")
+    projextTab <- data.frame("Projeto de extensao" = "Nenhum projeto de extensao registrado com início e fim no período", check.names = FALSE)
 }
 
 # Produção bibliográfica (Livros e Artigos)

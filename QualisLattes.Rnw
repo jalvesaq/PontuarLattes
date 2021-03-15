@@ -13,8 +13,12 @@ Bold <- function(x) {paste('\\textbf{', sub("%", "\\\\%", x), '}', sep ='')}
 
 CharSemNA <- function(x)
 {
-    y <- format(x)
+    if(!is.character(x))
+        y <- as.character(x)
+    else
+        y <- x
     y[is.na(x)] <- ""
+    y[y == "NaN" | is.nan(x)] <- "--"
     y
 }
 
@@ -26,18 +30,16 @@ Tabela <- function(tab, cap = "Sem título", alin, lbl, hline)
         tab[hline, 1] <- paste("\\hline", tab[hline, 1])
 
     for(n in 1:ncol(tab))
-        if(is.numeric(tab[[n]]))
-            tab[[n]] <- CharSemNA(tab[[n]])
+        tab[[n]] <- CharSemNA(tab[[n]])
 
     if(grepl("L", alin))
         cat("\\begin{ltabulary}{", alin, "}\n", sep = "")
     else
         cat("\\begin{longtable}{", alin, "}\n", sep = "")
-    cat("\\caption{", cap, "}", sep = "")
     if(missing(lbl)){
-        cat(" \\\\\n")
+        cat("\\caption{", cap, "} \\\\\n", sep = "")
     } else {
-        cat("\\label{", lbl, "} \\\\\n", sep = "")
+        cat("\\caption{", cap, "\\label{", lbl, "}}\\\\\n", sep = "")
     }
     cat("  \\toprule\n")
     cat(paste(Bold(colnames(tab)), collapse = " & "), "\\\\\n")
@@ -101,25 +103,29 @@ pontuacaoSJR  <- MMG(pontuacaoSJR, g = TRUE)
 pontuacaoSJRPond  <- MMG(pontuacaoSJRPond, g = TRUE)
 pontuacaoSNIPPond  <- MMG(pontuacaoSNIPPond, g = TRUE)
 
-oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab[, 2:ncol(oriconcTab)], 1, sum, na.rm = TRUE))
-total <- as.character(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, sum, na.rm = TRUE))
-mediana <- as.character(round(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, median, na.rm = TRUE), 1))
-media  <- as.character(round(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, mean, na.rm = TRUE), 1))
-oriconcTab[, 2:ncol(oriconcTab)] <- format(oriconcTab[, 2:ncol(oriconcTab)])
-tab <- as.data.frame(rbind(c("Total", total), c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
-colnames(tab) <- colnames(oriconcTab)
-rownames(oriconcTab) <- NULL
-oriconcTab <- rbind(oriconcTab, tab, stringsAsFactors = FALSE)
+if(ncol(oriconcTab) > 2 && nrow(oriconcTab) > 3){
+    oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab[, 2:ncol(oriconcTab)], 1, sum, na.rm = TRUE))
+    total <- as.character(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, sum, na.rm = TRUE))
+    mediana <- as.character(round(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, median, na.rm = TRUE), 1))
+    media  <- as.character(round(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, mean, na.rm = TRUE), 1))
+    oriconcTab[, 2:ncol(oriconcTab)] <- format(oriconcTab[, 2:ncol(oriconcTab)])
+    tab <- as.data.frame(rbind(c("Total", total), c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
+    colnames(tab) <- colnames(oriconcTab)
+    rownames(oriconcTab) <- NULL
+    oriconcTab <- rbind(oriconcTab, tab, stringsAsFactors = FALSE)
+}
 
-oriandTab <- cbind(oriandTab, "Total" = apply(oriandTab[, 2:ncol(oriandTab)], 1, sum, na.rm = TRUE))
-total <- as.character(apply(oriandTab[, 2:ncol(oriandTab)], 2, sum, na.rm = TRUE))
-mediana <- as.character(round(apply(oriandTab[, 2:ncol(oriandTab)], 2, median, na.rm = TRUE), 1))
-media  <- as.character(round(apply(oriandTab[, 2:ncol(oriandTab)], 2, mean, na.rm = TRUE), 1))
-oriandTab[, 2:ncol(oriandTab)] <- format(oriandTab[, 2:ncol(oriandTab)])
-tab <- as.data.frame(rbind(c("Total", total), c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
-colnames(tab) <- colnames(oriandTab)
-rownames(oriandTab) <- NULL
-oriandTab <- rbind(oriandTab, tab, stringsAsFactors = FALSE)
+if(ncol(oriandTab) > 2 && nrow(oriandTab) > 3){
+    oriandTab <- cbind(oriandTab, "Total" = apply(oriandTab[, 2:ncol(oriandTab)], 1, sum, na.rm = TRUE))
+    total <- as.character(apply(oriandTab[, 2:ncol(oriandTab)], 2, sum, na.rm = TRUE))
+    mediana <- as.character(round(apply(oriandTab[, 2:ncol(oriandTab)], 2, median, na.rm = TRUE), 1))
+    media  <- as.character(round(apply(oriandTab[, 2:ncol(oriandTab)], 2, mean, na.rm = TRUE), 1))
+    oriandTab[, 2:ncol(oriandTab)] <- format(oriandTab[, 2:ncol(oriandTab)])
+    tab <- as.data.frame(rbind(c("Total", total), c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
+    colnames(tab) <- colnames(oriandTab)
+    rownames(oriandTab) <- NULL
+    oriandTab <- rbind(oriandTab, tab, stringsAsFactors = FALSE)
+}
 
 nSJR <- cbind(nSJR, "%" = round(100 * nSJR$Sim / (nSJR$Não + nSJR$Sim)))
 nSJR <- nSJR[order(nSJR[, 4], decreasing = TRUE), ]
@@ -311,6 +317,10 @@ if(!is.null(doutor)){
     doutor <- doutor[order(doutor$Ano), ]
     tab <- cbind(doutor,
                  "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor$Ano))
+
+    for(n in 1:ncol(tab))
+        tab[[n]] <- CharSemNA(tab[[n]])
+
     cap <- "Curso de doutorado"
     alin <- "LLLcc"
 
@@ -342,7 +352,7 @@ if(!is.null(doutor)){
 @
 
 <<areaTitulo>>=
-tab <- sort(table(doutor[, "Nome do curso"]), decreasing = TRUE)
+tab <- sort(table(doutor[["Nome do curso"]]), decreasing = TRUE)
 tab <- cbind("Área" = sub("^$", "(não especificado)", rownames(tab)),
              "Frequência" = tab, "%" = sub("\\.", ",",
                                            sprintf("%0.1f", 100 * tab / sum(tab, na.rm = TRUE))))
@@ -354,11 +364,13 @@ Tabela(tab, hline = nrow(tab), cap = "Área de titulação")
 \newpage
 
 <<localTitulo>>=
-tab <- sort(table(doutor[, "Instituição doutorado"]), decreasing = TRUE)
-tab <- cbind("Instituição" = sub("^$", "(não especificado)", rownames(tab)),
-             "Frequência" = tab, "%" = sub("\\.", ",",
-                                           sprintf("%0.1f", 100 * tab / sum(tab, na.rm = TRUE))))
-tab <- rbind(tab, c("Total", as.character(sum(as.numeric(tab[, 2]), na.rm = TRUE)), "100,0"))
+tab <- sort(table(doutor[["Instituição doutorado"]]), decreasing = TRUE)
+tab <- data.frame("Instituição" = names(tab), "Frequência" = as.numeric(tab),
+                  "%" = as.character(sub("\\.", ",", sprintf("%0.1f", 100 * tab / sum(tab, na.rm = TRUE)))),
+                  stringsAsFactors = FALSE,
+                  check.names = FALSE)
+
+tab <- rbind(tab, c("Total", as.character(sum(as.numeric(tab$Frequência), na.rm = TRUE)), "100,0"), stringsAsFactors = FALSE)
 Tabela(tab, cap = "Instituição doutorado", hline = nrow(tab))
 @
 
@@ -655,7 +667,7 @@ tab <- data.frame("Categoria" = names(tab), "Frequência" = unname(tab))
 tab <- tab[order(tab$Frequência, decreasing = TRUE), ]
 tab$Percetual <- as.character(round(100 * tab$Frequência / sum(!is.na(p$cat.sjr))))
 colnames(tab) <- sub("Percetual", "\\%", colnames(tab))
-Tabela(tab, lbl = "tab:sjrcat",
+Tabela(tab, lbl = "tab:sjrcat", alin = "lrr",
        cap = paste0("Classificação dos periódicos com SJR (N = ", sum(!is.na(p$cat.sjr)), ")"))
 @
 
@@ -728,7 +740,7 @@ tab <- data.frame("Categoria" = names(tab), "Frequência" = unname(tab))
 tab <- tab[order(tab$Frequência, decreasing = TRUE), ]
 tab$Percetual <- as.character(round(100 * tab$Frequência / sum(!is.na(p$ASJC.field.IDs))))
 colnames(tab) <- sub("Percetual", "\\%", colnames(tab))
-Tabela(tab, lbl = "tab:snipcat",
+Tabela(tab, lbl = "tab:snipcat", alin = "lrr",
        cap = paste0("Classificação dos periódicos com Snip (N = ", sum(!is.na(p$ASJC.field.IDs)), ")"))
 @
 
@@ -779,32 +791,37 @@ coautoria identificada de acordo com três métodos:
 \begin{tabular}{crl}
  ~~~~~~~~~ &  \textbf{N} & Nome completo dos autores.\\
  ~~~~~~~~~ &  \textbf{C} & Código do CNPq dos autores.\\
- ~~~~~~~~~ &  \textbf{V} & Coincidência de ISSN/ISBN, ano, tipo de produção
-    (livro, artigo ou capítulo), volume, número e página inicial. \\
+ ~~~~~~~~~ &  \textbf{V} & Coincidência de ISSN/ISBN, ano, tipo de produção (livro, artigo ou capítulo), volume, número e página inicial. \\
 \end{tabular}
 
 \begin{longtable}{|E{3cm}|E{6cm}|c|E{5cm}|r|r|r|r|}
-\caption{Trabalhos produzidos em coautoria} \\
-  \hline
+    \caption{Trabalhos produzidos em coautoria}\label{tab:ncoaut} \\
+    \hline
     \multirow{2}{*}{\textbf{Professor}} & \multirow{2}{*}{\textbf{Produção}} &
-    \multirow{2}{*}{\textbf{Ano}} & \multirow{2}{*}{\textbf{Livro ou
-    periódico}} & \multirow{2}{*}{\textbf{ISSN ou ISBN}} & \multicolumn{3}{c|}{\textbf{N. Aut.}} \\
-    \cline{6-8}                         &                                    &                               &                                              &                                & \textbf{N} & \textbf{C} & \textbf{V} \\
-  \hline
-\endfirsthead
-
-  \hline
+    \multirow{2}{*}{\textbf{Ano}} & \multirow{2}{*}{\textbf{Livro ou periódico}} &
+    \multirow{2}{*}{\textbf{ISSN ou ISBN}} & \multicolumn{3}{c|}{\textbf{N. Aut.}} \\
+    \cline{6-8} & & & & & \textbf{N} & \textbf{C} & \textbf{V} \\
+    \hline
+    \endfirsthead
+    \multicolumn{8}{c}{{\footnotesize ... continuação da página anterior}} \\
+    \hline
     \multirow{2}{*}{\textbf{Professor}} & \multirow{2}{*}{\textbf{Produção}} &
-    \multirow{2}{*}{\textbf{Ano}} & \multirow{2}{*}{\textbf{Livro ou
-    periódico}} & \multirow{2}{*}{\textbf{ISSN ou ISBN}} & \multicolumn{3}{c|}{\textbf{N. Aut.}} \\
-    \cline{6-8}                         &                                    &                               &                                              &                                & \textbf{N} & \textbf{C} & \textbf{V} \\
-  \hline
-\endhead
+    \multirow{2}{*}{\textbf{Ano}} & \multirow{2}{*}{\textbf{Livro ou periódico}} &
+    \multirow{2}{*}{\textbf{ISSN ou ISBN}} & \multicolumn{3}{c|}{\textbf{N. Aut.}} \\
+    \cline{6-8} & & & & & \textbf{N} & \textbf{C} & \textbf{V} \\
+    \endhead
+    \hline
+    \multicolumn{8}{r}{{\footnotesize Continua na próxima página}} \\
+    \endfoot
+    \hline
+    \endlastfoot
 <<coautoria>>=
-cat(paste(apply(coaut, 1, paste, collapse = " & "), "\\\\\n\\hline"), sep = "\n")
+if(nrow(coaut) > 0){
+    cat(paste(apply(coaut, 1, paste, collapse = " & "), "\\\\\n\\hline"), sep = "\n")
+} else {
+    cat("\\multicolumn{8}{|l|}{Não foram identificados trabalhos em coautoria}\\\\\n")
+}
 @
-\hline
-\label{tab:ncoaut}
 \end{longtable}
 
 \clearpage
