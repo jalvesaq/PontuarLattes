@@ -71,7 +71,6 @@ if(sum(duplicated(qualis$isxn))){
         quit(save = "no", status = 1)
 }
 
-
 # http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
 # Convenience function to convert html codes
 html2tex <- function(x) {
@@ -86,7 +85,6 @@ html2tex <- function(x) {
     x <- xtable::sanitize(x)
     x
 }
-
 
 NomeSigla <- function(x)
 {
@@ -105,7 +103,6 @@ AbreviarInstituicao <- function(x)
     x <- sub("Programa Pós.Graduação", "PPG", x, ignore.case = TRUE)
     x
 }
-
 
 # Ler currículos
 
@@ -194,7 +191,6 @@ obter.producao <- function(arquivo)
                                                  oa[[ii]]$children[[2]]$attributes[c("NOME-DO-ORIENTANDO", "NOME-INSTITUICAO")])
         }
     }
-
 
     if("PREMIOS-TITULOS" %in% names(prof$children)){
         xx <- prof$children$`PREMIOS-TITULOS`$children
@@ -384,7 +380,6 @@ if(exists("equivalente")){
         }
 }
 
-
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 
 if(nrow(p) == 0){
@@ -418,7 +413,6 @@ if(QualisPorTitulo){
         }
     }
 }
-
 
 # Organização de dossiês em periódicos:
 if(QNovo){
@@ -531,6 +525,8 @@ if(length(doutorado) > 1){
     doutor <- doutor[order(doutor[, "Ano"], decreasing = TRUE), ]
     notdup <- !duplicated(doutor[, "Professor"])
     doutor <- doutor[notdup, ]
+    doutor <- as.data.frame(doutor, stringsAsFactors = FALSE)
+    doutor$Ano <- as.numeric(doutor$Ano)
 } else {
     doutor <- NULL
 }
@@ -623,23 +619,15 @@ nSJR <- cbind("Não" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artig
                               function(x) sum(is.na(x))),
               "Sim" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
                              function(x) sum(!is.na(x))))
-nSJR <- cbind(nSJR, "%" = round(100 * nSJR[, 2] / (nSJR[, 1] + nSJR[, 2])))
-nSJR[is.na(nSJR)] <- 0
-nSJR <- nSJR[order(nSJR[, 3], decreasing = TRUE), ]
-mediana <- sprintf("%0.1f", round(apply(nSJR, 2, median, na.rm = TRUE), 2))
-media <- sprintf("%0.1f", round(apply(nSJR, 2, mean, na.rm = TRUE), 2))
-nSJR <- rbind(format(nSJR), "Mediana" = mediana, "Média" = media)
+nSJR <- as.data.frame(nSJR)
+nSJR <- cbind("Professor" = rownames(nSJR), nSJR, stringsAsFactors = FALSE)
 
 nSnip <- cbind("Não" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
                               function(x) sum(is.na(x))),
               "Sim" = tapply(p$SNIP[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
                              function(x) sum(!is.na(x))))
-nSnip <- cbind(nSnip, "%" = round(100 * nSnip[, 2] / (nSnip[, 1] + nSnip[, 2])))
-nSnip[is.na(nSnip)] <- 0
-nSnip <- nSnip[order(nSnip[, 3], decreasing = TRUE), ]
-mediana <- sprintf("%0.1f", round(apply(nSnip, 2, median, na.rm = TRUE), 2))
-media <- sprintf("%0.1f", round(apply(nSnip, 2, mean, na.rm = TRUE), 2))
-nSnip <- rbind(format(nSnip), "Mediana" = mediana, "Média" = media)
+nSnip <- as.data.frame(nSnip)
+nSnip <- cbind("Professor" = rownames(nSnip), nSnip, stringsAsFactors = FALSE)
 
 p4 <- p[p$tipo == "Artigo", c("prof", "ano", "pontos")]
 p4s <- split(p4, p4$prof)
@@ -672,6 +660,9 @@ if(is.null(posdoc)){
         posdoc <- posdoc[order(posdoc[, 4]), ]
 }
 colnames(posdoc) <- c("Professor", "Instituição", "Início", "Fim")
+posdoc <- as.data.frame(posdoc, stringsAsFactors = FALSE)
+posdoc$Início <- as.numeric(posdoc$Início)
+posdoc$Fim <- as.numeric(posdoc$Fim)
 
 # Orientações concluídas
 if(length(oriconc)){
@@ -733,11 +724,7 @@ if(length(oriconc)){
 
     if(nrow(oriconcTab) > 2){
         oriconcTab <- oriconcTab[ro, ordem]
-        oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab, 1, sum, na.rm = TRUE))
-        total <- apply(oriconcTab, 2, sum, na.rm = TRUE)
-        mediana <- round(apply(oriconcTab, 2, median, na.rm = TRUE), 1)
-        media  <- round(apply(oriconcTab, 2, mean, na.rm = TRUE), 1)
-        oriconcTab <- rbind(oriconcTab, "Total" = total, "Mediana" = mediana, "Média"= media)
+        oriconcTab <- as.data.frame(oriconcTab, stringsAsFactors = FALSE)
         oriconcTab <- cbind("Orientador" = rownames(oriconcTab), oriconcTab)
     }
 
@@ -760,8 +747,6 @@ if(length(oriconc)){
     oriconcTab <- data.frame(Natureza = "", Instituição = "", Curso = "", Professor = "", Orientado = "", Ano = "")
     oc <- data.frame(Natureza = "", Instituição = "", Curso = "", Professor = "", Orientado = "", Ano = "")
 }
-
-
 
 # Prêmios
 if(length(premios)){
@@ -835,11 +820,7 @@ if(length(oriand)){
 
     if(nrow(oriandTab) > 2){
         oriandTab <- oriandTab[ro, ordem]
-        oriandTab <- cbind(oriandTab, "Total" = apply(oriandTab, 1, sum, na.rm = TRUE))
-        total <- apply(oriandTab, 2, sum, na.rm = TRUE)
-        mediana <- round(apply(oriandTab, 2, median, na.rm = TRUE), 1)
-        media  <- round(apply(oriandTab, 2, mean, na.rm = TRUE), 1)
-        oriandTab <- rbind(oriandTab, "Total" = total, "Mediana" = mediana, "Média"= media)
+        oriandTab <- as.data.frame(oriandTab, stringsAsFactors = FALSE)
         oriandTab <- cbind("Orientador" = rownames(oriandTab), oriandTab)
     }
 
@@ -855,7 +836,6 @@ if(length(oriand)){
     oa <- data.frame(Ano = "", Professor = "", Natureza = "", Instituição =
                      "", Orientando = "")
 }
-
 
 ## Registro do item “Ensino” no período
 if(length(ensino)){
@@ -946,7 +926,6 @@ names(mediamovel) <- as.character(as.numeric(min(names(media))):as.numeric(max(n
 for(n in names(media))
     mediamovel[[n]] <- media[[n]]
 
-
 mmmsg <- character()
 # Calcular média móvel de cada professor
 MediaMovel <- function(x)
@@ -994,7 +973,6 @@ MediaMovel <- function(x)
 pcl <- split(pcompleto, pcompleto$prof)
 mm <- lapply(pcl, MediaMovel)
 mm <- mm[!is.na(mm)]
-
 
 # Produção segundo classificação Qualis
 p$um <- 1
@@ -1068,7 +1046,6 @@ if(sum(idx) > 0){
     b$erro[idx] <- "ninval"
 }
 
-
 b$producao <- sub("^(................................).*", "\\1", b$producao)
 b$livro.ou.periodico <- sub("^(....................................).*", "\\1", b$livro.ou.periodico)
 idx <- grep("[A-Z][A-Z][A-Z][A-Z][A-Z]", b$producao)
@@ -1093,9 +1070,6 @@ proddet <- b
 proddet$SNIP <- round(proddet$SNIP, 3)
 rm(b)
 
-# TODO: Produzir tabela com periódicos que mais contribuíram para a pontuação
-# do programa
-
 # Títulos de periódicos registrados nos currículos com alguma diferença dos
 # títulos na planilha Qualis
 ttldif <- p[p$tipo == "Artigo", ]
@@ -1115,46 +1089,10 @@ colnames(semqualis) <- c("ISSN", "Título do periódico")
 
 p$Country <- factor(p$Country)
 
-save(datacv, quando, doutor, posdoc, premios, pontuacaoLvr, pontuacaoArt,
-     pontuacaoSJR, pontuacaoSNIP, file = "tabs.RData")
-
-MMG <- function(tab, r, g = FALSE)
-{
-    tab <- tab[, 2:ncol(tab)]
-    media <- apply(tab, 2, mean, na.rm = TRUE)
-    mediana <- apply(tab, 2, median, na.rm = TRUE)
-    gini <- format(round(apply(tab, 2, Gini), 2))
-    mrow <- max(media)
-    if(mrow > 10){
-        rr <- 1
-    } else {
-        if(mrow > 1){
-            rr <- 2
-        } else {
-            rr <- 3
-        }
-    }
-    mediana <- format(round(mediana, rr))
-    media <- format(round(media, rr))
-    if(missing(r))
-        tab <- format(tab)
-    else
-        tab <- format(round(tab, r))
-    tab <- rbind(tab, "Mediana" = mediana, "Média" = media)
-    if(g){
-        tab <- rbind(tab, "Gini" = gini)
-    }
-    tab <- cbind("Professor" = rownames(tab), tab)
-    rownames(tab) <- NULL
-    tab
-}
-
-pontuacaoLvr  <- MMG(pontuacaoLvr)
-pontuacaoArt  <- MMG(pontuacaoArt)
-pontuacaoSNIP <- MMG(pontuacaoSNIP, 3, g = TRUE)
-pontuacaoSJR  <- MMG(pontuacaoSJR, g = TRUE)
-pontuacaoSJRPond  <- MMG(pontuacaoSJRPond, g = TRUE)
-pontuacaoSNIPPond  <- MMG(pontuacaoSNIPPond, g = TRUE)
+# Salvar objetos do tipo data.frame para uso externo ao PontuarLattes
+save(datacv, quando, doutor, nSJR, nSnip, oriconcTab, oriandTab, posdoc,
+     premios, pontuacaoLvr, pontuacaoArt, pontuacaoSJR, pontuacaoSNIP,
+     file = "tabs.RData")
 
 cnpqId <- datacv[order(datacv$Professor), ]
 sink("lattes_xml/ultima_lista.html")
@@ -1176,11 +1114,3 @@ cat('</body>\n')
 cat('</html>\n')
 sink()
 
-# Fonte a ser usada no PDF:
-if(!exists("MainFont")){
-    if(grepl("linux", version$os)){
-        MainFont = "Liberation Serif"
-    } else {
-        MainFont = "Times New Roman"
-    }
-}

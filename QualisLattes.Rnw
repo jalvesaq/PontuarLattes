@@ -29,7 +29,10 @@ Tabela <- function(tab, cap = "Sem título", alin, lbl, hline)
         if(is.numeric(tab[[n]]))
             tab[[n]] <- CharSemNA(tab[[n]])
 
-    cat("\\begin{ltabulary}{", alin, "}\n", sep = "")
+    if(grepl("L", alin))
+        cat("\\begin{ltabulary}{", alin, "}\n", sep = "")
+    else
+        cat("\\begin{longtable}{", alin, "}\n", sep = "")
     cat("\\caption{", cap, "}", sep = "")
     if(missing(lbl)){
         cat(" \\\\\n")
@@ -51,10 +54,99 @@ Tabela <- function(tab, cap = "Sem título", alin, lbl, hline)
     cat("\\bottomrule\n")
     cat("\\endlastfoot\n")
     cat(paste(apply(tab, 1, paste, collapse = " & "), "\\\\"), sep = "\n")
-    cat("\\end{ltabulary}\n")
+    if(grepl("L", alin))
+        cat("\\end{ltabulary}\n")
+    else
+        cat("\\end{longtable}\n")
 }
 
 source("gerar_tabelas.R")
+
+# Formatar data.frames para exibição no relatório QualisLattes.pdf
+MMG <- function(tab, r, g = FALSE)
+{
+    tab <- tab[, 2:ncol(tab)]
+    media <- apply(tab, 2, mean, na.rm = TRUE)
+    mediana <- apply(tab, 2, median, na.rm = TRUE)
+    gini <- format(round(apply(tab, 2, Gini), 2))
+    mrow <- max(media)
+    if(mrow > 10){
+        rr <- 1
+    } else {
+        if(mrow > 1){
+            rr <- 2
+        } else {
+            rr <- 3
+        }
+    }
+    mediana <- format(round(mediana, rr))
+    media <- format(round(media, rr))
+    if(missing(r))
+        tab <- format(tab)
+    else
+        tab <- format(round(tab, r))
+    tab <- rbind(tab, "Mediana" = mediana, "Média" = media)
+    if(g){
+        tab <- rbind(tab, "Gini" = gini)
+    }
+    tab <- cbind("Professor" = rownames(tab), tab)
+    rownames(tab) <- NULL
+    tab
+}
+
+pontuacaoLvr  <- MMG(pontuacaoLvr)
+pontuacaoArt  <- MMG(pontuacaoArt)
+pontuacaoSNIP <- MMG(pontuacaoSNIP, 3, g = TRUE)
+pontuacaoSJR  <- MMG(pontuacaoSJR, g = TRUE)
+pontuacaoSJRPond  <- MMG(pontuacaoSJRPond, g = TRUE)
+pontuacaoSNIPPond  <- MMG(pontuacaoSNIPPond, g = TRUE)
+
+oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab[, 2:ncol(oriconcTab)], 1, sum, na.rm = TRUE))
+total <- as.character(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, sum, na.rm = TRUE))
+mediana <- as.character(round(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, median, na.rm = TRUE), 1))
+media  <- as.character(round(apply(oriconcTab[, 2:ncol(oriconcTab)], 2, mean, na.rm = TRUE), 1))
+oriconcTab[, 2:ncol(oriconcTab)] <- format(oriconcTab[, 2:ncol(oriconcTab)])
+tab <- as.data.frame(rbind(c("Total", total), c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
+colnames(tab) <- colnames(oriconcTab)
+rownames(oriconcTab) <- NULL
+oriconcTab <- rbind(oriconcTab, tab, stringsAsFactors = FALSE)
+
+oriandTab <- cbind(oriandTab, "Total" = apply(oriandTab[, 2:ncol(oriandTab)], 1, sum, na.rm = TRUE))
+total <- as.character(apply(oriandTab[, 2:ncol(oriandTab)], 2, sum, na.rm = TRUE))
+mediana <- as.character(round(apply(oriandTab[, 2:ncol(oriandTab)], 2, median, na.rm = TRUE), 1))
+media  <- as.character(round(apply(oriandTab[, 2:ncol(oriandTab)], 2, mean, na.rm = TRUE), 1))
+oriandTab[, 2:ncol(oriandTab)] <- format(oriandTab[, 2:ncol(oriandTab)])
+tab <- as.data.frame(rbind(c("Total", total), c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
+colnames(tab) <- colnames(oriandTab)
+rownames(oriandTab) <- NULL
+oriandTab <- rbind(oriandTab, tab, stringsAsFactors = FALSE)
+
+nSJR <- cbind(nSJR, "%" = round(100 * nSJR$Sim / (nSJR$Não + nSJR$Sim)))
+nSJR <- nSJR[order(nSJR[, 4], decreasing = TRUE), ]
+mediana <- sprintf("%0.1f", round(apply(nSJR[, 2:4], 2, median, na.rm = TRUE), 2))
+media <- sprintf("%0.1f", round(apply(nSJR[, 2:4], 2, mean, na.rm = TRUE), 2))
+tab <- as.data.frame(rbind(c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
+colnames(tab) <- colnames(nSJR)
+rownames(nSJR) <- NULL
+nSJR <- rbind(nSJR, tab, stringsAsFactors = FALSE)
+
+nSnip <- cbind(nSnip, "%" = round(100 * nSnip$Sim / (nSnip$Não + nSnip$Sim)))
+nSnip <- nSnip[order(nSnip[, 4], decreasing = TRUE), ]
+mediana <- sprintf("%0.1f", round(apply(nSnip[, 2:4], 2, median, na.rm = TRUE), 2))
+media <- sprintf("%0.1f", round(apply(nSnip[, 2:4], 2, mean, na.rm = TRUE), 2))
+tab <- as.data.frame(rbind(c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
+colnames(tab) <- colnames(nSnip)
+rownames(nSnip) <- NULL
+nSnip <- rbind(nSnip, tab, stringsAsFactors = FALSE)
+
+# Fonte a ser usada no PDF:
+if(!exists("MainFont")){
+    if(grepl("linux", version$os)){
+        MainFont = "Liberation Serif"
+    } else {
+        MainFont = "Times New Roman"
+    }
+}
 @
 
 \usepackage{fontspec}
@@ -216,9 +308,9 @@ cat(paste(apply(dias, 1, paste, collapse = " & "), "\\\\\n"), sep = "\n")
 
 <<tabelaGeral, warning=FALSE>>=
 if(!is.null(doutor)){
-    doutor <- doutor[order(doutor[, "Ano"]), ]
-    tab <- cbind(doutor[, 1:4],
-                 "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor[, "Ano"]))
+    doutor <- doutor[order(doutor$Ano), ]
+    tab <- cbind(doutor,
+                 "Tempo" = as.numeric(sub("-.*", "", as.character(as.Date(Sys.time())))) - as.numeric(doutor$Ano))
     cap <- "Curso de doutorado"
     alin <- "LLLcc"
 
@@ -273,7 +365,7 @@ Tabela(tab, cap = "Instituição doutorado", hline = nrow(tab))
 \clearpage
 
 Como pode ser visto na Tabela~\ref{tab:posdoc}, dos \Sexpr{nrow(doutor)}
-professores do programa, \Sexpr{length(levels(factor(posdoc[, 1])))}
+professores do programa, \Sexpr{length(levels(factor(posdoc$Professor)))}
 realizaram pós-doutorado pelo menos uma vez.
 
 <<posdoc, warning=FALSE>>=
@@ -474,7 +566,7 @@ l3 <- data.frame("Professor" = c("Mediana", "Média", "Gini"),
 tab$Pontos <- format(tab$Pontos)
 tab <- rbind(tab, l3)
 Tabela(tab, hline = nrow(tab) - 2,
-       cap = "Professores classificados por quatro artigos com maior pontuação)")
+       cap = "Professores classificados por quatro artigos com maior pontuação")
 @
 
 \clearpage
@@ -493,8 +585,7 @@ periódicos com SJR por professor e a Tabela~\ref{tab:sjr} mostra a pontuação
 calculada como a soma do índice SJR de cada publicação.
 
 <<nSjr>>=
-tab <- cbind("Professor" = rownames(nSJR), nSJR)
-Tabela(tab, lbl = "tab:nsjr", hline = nrow(tab) - 1,
+Tabela(nSJR, lbl = "tab:nsjr", hline = nrow(nSJR) - 1,
        cap = "Artigos publicados em periódicos com SJR")
 @
 
@@ -576,15 +667,14 @@ periódicos com SNIP por professor e a Tabela~\ref{tab:snip} mostra a pontuaçã
 calculada como a soma do índice SNIP de cada publicação:
 
 <<nSnip>>=
-tab <- cbind("Professor" = rownames(nSnip), nSnip)
-Tabela(tab, lbl = "tab:nSnip", hline = nrow(tab) -1,
+Tabela(nSnip, lbl = "tab:nSnip", hline = nrow(nSnip) -1,
              cap = "Artigos publicados em periódicos com SNIP")
 @
 
 \clearpage
 
 <<ppg_pontos_snip>>=
-Tabela(pontuacaoSNIP, lbl = "tab:snip", hline = nrow(tab) - 2,
+Tabela(pontuacaoSNIP, lbl = "tab:snip", hline = nrow(pontuacaoSNIP) - 2,
              cap = "Classificação por pontuação (Artigos, SNIP)")
 @
 
