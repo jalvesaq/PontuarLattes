@@ -7,8 +7,13 @@
 <<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE, error=FALSE>>=
 if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
     Sys.setenv(LANGUAGE = "pt_BR.UTF-8")
+options(OutDec = ",")
+
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 library("ineq")
+
+SPRINTF <- function(fmt, x) {sub("\\.", ",", sprintf(fmt, x))}
+
 Bold <- function(x) {paste('\\textbf{', sub("%", "\\\\%", x), '}', sep ='')}
 
 CharSemNA <- function(x)
@@ -129,8 +134,8 @@ if(ncol(oriandTab) > 2 && nrow(oriandTab) > 3){
 
 nSJR <- cbind(nSJR, "%" = round(100 * nSJR$Sim / (nSJR$Não + nSJR$Sim)))
 nSJR <- nSJR[order(nSJR[, 4], decreasing = TRUE), ]
-mediana <- sprintf("%0.1f", round(apply(nSJR[, 2:4], 2, median, na.rm = TRUE), 2))
-media <- sprintf("%0.1f", round(apply(nSJR[, 2:4], 2, mean, na.rm = TRUE), 2))
+mediana <- SPRINTF("%0.1f", round(apply(nSJR[, 2:4], 2, median, na.rm = TRUE), 2))
+media <- SPRINTF("%0.1f", round(apply(nSJR[, 2:4], 2, mean, na.rm = TRUE), 2))
 tab <- as.data.frame(rbind(c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
 colnames(tab) <- colnames(nSJR)
 rownames(nSJR) <- NULL
@@ -138,8 +143,8 @@ nSJR <- rbind(nSJR, tab, stringsAsFactors = FALSE)
 
 nSnip <- cbind(nSnip, "%" = round(100 * nSnip$Sim / (nSnip$Não + nSnip$Sim)))
 nSnip <- nSnip[order(nSnip[, 4], decreasing = TRUE), ]
-mediana <- sprintf("%0.1f", round(apply(nSnip[, 2:4], 2, median, na.rm = TRUE), 2))
-media <- sprintf("%0.1f", round(apply(nSnip[, 2:4], 2, mean, na.rm = TRUE), 2))
+mediana <- SPRINTF("%0.1f", round(apply(nSnip[, 2:4], 2, median, na.rm = TRUE), 2))
+media <- SPRINTF("%0.1f", round(apply(nSnip[, 2:4], 2, mean, na.rm = TRUE), 2))
 tab <- as.data.frame(rbind(c("Mediana", mediana), c("Média", media)), stringsAsFactors = FALSE)
 colnames(tab) <- colnames(nSnip)
 rownames(nSnip) <- NULL
@@ -355,7 +360,7 @@ if(!is.null(doutor)){
 tab <- sort(table(doutor[["Nome do curso"]]), decreasing = TRUE)
 tab <- cbind("Área" = sub("^$", "(não especificado)", rownames(tab)),
              "Frequência" = tab, "%" = sub("\\.", ",",
-                                           sprintf("%0.1f", 100 * tab / sum(tab, na.rm = TRUE))))
+                                           SPRINTF("%0.1f", 100 * tab / sum(tab, na.rm = TRUE))))
 tab <- rbind(tab, c("Total", as.character(sum(as.numeric(tab[, 2]), na.rm = TRUE)), "100,0"))
 
 Tabela(tab, hline = nrow(tab), cap = "Área de titulação")
@@ -366,7 +371,7 @@ Tabela(tab, hline = nrow(tab), cap = "Área de titulação")
 <<localTitulo>>=
 tab <- sort(table(doutor[["Instituição doutorado"]]), decreasing = TRUE)
 tab <- data.frame("Instituição" = names(tab), "Frequência" = as.numeric(tab),
-                  "%" = as.character(sub("\\.", ",", sprintf("%0.1f", 100 * tab / sum(tab, na.rm = TRUE)))),
+                  "%" = as.character(sub("\\.", ",", SPRINTF("%0.1f", 100 * tab / sum(tab, na.rm = TRUE)))),
                   stringsAsFactors = FALSE,
                   check.names = FALSE)
 
@@ -539,14 +544,22 @@ valores, a soma ponderada das médias é de
 \newpage
 
 <<ppg_pontos_lvr>>=
-Tabela(pontuacaoLvr, cap = "Professores classificados por pontuação (Livros)",
+if(ncol(pontuacaoLvr) > 12)
+    colnames(pontuacaoLvr) <- sub("^[1-2][0-9]", "", colnames(pontuacaoLvr))
+Tabela(pontuacaoLvr,
+       alin = paste0("l", paste0(rep("r", ncol(pontuacaoLvr) - 1), collapse ="")),
+       cap = "Professores classificados por pontuação (Livros)",
        hline = nrow(pontuacaoLvr) - 1)
 @
 
 \clearpage
 
 <<ppg_pontos_art>>=
-Tabela(pontuacaoArt, cap = "Professores classificados por pontuação (Artigos)",
+if(ncol(pontuacaoArt) > 12)
+    colnames(pontuacaoArt) <- sub("^[1-2][0-9]", "", colnames(pontuacaoArt))
+Tabela(pontuacaoArt,
+       alin = paste0("l", paste0(rep("r", ncol(pontuacaoArt) - 1), collapse ="")),
+       cap = "Professores classificados por pontuação (Artigos)",
        hline = nrow(pontuacaoLvr) - 1)
 @
 
@@ -562,7 +575,9 @@ ultimalinha <- apply(pond[, 2:ncol(pond)], 2, function(x) Gini(x))
 tab <- rbind(pond, pond[1, ])
 tab$Professor[nrow(tab)] <- "Índice de Gini"
 tab[nrow(tab), 2:ncol(tab)] <- ultimalinha
-tab[, 2:4] <- round(tab[, 2:4], 2)
+tab[, 2] <- SPRINTF("%0.3f", tab[, 2])
+tab[, 3] <- SPRINTF("%0.3f", tab[, 3])
+tab[, 4] <- SPRINTF("%0.3f", tab[, 4])
 Tabela(tab, lbl = "tab:pond", hline = nrow(tab),
        cap = "Professores classificados por pontuação ponderada")
 @
@@ -604,7 +619,10 @@ Tabela(nSJR, lbl = "tab:nsjr", hline = nrow(nSJR) - 1,
 \clearpage
 
 <<ppg_pontos_sjr>>=
+if(ncol(pontuacaoSJR) > 12)
+    colnames(pontuacaoSJR) <- sub("^[1-2][0-9]", "", colnames(pontuacaoSJR))
 Tabela(pontuacaoSJR, lbl = "tab:sjr", hline = nrow(pontuacaoSJR) - 2,
+       alin = paste0("l", paste0(rep("r", ncol(pontuacaoSJR) - 1), collapse ="")),
        cap = "Classificação por pontuação (Artigos, SJR)")
 @
 
@@ -686,7 +704,10 @@ Tabela(nSnip, lbl = "tab:nSnip", hline = nrow(nSnip) -1,
 \clearpage
 
 <<ppg_pontos_snip>>=
+if(ncol(pontuacaoSNIP) > 12)
+    colnames(pontuacaoSNIP) <- sub("^[1-2][0-9]", "", colnames(pontuacaoSNIP))
 Tabela(pontuacaoSNIP, lbl = "tab:snip", hline = nrow(pontuacaoSNIP) - 2,
+       alin = paste0("l", paste0(rep("r", ncol(pontuacaoSNIP) - 1), collapse ="")),
              cap = "Classificação por pontuação (Artigos, SNIP)")
 @
 

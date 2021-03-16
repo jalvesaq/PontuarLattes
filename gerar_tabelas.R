@@ -54,19 +54,24 @@ if(sum(grepl("A3", names(PontosQualis)))){
     QNovo <- FALSE
 }
 
-sum(duplicated(qualis$isxn))
+if(sum(duplicated(qualis$isxn))){
+    dup <- qualis[duplicated(qualis$isxn, fromLast = TRUE) | duplicated(qualis$isxn), ]
+    cat("ISSN duplicado no Qualis:\n", file = stderr())
+    dup[order(dup$isxn), ]
+    if(!interactive())
+        quit(save = "no", status = 1)
+}
 
-dup <- qualis[duplicated(qualis$isxn, fromLast = TRUE) | duplicated(qualis$isxn), ]
-dup[order(dup$isxn), ]
-
-sum(duplicated(sjrsnip$isxn))
-sum(duplicated(sjrsnip$isxn))
+if(sum(duplicated(sjrsnip$isxn))){
+    cat("ISSN duplicado no SJR/SNIP\n", file = stderr())
+    if(!interactive())
+        quit(save = "no", status = 1)
+}
 
 qualis <- merge(qualis, sjrsnip, all = TRUE)
-qualis[duplicated(qualis$isxn), ]
 
 if(sum(duplicated(qualis$isxn))){
-    cat("ISSN duplicado\n", file = stderr())
+    cat("ISSN duplicado após merge com SJR/SNIP.\n", file = stderr())
     if(!interactive())
         quit(save = "no", status = 1)
 }
@@ -852,6 +857,8 @@ if(length(ensino)){
         ens$um <- 1
         ensinoTab <- tapply(ens$um, list(ens$Professor, ens$Tipo), sum, na.rm = TRUE)
         ensinoTab[is.na(ensinoTab)] <- 0
+        colnames(ensinoTab) <- sub("OUTRO", "Outro", colnames(ensinoTab))
+        colnames(ensinoTab) <- sub("ENSINO-MEDIO", "Ens. Médio", colnames(ensinoTab))
         colnames(ensinoTab) <- sub("APERFEICOAMENTO", "Aperfeiçoamento", colnames(ensinoTab))
         colnames(ensinoTab) <- sub("ESPECIALIZACAO", "Especialização", colnames(ensinoTab))
         colnames(ensinoTab) <- sub("GRADUACAO", "Graduação", colnames(ensinoTab))
