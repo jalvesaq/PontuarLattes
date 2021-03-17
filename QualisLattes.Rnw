@@ -105,8 +105,8 @@ pontuacaoLvr  <- MMG(pontuacaoLvr)
 pontuacaoArt  <- MMG(pontuacaoArt)
 pontuacaoSNIP <- MMG(pontuacaoSNIP, 3, g = TRUE)
 pontuacaoSJR  <- MMG(pontuacaoSJR, g = TRUE)
-pontuacaoSJRPond  <- MMG(pontuacaoSJRPond, g = TRUE)
-pontuacaoSNIPPond  <- MMG(pontuacaoSNIPPond, g = TRUE)
+# pontuacaoSJRPond  <- MMG(pontuacaoSJRPond, g = TRUE)
+# pontuacaoSNIPPond  <- MMG(pontuacaoSNIPPond, g = TRUE)
 
 if(ncol(oriconcTab) > 2 && nrow(oriconcTab) > 3){
     oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab[, 2:ncol(oriconcTab)], 1, sum, na.rm = TRUE))
@@ -261,7 +261,7 @@ embora ele seja útil para a identificação de problemas no programa de
 pós-graduação, não é um instrumento usado oficialmente pela CAPES.
 
 <<qnovo>>=
-if(QNovo){
+if(nrow(p17)){
     cat("Observação: para cálculo da pontuação, está sendo usado Qualis
         2017-2020 não oficial, parcial e provisório que circulou nas redes
         sociais em 2019. Muitos periódicos ainda não fazem parte desse Qualis
@@ -518,7 +518,9 @@ arbitrariamente, recebendo pontuação equivalente a L2. Qualis de outras áreas
 não têm valor para a área de \emph{\Sexpr{NomeComite}}.
 
 <<classifpontos>>=
-Tabela(pontos, lbl = "tab:pontos", alin = "lLr", cap = "Tabela de pontuação conforme classificação da produção")
+Tabela(pontos, lbl = "tab:pontos",
+       alin = paste0("ll", paste0(rep("r", ncol(pontos) - 2), collapse = "")),
+       cap = "Tabela de pontuação conforme classificação da produção")
 
 pmediaL <- pontuacaoLvr[pontuacaoLvr$Professor == "Média", "Total"]
 pmedianaL <- pontuacaoLvr[pontuacaoLvr$Professor == "Mediana", "Total"]

@@ -140,4 +140,8 @@ sjr.cat <- table(sjr.cat)
 sjr.cat <- data.frame("Categoria" = names(sjr.cat),
                       "Peso" = rep(1.0, length(sjr.cat)))
 
+if(sum(duplicated(sjrsnip$isxn))){
+    cat("ISSN duplicado no SJR/SNIP\n", file = stderr())
+}
+
 save(sjrsnip, sjr.cat, snip.cat, issn, siglas, file = "../SJR_SNIP.RData")

@@ -6,20 +6,20 @@ NomeProg <- "Ciência Política e Relações Internacionais"
 TituloDoc <- "Produção dos Professores do PPG em Ciência Política e Relações Internacionais"
 NomeComite <- "Ciência Política e Relações Internacionais"
 Autor <- "PPG"
-PontosQualis <- c("A1"  = 100,
-                  "A2"  =  85,
-                  "B1"  =  70,
-                  "B2"  =  30,
-                  "B3"  =  20,
-                  "B4"  =  15,
-                  "B5"  =  10,
-                  "C"   =   0,
-                  "SQ"  =   0,
-                  "OD"  =   0,
-                  "Lvr" =  60,
-                  "Org" =  30,
-                  "Cap" =  15)
-# Pesos para cálculo da média ponderada
+PontosQualis10 <- data.frame(qualis = c("A1", "A2", "B1", "B2", "B3", "B4", "B5",
+                                        "C", "SQ", "OD", "Lvr", "Org", "Cap"),
+                             pontos = c(100, 85, 70, 30, 20, 15, 10, 0, 0, 0,
+                                        60, 30, 15))
+
+PontosQualis13 <- PontosQualis10
+
+PontosQualis17 <- data.frame(qualis = c("A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4",
+                                        "C", "SQ", "OD", "Lvr", "Org", "Cap"),
+                             pontos = c(100, 85, 70, 55, 20, 15, 10, 5, 0, 0, 10,
+                                        100, 55, 30))
+
+
+# Pesos para cálculo da média ponderada,
 PesoArtigos <- 0.7
 PesoLivros <- 0.3
 # Período do relatório
@@ -27,6 +27,10 @@ Inicio <- 2017
 Fim <- 2019
 QualisPorTitulo <- FALSE
 OrdenarOrientacaoPorNome <- FALSE
+
+QualQualis <- rbind("Q10" = c("ini" = 1900, "fim" = 2012),
+                    "Q13" = c(2013, 2016),
+                    "Q17" = c(2017, 2099))
 
 # Carregar dados do SJR e SNIP
 load("SJR_SNIP.RData")
@@ -36,38 +40,23 @@ load("SJR_SNIP.RData")
 if(file.exists("info.R"))
     source("info.R")
 
-# Novo Qualis?
-if(sum(grepl("A3", names(PontosQualis)))){
-    load("qualis/qualis_2017_2020.RData")
-    QNovo <- TRUE
+load("qualis/qualis_2010_2012.RData")
+load("qualis/qualis_2013_2016.RData")
+load("qualis/qualis_2017_2020.RData")
+
+if(NomeComite %in% names(q13)){
+    q10 <- q10[[NomeComite]]
+    q13 <- q13[[NomeComite]]
 } else {
-    load("qualis/qualis_2013_2016.RData")
-    if(NomeComite %in% names(qualis)){
-        qualis <- qualis[[NomeComite]]
-    } else {
-        writeLines(names(qualis), "nomes_validos.txt")
-        cat(paste0("Variável 'NomeComite' inválida: '", NomeComite,
-                    "'.\nVeja o arquivo 'nomes_validos.txt'.\n"), file = stderr())
-        if(!interactive())
-            quit(save = "no", status = 1)
-    }
-    QNovo <- FALSE
-}
-
-if(sum(duplicated(qualis$isxn))){
-    dup <- qualis[duplicated(qualis$isxn, fromLast = TRUE) | duplicated(qualis$isxn), ]
-    cat("ISSN duplicado no Qualis:\n", file = stderr())
-    dup[order(dup$isxn), ]
+    writeLines(names(q13), "nomes_validos.txt")
+    cat(paste0("Variável 'NomeComite' inválida: '", NomeComite,
+               "'.\nVeja o arquivo 'nomes_validos.txt'.\n"), file = stderr())
     if(!interactive())
         quit(save = "no", status = 1)
 }
 
-if(sum(duplicated(sjrsnip$isxn))){
-    cat("ISSN duplicado no SJR/SNIP\n", file = stderr())
-    if(!interactive())
-        quit(save = "no", status = 1)
-}
-
+qualis <- merge(q10, q13, all = TRUE)
+qualis <- merge(qualis, q17, all = TRUE)
 qualis <- merge(qualis, sjrsnip, all = TRUE)
 
 if(sum(duplicated(qualis$isxn))){
@@ -362,7 +351,9 @@ if(length(lsxml) == 0){
 xx <- lapply(lsxml, obter.producao)
 xx <- do.call("rbind", xx)
 p <- as.data.frame(xx, stringsAsFactors = FALSE)
+p <- p[!is.na(p$ano) & p$ano != "", ] # Garantir que o ano esteja especificado
 rm(xx, obter.producao)
+
 
 datacv <- as.data.frame(datacv)
 load("pq.RData")
@@ -386,6 +377,16 @@ if(exists("equivalente")){
 }
 
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
+p$qualis <- ""
+p$ano <- as.numeric(p$ano)
+i <- p$ano >= QualQualis["Q10", "ini"] & p$ano <= QualQualis["Q10", "fim"]
+p$qualis[i] <- p$q10[i]
+i <- p$ano >= QualQualis["Q13", "ini"] & p$ano <= QualQualis["Q13", "fim"]
+p$qualis[i] <- p$q13[i]
+i <- p$ano >= QualQualis["Q17", "ini"] & p$ano <= QualQualis["Q17", "fim"]
+p$qualis[i] <- p$q17[i]
+i <- p$tipo != "Artigo"
+p$qualis[i] <- p$tipo[i]
 
 if(nrow(p) == 0){
     cat("\nNenhuma publicação encontrada nos currículos de:\n",
@@ -402,8 +403,14 @@ if(QualisPorTitulo){
     p2 <- p2[!duplicated(p2$titulo) & !is.na(p2$issn) & p2$issn != "", ]
     p2 <- p2[!duplicated(p2$issn), ]
     q2 <- qualis
-    q2$titulo <- tolower(q2$titulo)
     p2$titulo <- tolower(p2$titulo)
+    q2$titulo10 <- tolower(q2$titulo10)
+    q2$titulo13 <- tolower(q2$titulo13)
+    q2$titulo17 <- tolower(q2$titulo17)
+
+    p2 <- p2[p2$titulo %in% c(q2$titulo10, q2$titulo13, q2$titulo17), ]
+
+
     p2 <- merge(p2, q2, stringsAsFactors = FALSE)
     if(nrow(p2) > 0){
         for(i in 1:nrow(p2)){
@@ -420,16 +427,47 @@ if(QualisPorTitulo){
 }
 
 # Organização de dossiês em periódicos:
-if(QNovo){
-    p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "NP"
-    p$qualis[is.na(p$qualis) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & p$tipo != "Artigo"]
+p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
+p$qualis[is.na(p$qualis) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & p$tipo != "Artigo"]
 
-    idx <- p$tipo != "Artigo" & p$tipo != "NãoArt" &
-        p$qualis %in% c("A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C", "NP")
-    if(sum(idx) > 0)
-        p$qualis[idx] <- "OD"
+i <- p$tipo != "Artigo" & p$tipo != "NãoArt" &
+    p$qualis %in% c("A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "C", "SQ")
+if(sum(i) > 0)
+    p$qualis[i] <- "OD"
 
-    pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
+i <- p$ano >= QualQualis["Q10", "ini"] & p$ano <= QualQualis["Q10", "fim"]
+p10 <- p[i, ]
+i <- p$ano >= QualQualis["Q13", "ini"] & p$ano <= QualQualis["Q13", "fim"]
+p13 <- p[i, ]
+i <- p$ano >= QualQualis["Q17", "ini"] & p$ano <= QualQualis["Q17", "fim"]
+p17 <- p[i, ]
+
+if(nrow(p10))
+    p10 <- merge(p10, PontosQualis10)
+if(nrow(p13))
+    p13 <- merge(p13, PontosQualis13)
+if(nrow(p17))
+    p17 <- merge(p17, PontosQualis17)
+
+p$pontos[p$tipo == "NãoArt"] <- 0
+
+if(nrow(p10)){
+    p <- p10
+    if(nrow(p13)){
+        p <- rbind(p, p13)
+    }
+    if(nrow(p17)){
+        p <- rbind(p, p17)
+    }
+} else if(nrow(p13)){
+    p <- p13
+    if(nrow(p17))
+        p <- rbind(p, p17)
+} else {
+    p <- p17
+}
+
+pontos <- as.data.frame(rbind(c(Tipo = "Artigo Qualis A1", Código = "A1"),
                                   c("Artigo Qualis A2", "A2"),
                                   c("Artigo Qualis A3", "A3"),
                                   c("Artigo Qualis A4", "A4"),
@@ -437,45 +475,29 @@ if(QNovo){
                                   c("Artigo Qualis B2", "B2"),
                                   c("Artigo Qualis B3", "B3"),
                                   c("Artigo Qualis B4", "B4"),
-                                  c("Artigo Qualis C", "C"),
-                                  c(paste("Artigo sem Qualis na área de", NomeComite), "NP"),
-                                  c("Organização de dossiê em periódico", "OD"),
-                                  c("Livro publicado", "Lvr"),
-                                  c("Livro organizado", "Org"),
-                                  c("Capítulo de livro", "Cap")), stringsAsFactors = FALSE)
-    pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis,
-                                       stringsAsFactors = FALSE))
-} else {
-    p$qualis[is.na(p$qualis) & p$tipo == "Artigo"] <- "SQ"
-    p$qualis[is.na(p$qualis) & p$tipo != "Artigo"] <- p$tipo[is.na(p$qualis) & p$tipo != "Artigo"]
-
-    idx <- p$tipo != "Artigo" & p$tipo != "NãoArt" &
-        p$qualis %in% c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C")
-    if(sum(idx) > 0)
-        p$qualis[idx] <- "OD"
-
-    pontos <- as.data.frame(rbind(c(extenso = "Artigo Qualis A1", qualis = "A1"),
-                                  c("Artigo Qualis A2", "A2"),
-                                  c("Artigo Qualis B1", "B1"),
-                                  c("Artigo Qualis B2", "B2"),
-                                  c("Artigo Qualis B3", "B3"),
-                                  c("Artigo Qualis B4", "B4"),
                                   c("Artigo Qualis B5", "B5"),
                                   c("Artigo Qualis C", "C"),
-                                  c(paste("Artigo sem Qualis na área de", NomeComite), "SQ"),
+                                  c("Artigo sem Qualis", "SQ"),
                                   c("Organização de dossiê em periódico", "OD"),
                                   c("Livro publicado", "Lvr"),
                                   c("Livro organizado", "Org"),
                                   c("Capítulo de livro", "Cap")), stringsAsFactors = FALSE)
-    pontos <- merge(pontos, data.frame(qualis = names(PontosQualis), pontos = PontosQualis,
-                                       stringsAsFactors = FALSE))
+if(nrow(p10)){
+    colnames(PontosQualis10) <- c("Código", "q10")
+    pontos <- merge(pontos, PontosQualis10, all.x = TRUE)
 }
+if(nrow(p13)){
+    colnames(PontosQualis13) <- c("Código", "q13")
+    pontos <- merge(pontos, PontosQualis13, all.x = TRUE)
+}
+if(nrow(p17)){
+    colnames(PontosQualis17) <- c("Código", "q17")
+    pontos <- merge(pontos, PontosQualis17, all.x = TRUE)
+}
+colnames(pontos) <- sub("q10", "2010--12", colnames(pontos))
+colnames(pontos) <- sub("q13", "2013--16", colnames(pontos))
+colnames(pontos) <- sub("q17", "2017--20", colnames(pontos))
 
-p <- merge(p, pontos, all.x = TRUE, stringsAsFactors = FALSE)
-p$pontos[p$tipo == "NãoArt"] <- 0
-
-# Especificar o período do relatório
-p <- p[p$ano > "1900" & p$ano < "2100", ] # O ano pode não estar especificado
 
 # Detectar coautorias
 p$chave <- tolower(paste(p$isxn, p$ano, p$tipo, p$vol, p$num, p$pini))
@@ -569,56 +591,56 @@ TabProd <- function(d, v)
     tab
 }
 
-p$SJR.pond <- p$SJR
-if(min(sjr.cat$Peso) != max(sjr.cat$Peso)){
-    p$SJR.pond <- p$SJR * min(sjr.cat$Peso)
-    SJRPond <- sjr.cat[sjr.cat$Peso > min(sjr.cat$Peso), ]
-    SJRPond <- SJRPond[order(SJRPond$Peso), ]
-    SJRPond$Categoria <- as.character(SJRPond$Categoria)
-    for(i in 1:nrow(SJRPond)){
-        idx <- grep(paste0("^", SJRPond$Categoria[i], " \\(Q"), p$cat.sjr)
-        p$SJR.pond[idx] <- SJRPond$Peso[i] * p$SJR[idx]
-        idx <- grep(paste0("; ", SJRPond$Categoria[i], " \\(Q"), p$cat.sjr)
-        p$SJR.pond[idx] <- SJRPond$Peso[i] * p$SJR[idx]
-    }
-    SJRPond <- SJRPond[order(SJRPond$Peso, decreasing = TRUE), ]
-    SJRPond <- rbind(SJRPond,
-                     data.frame("Categoria" = "Outras categorias",
-                                "Peso" = min(sjr.cat$Peso),
-                                stringsAsFactors = FALSE))
-} else {
-    SJRPond <- data.frame("Categoria" = "Todas as categorias", "Peso" = max(sjr.cat$Peso))
-}
-
-p$SNIP.pond <- p$SNIP
-if(min(snip.cat$Peso) != max(snip.cat$Peso)){
-    p$SNIP.pond <- p$SNIP * min(snip.cat$Peso)
-    SNIPPond <- snip.cat[snip.cat$Peso > min(snip.cat$Peso), ]
-    SNIPPond <- SNIPPond[order(SNIPPond$Peso), ]
-    for(i in 1:nrow(SNIPPond)){
-        idx <- grep(paste0("^", SNIPPond$id[i]), p$ASJC.field.IDs)
-        p$SNIP.pond[idx] <- SNIPPond$Peso[i] * p$SNIP[idx]
-        idx <- grep(paste0("; ", SNIPPond$id[i]),  p$ASJC.field.IDs)
-        p$SNIP.pond[idx] <- SNIPPond$Peso[i] * p$SNIP[idx]
-    }
-    SNIPPond <- SNIPPond[order(SNIPPond$Peso, decreasing = TRUE), ]
-    SNIPPond <- rbind(SNIPPond,
-                     data.frame("id" = "",
-                                "Categoria" = "Outras categorias",
-                                "Peso" = min(snip.cat$Peso),
-                                stringsAsFactors = FALSE))
-} else {
-    SNIPPond <- data.frame("id" = "",
-                           "Categoria" = "Todas as categorias",
-                           "Peso" = max(snip.cat$Peso))
-}
+# p$SJR.pond <- p$SJR
+# if(min(sjr.cat$Peso) != max(sjr.cat$Peso)){
+#     p$SJR.pond <- p$SJR * min(sjr.cat$Peso)
+#     SJRPond <- sjr.cat[sjr.cat$Peso > min(sjr.cat$Peso), ]
+#     SJRPond <- SJRPond[order(SJRPond$Peso), ]
+#     SJRPond$Categoria <- as.character(SJRPond$Categoria)
+#     for(i in 1:nrow(SJRPond)){
+#         idx <- grep(paste0("^", SJRPond$Categoria[i], " \\(Q"), p$cat.sjr)
+#         p$SJR.pond[idx] <- SJRPond$Peso[i] * p$SJR[idx]
+#         idx <- grep(paste0("; ", SJRPond$Categoria[i], " \\(Q"), p$cat.sjr)
+#         p$SJR.pond[idx] <- SJRPond$Peso[i] * p$SJR[idx]
+#     }
+#     SJRPond <- SJRPond[order(SJRPond$Peso, decreasing = TRUE), ]
+#     SJRPond <- rbind(SJRPond,
+#                      data.frame("Categoria" = "Outras categorias",
+#                                 "Peso" = min(sjr.cat$Peso),
+#                                 stringsAsFactors = FALSE))
+# } else {
+#     SJRPond <- data.frame("Categoria" = "Todas as categorias", "Peso" = max(sjr.cat$Peso))
+# }
+#
+# p$SNIP.pond <- p$SNIP
+# if(min(snip.cat$Peso) != max(snip.cat$Peso)){
+#     p$SNIP.pond <- p$SNIP * min(snip.cat$Peso)
+#     SNIPPond <- snip.cat[snip.cat$Peso > min(snip.cat$Peso), ]
+#     SNIPPond <- SNIPPond[order(SNIPPond$Peso), ]
+#     for(i in 1:nrow(SNIPPond)){
+#         idx <- grep(paste0("^", SNIPPond$id[i]), p$ASJC.field.IDs)
+#         p$SNIP.pond[idx] <- SNIPPond$Peso[i] * p$SNIP[idx]
+#         idx <- grep(paste0("; ", SNIPPond$id[i]),  p$ASJC.field.IDs)
+#         p$SNIP.pond[idx] <- SNIPPond$Peso[i] * p$SNIP[idx]
+#     }
+#     SNIPPond <- SNIPPond[order(SNIPPond$Peso, decreasing = TRUE), ]
+#     SNIPPond <- rbind(SNIPPond,
+#                      data.frame("id" = "",
+#                                 "Categoria" = "Outras categorias",
+#                                 "Peso" = min(snip.cat$Peso),
+#                                 stringsAsFactors = FALSE))
+# } else {
+#     SNIPPond <- data.frame("id" = "",
+#                            "Categoria" = "Todas as categorias",
+#                            "Peso" = max(snip.cat$Peso))
+# }
 
 pontuacaoLvr  <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
 pontuacaoArt  <- TabProd(p[p$tipo == "Artigo", ], "pontos")
 pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP")
 pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR")
-pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond")
-pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond")
+# pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond")
+# pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond")
 
 nSJR <- cbind("Não" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
                               function(x) sum(is.na(x))),
@@ -910,7 +932,6 @@ if(length(projext)){
 }
 
 # Produção bibliográfica (Livros e Artigos)
-colnames(pontos) <- c("Classe", "Abreviatura", "Pontos")
 pLvr <- pontuacaoLvr[, c("Professor", "Total")]
 pArt <- pontuacaoArt[, c("Professor", "Total")]
 pLvr$Total <- pLvr$Total / max(pLvr$Total)

@@ -2,14 +2,11 @@ source("str_title_case.R")
 
 # Ler arquivo baixado da Plataforma Sucupira:
 QualisXLS <- "classificacoes_publicadas_todas_as_areas_avaliacao1522078273541.xls"
-qualis <- read.delim(QualisXLS, fileEncoding = "Latin1")
+q13 <- read.delim(QualisXLS, fileEncoding = "Latin1", stringsAsFactors = FALSE)
 
-levels(qualis$Área.de.Avaliação) <- str_title_case(levels(qualis$Área.de.Avaliação))
-levels(qualis$Título) <- str_title_case(levels(qualis$Título))
-qualis$Título <- as.character(qualis$Título)
-qualis$Estrato <- as.character(qualis$Estrato)
-qualis$ISSN <- as.character(qualis$ISSN)
-names(qualis) <- c("isxn", "titulo", "area", "qualis")
+q13$Área.de.Avaliação <- str_title_case(q13$Área.de.Avaliação)
+q13$Título <- str_title_case(q13$Título)
+names(q13) <- c("isxn", "titulo13", "area", "q13")
 
 load("../SJR_SNIP.RData")
 issn <- issn[issn$issn1 != "", ]
@@ -17,16 +14,16 @@ issn <- issn[issn$issn2 != "", ]
 issn <- issn[issn$issn1 != issn$issn2, ]
 
 # Correções
-qualis$isxn <- sub("-", "", qualis$isxn)
-qualis$qualis <- sub(" *$", "", qualis$qualis)
-qualis$titulo <- sub(" *$", "", qualis$titulo)
+q13$isxn <- sub("-", "", q13$isxn)
+q13$q13 <- sub(" *$", "", q13$q13)
+q13$titulo13 <- sub(" *$", "", q13$titulo13)
 
-qualis <- split(qualis, qualis$area)
+q13 <- split(q13, q13$area)
 limpar_area <- function(x){
     x$area <- NULL
     x
 }
-qualis <- lapply(qualis, limpar_area)
+q13 <- lapply(q13, limpar_area)
 
 # Adicionar ISSNs alternativos
 adicionar_issn <- function(x){
@@ -42,17 +39,23 @@ adicionar_issn <- function(x){
     for(i in 1:nrow(adicionar)){
         idx <- grep(adicionar$b[i], x$isxn)[1]
         novodf <- rbind(novodf, c(adicionar$a[i],
-                                  x$titulo[idx],
-                                  x$qualis[idx]))
+                                  x$titulo13[idx],
+                                  x$q13[idx]))
     }
 
-    colnames(novodf) <- c("isxn", "titulo", "qualis")
+    colnames(novodf) <- c("isxn", "titulo13", "q13")
 
     x <- rbind(x, novodf)
     x <- x[!duplicated(x$isxn), ]
     x
 }
 
-qualis <- lapply(qualis, adicionar_issn)
+q13 <- lapply(q13, adicionar_issn)
 
-save(QualisXLS, qualis, file = "qualis_2013_2016.RData")
+if(sum(duplicated(q13$isxn))){
+    dup <- q13[duplicated(q13$isxn, fromLast = TRUE) | duplicated(q13$isxn), ]
+    cat("ISSN duplicado no Qualis:\n", file = stderr())
+    dup[order(dup$isxn), ]
+}
+
+save(QualisXLS, q13, file = "qualis_2013_2016.RData")
