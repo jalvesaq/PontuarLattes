@@ -398,23 +398,57 @@ if(nrow(p) == 0){
 
 # Adicionar Qualis por título
 if(QualisPorTitulo){
-    p2 <- p[p$tipo == "Artigo" & is.na(p$qualis), c("isxn", "livro.ou.periodico")]
-    names(p2) <- c("issn", "titulo")
-    p2 <- p2[!duplicated(p2$titulo) & !is.na(p2$issn) & p2$issn != "", ]
-    p2 <- p2[!duplicated(p2$issn), ]
     q2 <- qualis
-    p2$titulo <- tolower(p2$titulo)
     q2$titulo10 <- tolower(q2$titulo10)
     q2$titulo13 <- tolower(q2$titulo13)
     q2$titulo17 <- tolower(q2$titulo17)
 
-    p2 <- p2[p2$titulo %in% c(q2$titulo10, q2$titulo13, q2$titulo17), ]
+    p2 <- p[p$tipo == "Artigo" & is.na(p$qualis), c("isxn", "livro.ou.periodico")]
+    names(p2) <- c("issn", "titulo17")
+    p2 <- p2[!duplicated(p2$titulo) & !is.na(p2$issn) & p2$issn != "", ]
+    p2 <- p2[!duplicated(p2$issn), ]
+    p2$titulo17 <- tolower(p2$titulo17)
 
+    # Reter somente o que será encontrado
+    p2 <- p2[p2$titulo17 %in% c(q2$titulo10, q2$titulo13, q2$titulo17), ]
 
-    p2 <- merge(p2, q2, stringsAsFactors = FALSE)
+    p17 <- merge(p2, q2, all.x = TRUE, stringsAsFactors = FALSE)
+
+    if(sum(is.na(p17))){
+        p13 <- p17[is.na(p17$isxn), c("titulo17", "issn")]
+        colnames(p13) <- c("titulo13", "issn")
+        p17 <- p17[!is.na(p17$isxn), ]
+        p13 <- merge(p13, q2, all.x = TRUE, stringsAsFactors = FALSE)
+
+        if(sum(is.na(p13$isxn))){
+            p10 <- p13[is.na(p13$isxn), c("titulo13", "issn")]
+            colnames(p10) <- c("titulo10", "issn")
+            p13 <- p13[!is.na(p13$isxn), ]
+            p10 <- merge(p10, q2, all.x = TRUE, stringsAsFactors = FALSE)
+            p10 <- p10[!is.na(p10$isxn), ]
+        }
+    }
+
+    p17$titulo10 <- p17$titulo13 <- p17$titulo17 <- NULL
+    p2 <- p17
+    if(exists("p13")){
+        p13$titulo10 <- p13$titulo13 <- p13$titulo17 <- NULL
+        p2 <- rbind(p2, p13)
+        if(exists("p10")){
+            p10$titulo10 <- p10$titulo13 <- p10$titulo17 <- NULL
+            p2 <- rbind(p2, p10)
+        }
+    }
+
+    p2 <- p2[p2$issn != p2$isxn, ]
+    p2 <- p2[!duplicated(p2$issn), ]
+    p2 <- p2[!duplicated(p2$isxn), ]
+
     if(nrow(p2) > 0){
         for(i in 1:nrow(p2)){
-            p$qualis[p$isxn == p2$issn[i]] <- p2$qualis[i]
+            p$qualis[p$isxn == p2$issn[i] & p$ano >= QualQualis["Q10", "ini"] & p$ano <= QualQualis["Q10", "fim"]] <- p2$q17[i]
+            p$qualis[p$isxn == p2$issn[i] & p$ano >= QualQualis["Q13", "ini"] & p$ano <= QualQualis["Q13", "fim"]] <- p2$q17[i]
+            p$qualis[p$isxn == p2$issn[i] & p$ano >= QualQualis["Q17", "ini"] & p$ano <= QualQualis["Q17", "fim"]] <- p2$q17[i]
             p$title.sjr[p$isxn == p2$issn[i]] <- p2$title.sjr[i]
             p$SJR[p$isxn == p2$issn[i]] <- p2$SJR[i]
             p$Country[p$isxn == p2$issn[i]] <- p2$Country[i]
@@ -1105,15 +1139,25 @@ rm(b)
 # Títulos de periódicos registrados nos currículos com alguma diferença dos
 # títulos na planilha Qualis
 ttldif <- p[p$tipo == "Artigo", ]
+ttldif$titulo10 <- sapply(ttldif$titulo10, html2tex)
+ttldif$titulo13 <- sapply(ttldif$titulo13, html2tex)
+ttldif$titulo17 <- sapply(ttldif$titulo17, html2tex)
+ttldif <- ttldif[!((!is.na(ttldif$titulo10) & tolower(ttldif$titulo10) == tolower(ttldif$livro.ou.periodico)) |
+                   (!is.na(ttldif$titulo13) & tolower(ttldif$titulo13) == tolower(ttldif$livro.ou.periodico)) |
+                   (!is.na(ttldif$titulo17) & tolower(ttldif$titulo17) == tolower(ttldif$livro.ou.periodico))),
+                 c("ano", "titulo10", "titulo13", "titulo17", "livro.ou.periodico")]
+ttldif$ano <- as.numeric(as.character(ttldif$ano))
+ttldif$titulo <- ""
+ttldif$titulo[ttldif$ano >= QualQualis["Q10", "ini"] & ttldif$ano <= QualQualis["Q10", "fim"]] <- ttldif$titulo10
+ttldif$titulo[ttldif$ano >= QualQualis["Q13", "ini"] & ttldif$ano <= QualQualis["Q13", "fim"]] <- ttldif$titulo13
+ttldif$titulo[ttldif$ano >= QualQualis["Q17", "ini"] & ttldif$ano <= QualQualis["Q17", "fim"]] <- ttldif$titulo17
+ttldif$ano <- ttldif$titulo10 <- ttldif$titulo13 <- ttldif$titulo17 <- NULL
 ttldif <- ttldif[!is.na(ttldif$titulo), ]
-ttldif$titulo <- sapply(ttldif$titulo, html2tex)
-ttldif <- ttldif[tolower(ttldif$titulo) != tolower(ttldif$livro.ou.periodico),
-       c("titulo", "livro.ou.periodico")]
-ttldif <- ttldif[!duplicated(ttldif), ]
+ttldif <- ttldif[!duplicated(ttldif), c("titulo", "livro.ou.periodico")]
 colnames(ttldif) <- c("Título Qualis", "Título Lattes")
 
 # Lista de periódicos sem qualis
-semqualis <- p[p$qualis == "SQ" | p$qualis == "NP", c("isxn", "livro.ou.periodico")]
+semqualis <- p[p$qualis == "SQ", c("isxn", "livro.ou.periodico")]
 semqualis <- semqualis[!duplicated(semqualis), ]
 semqualis <- semqualis[order(semqualis$livro.ou.periodico), ]
 semqualis$livro.ou.periodico <- sub(" \x26 ", " \x5c\x5c\x26 ", semqualis$livro.ou.periodico)
