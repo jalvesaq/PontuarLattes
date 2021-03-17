@@ -222,6 +222,12 @@ if(!exists("MainFont")){
 
 \clearpage
 
+\definecolor{coautr}{rgb}{0.5,1.0,0.7}
+\definecolor{ncarac}{rgb}{1,0.7,0.7}
+\definecolor{ninval}{rgb}{1,1,0.5}
+\definecolor{duplic}{rgb}{0.7,0.8,1}
+\definecolor{capdup}{rgb}{1,0.5,1}
+
 \section{Apresentação}
 
 Este relatório foi produzido com scripts desenvolvidos por Jakson Alves de
@@ -269,7 +275,6 @@ if(nrow(p17)){
         oficial.\n")
 }
 @
-
 
 Os scripts para elaboração deste relatório ainda estão em desenvolvimento e
 solicitamos que nos sejam comunicados erros encontrados nas tabelas e
@@ -451,7 +456,7 @@ tab <- oa
 colnames(tab) <- sub("Natureza", "Tipo", colnames(tab))
 hoje <- as.numeric(sub("-.*", "", as.character(Sys.Date())))
 atrasado <- ((tab$Tipo == "M" & (hoje - tab$Ano) > 4) | (tab$Tipo == "D" & (hoje - tab$Ano) > 6))
-tab$Ano[atrasado] <- paste("\\rowcolor{yellow}", tab$Ano[atrasado])
+tab$Ano[atrasado] <- paste("\\rowcolor{ninval}", tab$Ano[atrasado])
 Tabela(tab, cap = "Detalhamento das orientações em andamento", alin = "clcLL",
        lbl = "tab:oriandDet")
 @
@@ -501,8 +506,6 @@ if(ncol(projextTab) == 1){
            cap = paste0("Registro de ``Projetos de Extensão'' no período ", Inicio, "--", Fim))
 }
 @
-
-
 
 \newpage
 
@@ -676,7 +679,6 @@ ser classificado em mais de uma categoria, e a Tabela \ref{tab:sjrcat} mostra
 a frequência das categorias atribuídas aos periódicos publicados pelos
 professores.
 
-
 <<catSjr>>=
 SJRcat <- paste(p$cat.sjr[!is.na(p$cat.sjr)], collapse = ";")
 SJRcat <- strsplit(SJRcat, ";")[[1]]
@@ -690,7 +692,6 @@ colnames(tab) <- sub("Percetual", "\\%", colnames(tab))
 Tabela(tab, lbl = "tab:sjrcat", alin = "lrr",
        cap = paste0("Classificação dos periódicos com SJR (N = ", sum(!is.na(p$cat.sjr)), ")"))
 @
-
 
 \clearpage
 
@@ -750,7 +751,6 @@ Um mesmo periódico pode ser classificado em mais de uma categoria, e a Tabela
 \ref{tab:snipcat} mostra a frequência das categorias atribuídas aos periódicos
 publicados pelos professores.
 
-
 <<catSnip>>=
 SNIPcat <- paste(p$ASJC.field.IDs[!is.na(p$ASJC.field.IDs)], collapse = ";")
 SNIPcat <- strsplit(SNIPcat, ";")[[1]]
@@ -784,7 +784,6 @@ if(length(mmmsg))
     for(msg in mmmsg)
         cat("\n\n", msg, "\n\n")
 @
-
 
 <<mediamovel, fig.width=8, fig.height=3>>=
 if(length(mm)){
@@ -849,15 +848,6 @@ if(nrow(coaut) > 0){
 
 \clearpage
 
-
-
-\definecolor{coautr}{rgb}{0.5,1.0,0.7}
-\definecolor{ncarac}{rgb}{1,0.7,0.7}
-\definecolor{ninval}{rgb}{1,1,0.5}
-\definecolor{duplic}{rgb}{0.7,0.8,1}
-\definecolor{capdup}{rgb}{1,0.5,1}
-
-
 <<printerros, warning=FALSE>>=
 if(sum(proddet$erro == "coautr") > 0){
     cat("\\textbf{Legenda de informação adicional indicada na Tabela \\ref{tab:proddet}}:\n\n")
@@ -891,7 +881,6 @@ if(sum(c("capdup", "ncarac", "ninval", "duplic") %in% proddet$erro)){
 }
 @
 
-
 \small
 <<printTabProdDet>>=
 prddt <- proddet
@@ -902,17 +891,24 @@ Tabela(prddt, alin = "lllrrllrr", lbl = "tab:proddet", cap = "Produção detalha
 
 \clearpage
 
+A Tabela \ref{tab:ttldif} tem o objetivo de ajudar a identificar erros de
+digitação nos títulos dos periódicos, podendo ser uma diferença tão pequena
+quanto uma vogal sem acento. Constam da tabela os títulos com pelo menos uma
+letra diferente do título de mesmo ISSN na planilha Qualis. Adicionalmente,
+estão realçadas de amarelo as linhas em que não foi possível encontrar uma
+sequência idêntica de 12 letras nos dois títulos.
+
 <<apendice2, warning=FALSE>>=
-Tabela(ttldif, alin = "LL", hline = 2:nrow(ttldif),
+Tabela(ttldif, alin = "LL", lbl = "tab:ttldif", hline = 2:nrow(ttldif),
        cap = "Títulos de periódicos registrados nos currículos com alguma diferença dos títulos na planilha Qualis")
 @
 
 \clearpage
 
-Períodicos podem estar sem Qualis porque não foram ainda classificados pelo
+Periódicos podem estar sem Qualis porque não foram ainda classificados pelo
 comitê da área ou porque o professor errou a digitação do ISSN no currículo
 Lattes. Para descobrir se foi um erro de digitação, veja na
-Tabela~\ref{tab:proddet} quem foi o professor que publicou no periodico,
+Tabela~\ref{tab:proddet} quem foi o professor que publicou no periódico,
 descubra qual o ISSN correto do periódico e verifique no currículo Lattes do
 professor se os dados foram digitados corretamente.
 

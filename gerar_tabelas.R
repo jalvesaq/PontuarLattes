@@ -1155,6 +1155,26 @@ ttldif$ano <- ttldif$titulo10 <- ttldif$titulo13 <- ttldif$titulo17 <- NULL
 ttldif <- ttldif[!is.na(ttldif$titulo), ]
 ttldif <- ttldif[!duplicated(ttldif), c("titulo", "livro.ou.periodico")]
 colnames(ttldif) <- c("Título Qualis", "Título Lattes")
+LimparDif <- function(x)
+{
+    x <- gsub("[\\.,!;:?]", "", x)
+    x <- gsub("  ", " ", x)
+    x
+}
+NDif <- function(x)
+{
+    x1 <- LimparDif(x[1])
+    x2 <- LimparDif(x[2])
+    n2 <- nchar(x1) - 12
+    if(n2 > 2)
+        for(n in 1:n2)
+            if(grepl(tolower(substr(x1, n, n + 12)), tolower(x2), fixed = TRUE))
+                return(FALSE)
+    return(TRUE)
+}
+
+i <- apply(ttldif, 1, NDif)
+ttldif[i, 1] <- paste("\\rowcolor{ninval}", ttldif[i, 1])
 
 # Lista de periódicos sem qualis
 semqualis <- p[p$qualis == "SQ", c("isxn", "livro.ou.periodico")]
