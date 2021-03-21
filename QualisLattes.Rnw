@@ -10,6 +10,7 @@ if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
 options(OutDec = ",")
 
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
+
 library("ineq")
 
 SPRINTF <- function(fmt, x) {sub("\\.", ",", sprintf(fmt, x))}
@@ -23,6 +24,7 @@ CharSemNA <- function(x)
     else
         y <- x
     y[is.na(x)] <- ""
+    y <- sub("^ *", "", y)
     y[y == "NaN" | is.nan(x)] <- "--"
     y
 }
@@ -88,10 +90,13 @@ MMG <- function(tab, r, g = FALSE)
     }
     mediana <- format(round(mediana, rr))
     media <- format(round(media, rr))
-    if(missing(r))
-        tab <- format(tab)
-    else
-        tab <- format(round(tab, r))
+    if(missing(r)){
+        if(max(tab[, 2:ncol(tab)], na.rm = TRUE) < 100)
+            r <- 1
+        else
+            r <- 0
+    }
+    tab <- format(round(tab, r))
     tab <- rbind(tab, "Mediana" = mediana, "Média" = media)
     if(g){
         tab <- rbind(tab, "Gini" = gini)
@@ -104,7 +109,7 @@ MMG <- function(tab, r, g = FALSE)
 pontuacaoLvr  <- MMG(pontuacaoLvr)
 pontuacaoArt  <- MMG(pontuacaoArt)
 pontuacaoSNIP <- MMG(pontuacaoSNIP, 3, g = TRUE)
-pontuacaoSJR  <- MMG(pontuacaoSJR, g = TRUE)
+pontuacaoSJR  <- MMG(pontuacaoSJR, 3, g = TRUE)
 # pontuacaoSJRPond  <- MMG(pontuacaoSJRPond, g = TRUE)
 # pontuacaoSNIPPond  <- MMG(pontuacaoSNIPPond, g = TRUE)
 
@@ -276,6 +281,16 @@ if(nrow(p17)){
 }
 @
 
+<<PeriodoProf>>=
+if(exists("PeriodoProf")){
+    cat("Os dados de professores classificados neste relatório como não credenciados por todo o período\n")
+    cat(Inicio, "--", Fim, " foram excluídos nos anos em que não estiveram credenciados das tabelas\n", sep = "")
+    cat("prêmios, de orientações e de produção bibliográfica, mas foram mantidos nas tabelas de\n")
+    cat("atividades de ensino e de extensão e nos gráficos com as médias móveis da pontuação da produção bibliográfica.\n\n", sep = "")
+}
+@
+
+
 Os scripts para elaboração deste relatório ainda estão em desenvolvimento e
 solicitamos que nos sejam comunicados erros encontrados nas tabelas e
 gráficos.
@@ -403,7 +418,9 @@ if(length(premios) == 0){
     if(nrow(premios) == 0){
         cat("Nenhum prêmio recebido no período.\n")
     } else {
-        Tabela(premios,  alin = "lLLc", cap = "Lista de Prêmios recebidos")
+        Tabela(premios, alin = "lLLc",
+               cap = paste("Lista de Prêmios recebidos no período ",
+                           Inicio, "--", Fim, sep = ""))
     }
 }
 @
@@ -432,8 +449,8 @@ Tabela(oriconcTab, lbl = "tab:oriconc", hline = nrow(oriconcTab) - 2,
 <<detOriConc, warning=FALSE>>=
 tab <- oc
 colnames(tab) <- sub("Natureza", "Tipo", colnames(tab))
-Tabela(tab, alin = "lLLlLc", lbl = "tab:detoriconc",
-       cap = "Detalhamento das orientações")
+Tabela(tab, alin = "LclLLL", lbl = "tab:detoriconc",
+       cap = "Detalhamento das orientações concluídas")
 @
 
 \newpage
@@ -442,10 +459,9 @@ Tabela(tab, alin = "lLLlLc", lbl = "tab:detoriconc",
 aln <- paste0("ll", paste0(rep("r", ncol(oriandTab) - 1), collapse = ""))
 if(nrow(oriandTab) > 3){
     Tabela(oriandTab, lbl = "tab:oriand", hline = nrow(oriandTab) - 2,
-           cap = paste0("Orientações em andamento no período ", Inicio, "--", Fim))
+           cap = "Orientações em andamento na data de atualização do currículo")
 } else {
-    Tabela(oriandTab, lbl = "tab:oriand",
-           cap = paste0("Orientações em andamento no período ", Inicio, "--", Fim))
+    Tabela(oriandTab, lbl = "tab:oriand", cap = "Orientações em andamento na data de atualização do currículo")
 }
 @
 
@@ -456,8 +472,8 @@ tab <- oa
 colnames(tab) <- sub("Natureza", "Tipo", colnames(tab))
 hoje <- as.numeric(sub("-.*", "", as.character(Sys.Date())))
 atrasado <- ((tab$Tipo == "M" & (hoje - tab$Ano) > 4) | (tab$Tipo == "D" & (hoje - tab$Ano) > 6))
-tab$Ano[atrasado] <- paste("\\rowcolor{ninval}", tab$Ano[atrasado])
-Tabela(tab, cap = "Detalhamento das orientações em andamento", alin = "clcLL",
+tab[[1]][atrasado] <- paste("\\rowcolor{ninval}", tab[[1]][atrasado])
+Tabela(tab, cap = "Detalhamento das orientações em andamento", alin = "LclLL",
        lbl = "tab:oriandDet")
 @
 
@@ -466,7 +482,11 @@ Tabela(tab, cap = "Detalhamento das orientações em andamento", alin = "clcLL",
 \section{Ensino}
 
 A Tabela \ref{tab:ensino} mostra o número de vezes que o item ``Ensino'' foi
-registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
+registrado no Lattes como iniciado e concluído no período \Sexpr{Inicio}--\Sexpr{Fim}.
+<<notaEns>>=
+if(exists("PeriodoProf"))
+    cat("A tabela não omite atividades de ensino dos professores que não estavam credenciados no programa em parte desse período.\n\n")
+@
 
 <<tabEnsino>>=
 Tabela(ensinoTab, lbl = "tab:ensino",
@@ -480,6 +500,11 @@ Tabela(ensinoTab, lbl = "tab:ensino",
 
 A Tabela \ref{tab:extensao} mostra o número de vezes que o item ``Atividades
 de Extensão'' foi registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
+<<notaExt>>=
+if(exists("PeriodoProf"))
+    cat("Assim como na tabela anterior, as atividades e projetos de extensão dos professores realizada nos anos em que não estavam credenciados no programa também são mostradas.\n\n")
+@
+
 
 <<tabExtensao, warning=FALSE>>=
 if(ncol(extensaoTab) == 1){

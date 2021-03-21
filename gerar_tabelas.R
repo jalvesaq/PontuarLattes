@@ -1,5 +1,4 @@
 library("XML")
-library("ineq")
 
 # Variáveis cujos valores devem ser substituídos no info.R:
 NomeProg <- "Ciência Política e Relações Internacionais"
@@ -17,7 +16,6 @@ PontosQualis17 <- data.frame(qualis = c("A1", "A2", "A3", "A4", "B1", "B2", "B3"
                                         "C", "SQ", "OD", "Lvr", "Org", "Cap"),
                              pontos = c(100, 85, 70, 55, 20, 15, 10, 5, 0, 0, 10,
                                         100, 55, 30))
-
 
 # Pesos para cálculo da média ponderada,
 PesoArtigos <- 0.7
@@ -367,6 +365,21 @@ pq <- pq[!duplicated(pq$nome), ]
 colnames(pq) <- sub("nome", "Professor", colnames(pq))
 datacv <- merge(datacv, pq, all.x = TRUE)
 
+if(exists("PeriodoProf")){
+    if(sum(PeriodoProf$ini > PeriodoProf$fim)){
+        cat("Erro in \"PeriodoProf\": início maior do que final!\n", file = stderr())
+        if(!interactive())
+            quit(save = "no", status = 1)
+    }
+    if(sum(PeriodoProf$prof %in% datacv$Professor) != nrow(PeriodoProf)){
+        cat("Nome não localizado nos currículos: ",
+            paste(PeriodoProf$prof[!(PeriodoProf$prof %in% datacv$Professor)],
+                  collapse = ", "), ".\n", sep = "", file = stderr())
+        if(!interactive())
+            quit(save = "no", status = 1)
+    }
+}
+
 if(exists("equivalente")){
     for(i in 1:length(equivalente))
         if(sum(qualis$isxn == equivalente[i]) == 1){
@@ -379,6 +392,8 @@ if(exists("equivalente")){
 p <- merge(p, qualis, all.x = TRUE, stringsAsFactors = FALSE)
 p$qualis <- ""
 p$ano <- as.numeric(p$ano)
+p <- p[!is.na(p$ano), ]
+
 i <- p$ano >= QualQualis["Q10", "ini"] & p$ano <= QualQualis["Q10", "fim"]
 p$qualis[i] <- p$q10[i]
 i <- p$ano >= QualQualis["Q13", "ini"] & p$ano <= QualQualis["Q13", "fim"]
@@ -532,6 +547,21 @@ colnames(pontos) <- sub("q10", "2010--12", colnames(pontos))
 colnames(pontos) <- sub("q13", "2013--16", colnames(pontos))
 colnames(pontos) <- sub("q17", "2017--20", colnames(pontos))
 
+pcompleto <- p
+
+p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
+
+# Eliminar professores não credenciados em anos específicos
+if(exists("PeriodoProf")){
+    idx <- rep(TRUE, nrow(p))
+    for(i in 1:nrow(PeriodoProf)){
+        idx[p$prof == PeriodoProf$prof[i] &
+            !(p$ano %in% PeriodoProf$ini[i]:PeriodoProf$fim[i])] <- FALSE
+    }
+    p <- p[idx, ]
+}
+
+p$ano <- factor(as.character(p$ano))
 
 # Detectar coautorias
 p$chave <- tolower(paste(p$isxn, p$ano, p$tipo, p$vol, p$num, p$pini))
@@ -558,12 +588,6 @@ NAutores <- function(s)
 p$ncoaut.id <- unname(sapply(p$idcnpq, NAutores))
 p$ncoaut.id[p$ncoaut.id == 0] <- 1
 p$ncoaut.max <- apply(p[, c("ncoaut", "ncoaut.nm", "ncoaut.id")], 1, max)
-
-pcompleto <- p
-
-p <- p[!is.na(p$ano) & p$ano >= Inicio & p$ano <= Fim, ]
-
-p$ano <- factor(as.numeric(p$ano), levels = Inicio:Fim, labels = as.character(Inicio:Fim))
 
 if(sum(is.na(p$pontos)) > 0){
     cat("\n\n\\textcolor{red}{Pontuação não definida}:\n\n\\begin{verbatim}\n")
@@ -622,6 +646,15 @@ TabProd <- function(d, v)
         colnames(tab) <- cn
     }
     tab <- cbind("Professor" = rownames(tab), as.data.frame(tab))
+
+    # Eliminar professores não credenciados em anos específicos
+    if(exists("PeriodoProf")){
+        for(i in 1:nrow(PeriodoProf))
+            for(a in Inicio:Fim)
+                if(!(a %in% PeriodoProf$ini[i]:PeriodoProf$fim[i]))
+                    tab[tab$Professor == PeriodoProf$prof[i], as.character(a)] <- NaN
+    }
+
     tab
 }
 
@@ -736,8 +769,20 @@ if(length(oriconc)){
     oc[, 4] <- NomeSigla(sapply(oc[, 4], html2tex))
     oc <- as.data.frame(oc, stringsAsFactors = FALSE)
     oc$Instituição <- sapply(oc$Instituição, html2tex)
+    oc$Curso <- sapply(oc$Curso, html2tex)
+    oc$Orientado <- sapply(oc$Orientado, html2tex)
     oc$Ano <- as.numeric(as.character(oc$Ano))
     oc <- oc[oc$Ano >= Inicio & oc$Ano <= Fim, ]
+
+    # Eliminar professores não credenciados em anos específicos
+    if(exists("PeriodoProf")){
+        idx <- rep(TRUE, nrow(oc))
+        for(i in 1:nrow(PeriodoProf)){
+            idx[oc$Professor == PeriodoProf$prof[i] &
+                !(oc$Ano %in% PeriodoProf$ini[i]:PeriodoProf$fim[i])] <- FALSE
+        }
+        oc <- oc[idx, ]
+    }
 
     oc$Natureza <- sapply(oc$Natureza, html2tex)
     oc$Natureza <- gsub("\\\\_",  "_", oc$Natureza)
@@ -798,16 +843,14 @@ if(length(oriconc)){
     oc$Orientado <- sub(" .* ", " ", oc$Orientado)
     oc$Instituição <- AbreviarInstituicao(oc$Instituição)
     oc$Curso <- AbreviarInstituicao(oc$Curso)
-    oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
-             c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
     oc$Professor <- sub(" .* ", " ", oc$Professor)
     oc$Orientado <- sub(" .* ", " ", oc$Orientado)
     oc$Instituição <- sub("Universidade", "U.", oc$Instituição)
     oc$Instituição <- sub("Federal", "F.", oc$Instituição)
     oc$Instituição <- sub("Estadual", "E.", oc$Instituição)
     oc$Curso <- sub("Programa de Pós-Graduação", "PPG", oc$Curso)
-    oc <- oc[order(paste(oc$Natureza, oc$Instituição, oc$Curso, oc$Professor, oc$Orientado, oc$Ano)),
-             c("Natureza", "Instituição", "Curso", "Professor", "Orientado", "Ano")]
+    oc <- oc[order(paste(oc$Professor, oc$Ano, oc$Natureza, oc$Instituição)),
+             c("Professor", "Ano", "Natureza", "Instituição", "Curso", "Orientado")]
 } else {
     oriconcTab <- data.frame(Natureza = "", Instituição = "", Curso = "", Professor = "", Orientado = "", Ano = "")
     oc <- data.frame(Natureza = "", Instituição = "", Curso = "", Professor = "", Orientado = "", Ano = "")
@@ -822,11 +865,21 @@ if(length(premios)){
     colnames(premios) <- c("Professor", "Prêmio", "Entidade promotora", "Ano", "En")
     if(nrow(premios) > 1)
         premios <- premios[order(premios[, "Ano"]), 1:4]
-    premios[, "Professor"] <- sub(" .* ", " ", premios[, "Professor"])
     premios <- as.data.frame(premios, stringsAsFactors = FALSE)
     premios <- premios[premios[, "Ano"] >= Inicio & premios[, "Ano"] <= Fim, ]
     premios$Prêmio <- sapply(premios$Prêmio, html2tex)
     premios[[3]] <- sapply(premios[[3]], html2tex)
+
+    # Eliminar professores não credenciados em anos específicos
+    if(exists("PeriodoProf")){
+        idx <- rep(TRUE, nrow(premios))
+        for(i in 1:nrow(PeriodoProf)){
+            idx[premios$Professor == PeriodoProf$prof[i] &
+                !(premios$Ano %in% PeriodoProf$ini[i]:PeriodoProf$fim[i])] <- FALSE
+        }
+        premios <- premios[idx, ]
+    }
+    premios[, "Professor"] <- sub(" .* ", " ", premios[, "Professor"])
 }
 
 # Orientações em andamento
@@ -837,8 +890,8 @@ if(length(oriand)){
     oa$Instituição <- sapply(oa$Instituição, html2tex)
     oa$Instituição <- NomeSigla(sapply(oa$Instituição, html2tex))
     oa$Instituição <- AbreviarInstituicao(oa$Instituição)
-    oa <- oa[order(oa$Ano), ]
     oa$Natureza <- sapply(oa$Natureza, html2tex)
+    oa$Orientando <- sapply(oa$Orientando, html2tex)
     oa$Natureza <- factor(oa$Natureza)
     levels(oa$Natureza) <- sub("Dissertação de mestrado", "M", levels(oa$Natureza))
     levels(oa$Natureza) <- sub("Iniciação Científica", "IC", levels(oa$Natureza))
@@ -890,11 +943,10 @@ if(length(oriand)){
     oriandTab <- cbind("Orientador" = rownames(oriandTab), oriandTab)
 
     # Detalhamento das orientações em andamento
-    oa$um <- NULL
-    oa <- oa[order(paste(oa$Professor, oa$Instituição, oa$Natureza, oa$Ano)),
-             c("Ano", "Professor", "Natureza", "Instituição", "Orientando")]
     oa$Professor <- sub(" .* ", " ", oa$Professor)
     oa$Ano <- as.numeric(as.character(oa$Ano))
+    oa <- oa[order(paste(oa$Professor, oa$Ano, oa$Natureza, oa$Instituição)),
+             c("Professor", "Ano", "Natureza", "Instituição", "Orientando")]
 } else {
     oriandTab <- data.frame(Orientador = "", O = "", IC = "", G = "", M = "",
                             D = "", PD = "", Total = "")
@@ -984,8 +1036,8 @@ pond <- pond[order(pond$Média, decreasing = TRUE), ]
 # É preciso especificar o ano porque há casos de não registro do ano
 pm <- pcompleto[, c("tipo", "pontos", "ano")]
 
-pm$pontos[pm$tipo == "Artigo"] <- 0.7 * pm$pontos[pm$tipo == "Artigo"]
-pm$pontos[pm$tipo != "Artigo"] <- 0.3 * pm$pontos[pm$tipo != "Artigo"]
+pm$pontos[pm$tipo == "Artigo"] <- PesoArtigos * pm$pontos[pm$tipo == "Artigo"]
+pm$pontos[pm$tipo != "Artigo"] <- PesoLivros * pm$pontos[pm$tipo != "Artigo"]
 media <- tapply(pm$pontos, pm$ano, function(x) sum(x) / nrow(quando))
 mediamovel <- rep(0, max(as.numeric(names(media))) - min(as.numeric(names(media))) + 1)
 names(mediamovel) <- as.character(as.numeric(min(names(media))):as.numeric(max(names(media))))
@@ -1191,7 +1243,7 @@ save(datacv, quando, doutor, nSJR, nSnip, oriconcTab, oriandTab, posdoc,
      file = "tabs.RData")
 
 cnpqId <- datacv[order(datacv$Professor), ]
-sink("lattes_xml/ultima_lista.html")
+sink("lattes_xml/links_para_Lattes_XML.html")
 cat('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n')
 cat('<html xmlns="http://www.w3.org/1999/xhtml">\n')
 cat('<head>\n')
