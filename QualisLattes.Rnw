@@ -378,7 +378,7 @@ if(!is.null(doutor)){
 
 <<areaTitulo>>=
 tab <- sort(table(doutor[["Nome do curso"]]), decreasing = TRUE)
-tab <- cbind("Área" = sub("^$", "(não especificado)", rownames(tab)),
+tab <- cbind("Nome do curso" = sub("^$", "(não especificado)", rownames(tab)),
              "Frequência" = tab, "%" = sub("\\.", ",",
                                            SPRINTF("%0.1f", 100 * tab / sum(tab, na.rm = TRUE))))
 tab <- rbind(tab, c("Total", as.character(sum(as.numeric(tab[, 2]), na.rm = TRUE)), "100,0"))
@@ -442,6 +442,14 @@ PD = Supervisão de pós-doutorado.
 <<oriconc>>=
 Tabela(oriconcTab, lbl = "tab:oriconc", hline = nrow(oriconcTab) - 2,
              cap = paste0("Orientações concluídas no período ", Inicio, "--", Fim))
+
+ocGini <- do.call("c", oriconcTab[oriconcTab$Orientador %in% datacv$Professor,
+                  colnames(oriconcTab) %in% c("M", "D")])
+if(length(ocGini)){
+    ocGini <- round(Gini(as.numeric(ocGini)), 2)
+    cat("Considerando apenas orientações de mestrado e doutorado, o índice de Gini do número de orientações concluídas por professor é de ",
+        ocGini, ".\n\n", sep = "")
+}
 @
 
 \newpage
@@ -460,6 +468,13 @@ aln <- paste0("ll", paste0(rep("r", ncol(oriandTab) - 1), collapse = ""))
 if(nrow(oriandTab) > 3){
     Tabela(oriandTab, lbl = "tab:oriand", hline = nrow(oriandTab) - 2,
            cap = "Orientações em andamento na data de atualização do currículo")
+oaGini <- do.call("c", oriandTab[oriandTab$Orientador %in% datacv$Professor,
+                  colnames(oriandTab) %in% c("M", "D")])
+if(length(oaGini)){
+    oaGini <- round(Gini(as.numeric(oaGini)), 2)
+    cat("Considerando apenas orientações de mestrado e doutorado, o índice de Gini do número de orientações em andamento por professor é de ",
+        oaGini, ".\n\n", sep = "")
+}
 } else {
     Tabela(oriandTab, lbl = "tab:oriand", cap = "Orientações em andamento na data de atualização do currículo")
 }
@@ -539,11 +554,8 @@ if(ncol(projextTab) == 1){
 \subsection{Produção no período \Sexpr{Inicio}--\Sexpr{Fim}}
 
 A Tabela \ref{tab:pontos} mostra os valores atribuídos aos diferentes níveis
-de classificação Qualis dos periódicos. Livros e capítulos de livros não
-classificados pelo comitê de \emph{\Sexpr{NomeComite}} da CAPES, podem não ter
-sido contabilizados na produção do Programa, mas, aqui, estão,
-arbitrariamente, recebendo pontuação equivalente a L2. Qualis de outras áreas
-não têm valor para a área de \emph{\Sexpr{NomeComite}}.
+de classificação Qualis dos periódicos. Livros e capítulos de livros, aqui, estão,
+arbitrariamente, recebendo pontuação equivalente a L2.
 
 <<classifpontos>>=
 Tabela(pontos, lbl = "tab:pontos",
@@ -563,10 +575,8 @@ professores do Programa de Pós-Graduação em \Sexpr{NomeProg} no período
 \Sexpr{Inicio}--\Sexpr{Fim} na produção de livros e capítulos foi de
 \textbf{\Sexpr{pmediaL}} pontos e a mediana de \textbf{\Sexpr{pmedianaL}}
 pontos e na produção de artigos foi de \textbf{\Sexpr{pmediaA}} pontos e a
-mediana de \textbf{\Sexpr{pmedianaA}}.\footnote{Os dados do Qualis são
-extraídos do arquivo
-\texttt{\Sexpr{sub(".*/", "", gsub("_", "\\\\_", QualisXLS))}},
-baixado da Plataforma Sucupira.} A área de \Sexpr{NomeComite} atribui peso
+mediana de \textbf{\Sexpr{pmedianaA}}. No cálculo das médias ponderadas,
+está sendo atribuído peso
 \Sexpr{PesoLivros} aos livros e \Sexpr{PesoArtigos} aos artigos. Usando esses
 valores, a soma ponderada das médias é de
 \textbf{\Sexpr{pmediapon}}.
@@ -578,7 +588,7 @@ if(ncol(pontuacaoLvr) > 12)
     colnames(pontuacaoLvr) <- sub("^[1-2][0-9]", "", colnames(pontuacaoLvr))
 Tabela(pontuacaoLvr,
        alin = paste0("l", paste0(rep("r", ncol(pontuacaoLvr) - 1), collapse ="")),
-       cap = "Professores classificados por pontuação (Livros)",
+       cap = "Professores classificados por pontuação (Livros e Capítulos)",
        hline = nrow(pontuacaoLvr) - 1)
 @
 
@@ -596,9 +606,10 @@ Tabela(pontuacaoArt,
 \clearpage
 
 A Tabela~\ref{tab:pond} apresenta a classificação dos professores quando sua
-produção é ponderada de acordo com os critérios do comitê de área. Uma linha
-adicional, indicadora da concentração da produção, apresenta o índice de Gini
-para livros, artigos e para a média ponderada dos dois tipos de produção.
+produção é ponderada de acordo com os pesos já mencionados. Além da média e da
+mediana, uma linha adicional, indicadora da concentração da produção,
+apresenta o índice de Gini para livros, artigos e para a média ponderada dos
+dois tipos de produção.
 
 <<imprimirpond>>=
 ultimalinha <- apply(pond[, 2:ncol(pond)], 2, function(x) Gini(x))
@@ -634,6 +645,27 @@ tab <- cbind("Professor" = rownames(tab), tab)
 Tabela(tab, alin = paste(c("L", rep("r", ncol(producao))), collapse = "|"),
        cap = "Produção segundo classificação Qualis", hline = nrow(tab))
 @
+
+\clearpage
+
+A Tabela \ref{tab:idi} mostra o idioma detectado pela análise automática do
+títulos dos artigos e capítulos ou de livro.\footnote{Função
+\texttt{detect\_language} do pacote \texttt{cld2}.} O percentual de erros na
+identificação do idioma é relativamente elevado.
+
+<<idiomacld2>>=
+library("cld2")
+idi1 <- detect_language(p$producao, lang_code = FALSE)
+idi2 <- detect_language(p$livro.ou.periodico, lang_code = FALSE)
+idi1[is.na(idi1) | idi1 == "GALICIAN"] <- idi2[is.na(idi1) | idi1 == "GALICIAN"]
+til <- grepl("ã", tolower(p$producao))
+idi1[til & (is.na(idi1) | idi1 == "GALICIAN")] <- "PORTUGUESE"
+idi1[is.na(idi1)] <- "Não identificado"
+tab <- sort(tapply(rep(1, length(idi1)), idi1, sum), decreasing = TRUE)
+tab <- data.frame(Idioma = names(tab), Frequência = unname(tab))
+Tabela(tab, lbl = "tab:idi", cap = "Frequência do idioma da produção bibliográfica")
+@
+
 
 \clearpage
 

@@ -1098,6 +1098,12 @@ producao <- tapply(p$um, list(p$prof, p$qualis), sum)
 if(sum(grepl("Nada", colnames(producao)))){
     producao <- producao[, !grepl("Nada", colnames(producao))]
 }
+if("A1" %in% colnames(producao)){
+    if("A2" %in% colnames(producao))
+        producao <- producao[order(producao[, "A1"], producao[, "A2"], decreasing = TRUE), ]
+    else
+        producao <- producao[order(producao[, "A1"], decreasing = TRUE), ]
+}
 
 p$producao <- sapply(p$producao, html2tex)
 p$livro.ou.periodico <- sapply(p$livro.ou.periodico, html2tex)
