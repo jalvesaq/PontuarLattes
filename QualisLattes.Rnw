@@ -33,7 +33,7 @@ Tabela <- function(tab, cap = "Sem título", alin, lbl, hline)
 {
     if(missing(alin))
         alin <- paste("L", paste(rep("r", ncol(tab) - 1), collapse = ""), sep = "")
-    if(!missing(hline))
+    if(!missing(hline) && min(hline) > 0 && max(hline) <= nrow(tab))
         tab[hline, 1] <- paste("\\hline", tab[hline, 1])
 
     for(n in 1:ncol(tab))
@@ -465,18 +465,16 @@ Tabela(tab, alin = "LclLLL", lbl = "tab:detoriconc",
 
 <<oriand>>=
 aln <- paste0("ll", paste0(rep("r", ncol(oriandTab) - 1), collapse = ""))
-if(nrow(oriandTab) > 3){
     Tabela(oriandTab, lbl = "tab:oriand", hline = nrow(oriandTab) - 2,
            cap = "Orientações em andamento na data de atualização do currículo")
-oaGini <- do.call("c", oriandTab[oriandTab$Orientador %in% datacv$Professor,
-                  colnames(oriandTab) %in% c("M", "D")])
-if(length(oaGini)){
-    oaGini <- round(Gini(as.numeric(oaGini)), 2)
-    cat("Considerando apenas orientações de mestrado e doutorado, o índice de Gini do número de orientações em andamento por professor é de ",
-        oaGini, ".\n\n", sep = "")
-}
-} else {
-    Tabela(oriandTab, lbl = "tab:oriand", cap = "Orientações em andamento na data de atualização do currículo")
+if(nrow(oriandTab) > 3){
+    oaGini <- do.call("c", oriandTab[oriandTab$Orientador %in% datacv$Professor,
+                      colnames(oriandTab) %in% c("M", "D")])
+    if(length(oaGini)){
+        oaGini <- round(Gini(as.numeric(oaGini)), 2)
+        cat("\nConsiderando apenas orientações de mestrado e doutorado, o índice de Gini do número de orientações em andamento por professor é de ",
+            oaGini, ".\n\n", sep = "")
+    }
 }
 @
 
@@ -485,9 +483,11 @@ if(length(oaGini)){
 <<oriandTab, warning=FALSE>>=
 tab <- oa
 colnames(tab) <- sub("Natureza", "Tipo", colnames(tab))
-hoje <- as.numeric(sub("-.*", "", as.character(Sys.Date())))
-atrasado <- ((tab$Tipo == "M" & (hoje - tab$Ano) > 4) | (tab$Tipo == "D" & (hoje - tab$Ano) > 6))
-tab[[1]][atrasado] <- paste("\\rowcolor{ninval}", tab[[1]][atrasado])
+if(nrow(tab) > 1){
+    hoje <- as.numeric(sub("-.*", "", as.character(Sys.Date())))
+    atrasado <- ((tab$Tipo == "M" & (hoje - tab$Ano) > 4) | (tab$Tipo == "D" & (hoje - tab$Ano) > 6))
+    tab[[1]][atrasado] <- paste("\\rowcolor{ninval}", tab[[1]][atrasado])
+}
 Tabela(tab, cap = "Detalhamento das orientações em andamento", alin = "LclLL",
        lbl = "tab:oriandDet")
 @
@@ -554,8 +554,9 @@ if(ncol(projextTab) == 1){
 \subsection{Produção no período \Sexpr{Inicio}--\Sexpr{Fim}}
 
 A Tabela \ref{tab:pontos} mostra os valores atribuídos aos diferentes níveis
-de classificação Qualis dos periódicos. Livros e capítulos de livros, aqui, estão,
-arbitrariamente, recebendo pontuação equivalente a L2.
+de classificação Qualis dos periódicos. Não temos os dados dos Qualis Livros
+e, por isso, livros e capítulos de livros estão recebendo pontuação
+independente da sua classificação no Qualis Livros.
 
 <<classifpontos>>=
 Tabela(pontos, lbl = "tab:pontos",
@@ -566,20 +567,19 @@ pmediaL <- pontuacaoLvr[pontuacaoLvr$Professor == "Média", "Total"]
 pmedianaL <- pontuacaoLvr[pontuacaoLvr$Professor == "Mediana", "Total"]
 pmediaA <- pontuacaoArt[pontuacaoArt$Professor == "Média", "Total"]
 pmedianaA <- pontuacaoArt[pontuacaoArt$Professor == "Mediana", "Total"]
-pmediapon <- PesoLivros * as.numeric(sub(",", ".", pmediaL)) +
-    PesoArtigos * as.numeric(sub(",", ".", pmediaA))
+pmediapon <- round(PesoLivros * as.numeric(sub(",", ".", pmediaL)) +
+    PesoArtigos * as.numeric(sub(",", ".", pmediaA)), 1)
 @
 
-Seguindo os valores da Tabela \ref{tab:pontos}, a pontuação total média dos
-professores do Programa de Pós-Graduação em \Sexpr{NomeProg} no período
-\Sexpr{Inicio}--\Sexpr{Fim} na produção de livros e capítulos foi de
-\textbf{\Sexpr{pmediaL}} pontos e a mediana de \textbf{\Sexpr{pmedianaL}}
-pontos e na produção de artigos foi de \textbf{\Sexpr{pmediaA}} pontos e a
-mediana de \textbf{\Sexpr{pmedianaA}}. No cálculo das médias ponderadas,
-está sendo atribuído peso
-\Sexpr{PesoLivros} aos livros e \Sexpr{PesoArtigos} aos artigos. Usando esses
-valores, a soma ponderada das médias é de
-\textbf{\Sexpr{pmediapon}}.
+Seguindo os valores da Tabela \ref{tab:pontos} (nos períodos definidos na
+Tabela~\ref{tab:qQmm}), a pontuação total média dos professores do
+\emph{\Sexpr{NomeProg}} no período \Sexpr{Inicio}--\Sexpr{Fim} na produção de
+livros e capítulos foi de \textbf{\Sexpr{pmediaL}} pontos e a mediana de
+\textbf{\Sexpr{pmedianaL}} pontos e na produção de artigos foi de
+\textbf{\Sexpr{pmediaA}} pontos e a mediana de \textbf{\Sexpr{pmedianaA}}. No
+cálculo das médias ponderadas, está sendo atribuído peso \Sexpr{PesoLivros}
+aos livros e \Sexpr{PesoArtigos} aos artigos. Usando esses valores, a soma
+ponderada das médias é de \textbf{\Sexpr{pmediapon}}.
 
 \newpage
 
@@ -742,10 +742,14 @@ SJRcat <- strsplit(SJRcat, ";")[[1]]
 SJRcat <- sub(" *", "", sub(" $", "", sub(" \\(Q[0-4]\\)", "", SJRcat)))
 SJRcat <- factor(SJRcat)
 tab <- tapply(rep(1, length(SJRcat)), SJRcat, sum)
-tab <- data.frame("Categoria" = names(tab), "Frequência" = unname(tab))
-tab <- tab[order(tab$Frequência, decreasing = TRUE), ]
-tab$Percetual <- as.character(round(100 * tab$Frequência / sum(!is.na(p$cat.sjr))))
-colnames(tab) <- sub("Percetual", "\\%", colnames(tab))
+if(length(tab) > 0){
+    tab <- data.frame("Categoria" = names(tab), "Frequência" = unname(tab))
+    tab <- tab[order(tab$Frequência, decreasing = TRUE), ]
+    tab$Percetual <- as.character(round(100 * tab$Frequência / sum(!is.na(p$cat.sjr))))
+    colnames(tab) <- sub("Percetual", "\\%", colnames(tab))
+} else {
+    tab <- data.frame("Categoria" = character(), "Frequência" = numeric())
+}
 Tabela(tab, lbl = "tab:sjrcat", alin = "lrr",
        cap = paste0("Classificação dos periódicos com SJR (N = ", sum(!is.na(p$cat.sjr)), ")"))
 @
@@ -816,10 +820,14 @@ for(i in 1:nrow(snip.cat))
     SNIPcat <- sub(snip.cat$id[i], snip.cat$Categoria[i], SNIPcat)
 SNIPcat <- factor(SNIPcat)
 tab <- tapply(rep(1, length(SNIPcat)), SNIPcat, sum)
-tab <- data.frame("Categoria" = names(tab), "Frequência" = unname(tab))
-tab <- tab[order(tab$Frequência, decreasing = TRUE), ]
-tab$Percetual <- as.character(round(100 * tab$Frequência / sum(!is.na(p$ASJC.field.IDs))))
-colnames(tab) <- sub("Percetual", "\\%", colnames(tab))
+if(length(tab) > 0){
+    tab <- data.frame("Categoria" = names(tab), "Frequência" = unname(tab))
+    tab <- tab[order(tab$Frequência, decreasing = TRUE), ]
+    tab$Percetual <- as.character(round(100 * tab$Frequência / sum(!is.na(p$ASJC.field.IDs))))
+    colnames(tab) <- sub("Percetual", "\\%", colnames(tab))
+} else {
+    tab <- data.frame("Categoria" = character(), "Frequência" = numeric())
+}
 Tabela(tab, lbl = "tab:snipcat", alin = "lrr",
        cap = paste0("Classificação dos periódicos com Snip (N = ", sum(!is.na(p$ASJC.field.IDs)), ")"))
 @
@@ -835,6 +843,24 @@ professores. Ou seja, cada ponto representa o valor médio da pontuação nos
 representa a média móvel da produção média de todos os professores,
 correspondendo à media dos professores permanentes do programa somente nos
 anos mais recentes, em que a composição do corpo docente for a mesma da atual.
+No cálculo da pontuação dos artigos, foram utilizados os Qualis indicados na
+Tabela~\ref{tab:qQmm}.
+
+<<qQmm>>=
+tab <- data.frame(Referência = rownames(QualQualis),
+                  De = QualQualis[, "ini"],
+                  Até = QualQualis[, "fim"])
+tab$Referência <- sub("Q10", paste0("Qualis 2010--2012 (", NomeComite, ")"), tab$Referência)
+tab$Referência <- sub("Q13", paste0("Qualis 2013--2016 (", NomeComite, ")"), tab$Referência)
+tab$Referência <- sub("Q17", "Qualis 2017--2020 (Qualis único, não oficial e proviśorio)", tab$Referência)
+amin <- min(sapply(mm, function(x) min(as.numeric(names(x)))))
+amax <- max(sapply(mm, function(x) max(as.numeric(names(x)))))
+tab$De[tab$De < amin] <- amin
+tab$De[tab$De > amax] <- amax
+tab$Até[tab$Até < amin] <- amin
+tab$Até[tab$Até > amax] <- amax
+Tabela(tab, lbl = "tab:qQmm", cap = "Qualis utilizado no cálculo das médias móveis")
+@
 
 <<mmmsg>>=
 if(length(mmmsg))

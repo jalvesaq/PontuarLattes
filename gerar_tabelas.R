@@ -1152,6 +1152,7 @@ checkISBN <- function(x){
     x <- strsplit(x, "")[[1]]
     if(length(x) != 13)
         return(FALSE) # Não é livro
+    x[x == "X"] <- 10
     x <- as.numeric(x)
     if(sum(is.na(x)) > 0)
         return(TRUE)
@@ -1204,35 +1205,43 @@ ttldif <- ttldif[!((!is.na(ttldif$titulo10) & tolower(ttldif$titulo10) == tolowe
                    (!is.na(ttldif$titulo13) & tolower(ttldif$titulo13) == tolower(ttldif$livro.ou.periodico)) |
                    (!is.na(ttldif$titulo17) & tolower(ttldif$titulo17) == tolower(ttldif$livro.ou.periodico))),
                  c("ano", "titulo10", "titulo13", "titulo17", "livro.ou.periodico")]
-ttldif$ano <- as.numeric(as.character(ttldif$ano))
-ttldif$titulo <- ""
-ttldif$titulo[ttldif$ano >= QualQualis["Q10", "ini"] & ttldif$ano <= QualQualis["Q10", "fim"]] <- ttldif$titulo10
-ttldif$titulo[ttldif$ano >= QualQualis["Q13", "ini"] & ttldif$ano <= QualQualis["Q13", "fim"]] <- ttldif$titulo13
-ttldif$titulo[ttldif$ano >= QualQualis["Q17", "ini"] & ttldif$ano <= QualQualis["Q17", "fim"]] <- ttldif$titulo17
-ttldif$ano <- ttldif$titulo10 <- ttldif$titulo13 <- ttldif$titulo17 <- NULL
-ttldif <- ttldif[!is.na(ttldif$titulo), ]
-ttldif <- ttldif[!duplicated(ttldif), c("titulo", "livro.ou.periodico")]
-colnames(ttldif) <- c("Título Qualis", "Título Lattes")
-LimparDif <- function(x)
-{
-    x <- gsub("[\\.,!;:?]", "", x)
-    x <- gsub("  ", " ", x)
-    x
-}
-NDif <- function(x)
-{
-    x1 <- LimparDif(x[1])
-    x2 <- LimparDif(x[2])
-    n2 <- nchar(x1) - 12
-    if(n2 > 2)
-        for(n in 1:n2)
-            if(grepl(tolower(substr(x1, n, n + 12)), tolower(x2), fixed = TRUE))
-                return(FALSE)
-    return(TRUE)
-}
+if(nrow(ttldif) > 0){
+    ttldif$ano <- as.numeric(as.character(ttldif$ano))
+    ttldif$titulo <- ""
+    idx <- ttldif$ano >= QualQualis["Q10", "ini"] & ttldif$ano <= QualQualis["Q10", "fim"]
+    ttldif$titulo[idx] <- ttldif$titulo10[idx]
+    idx <- ttldif$ano >= QualQualis["Q13", "ini"] & ttldif$ano <= QualQualis["Q13", "fim"]
+    ttldif$titulo[idx] <- ttldif$titulo13[idx]
+    idx <- ttldif$ano >= QualQualis["Q17", "ini"] & ttldif$ano <= QualQualis["Q17", "fim"]
+    ttldif$titulo[idx] <- ttldif$titulo17[idx]
+    ttldif$ano <- ttldif$titulo10 <- ttldif$titulo13 <- ttldif$titulo17 <- NULL
+    ttldif <- ttldif[!is.na(ttldif$titulo), ]
+    ttldif <- ttldif[!duplicated(ttldif), c("titulo", "livro.ou.periodico")]
+    colnames(ttldif) <- c("Título Qualis", "Título Lattes")
+    LimparDif <- function(x)
+    {
+        x <- gsub("[\\.,!;:?]", "", x)
+        x <- gsub("  ", " ", x)
+        x
+    }
+    NDif <- function(x)
+    {
+        x1 <- LimparDif(x[1])
+        x2 <- LimparDif(x[2])
+        n2 <- nchar(x1) - 12
+        if(n2 > 2)
+            for(n in 1:n2)
+                if(grepl(tolower(substr(x1, n, n + 12)), tolower(x2), fixed = TRUE))
+                    return(FALSE)
+        return(TRUE)
+    }
 
-i <- apply(ttldif, 1, NDif)
-ttldif[i, 1] <- paste("\\rowcolor{ninval}", ttldif[i, 1])
+    i <- apply(ttldif, 1, NDif)
+    ttldif[i, 1] <- paste("\\rowcolor{ninval}", ttldif[i, 1])
+} else {
+    ttldif <- ttldif[, c("ano", "livro.ou.periodico")]
+    colnames(ttldif) <- c("Título Qualis", "Título Lattes")
+}
 
 # Lista de periódicos sem qualis
 semqualis <- p[p$qualis == "SQ", c("isxn", "livro.ou.periodico")]
