@@ -12,6 +12,7 @@ options(OutDec = ",")
 opts_chunk$set(echo=FALSE, cache=FALSE,  fig.width=6, fig.height=3, fig.align="center", results='asis')
 
 library("ineq")
+library("cld2")
 
 SPRINTF <- function(fmt, x) {sub("\\.", ",", sprintf(fmt, x))}
 
@@ -403,6 +404,7 @@ Tabela(tab, cap = "Instituição doutorado", hline = nrow(tab))
 
 Como pode ser visto na Tabela~\ref{tab:posdoc}, dos \Sexpr{nrow(doutor)}
 professores do programa, \Sexpr{length(levels(factor(posdoc$Professor)))}
+(\Sexpr{round(100*length(levels(factor(posdoc$Professor)))/nrow(doutor))}\%)
 realizaram pós-doutorado pelo menos uma vez.
 
 <<posdoc, warning=FALSE>>=
@@ -648,30 +650,31 @@ Tabela(tab, alin = paste(c("L", rep("r", ncol(producao))), collapse = "|"),
 
 \clearpage
 
-A Tabela \ref{tab:idi} mostra o idioma detectado pela análise automática do
-títulos dos artigos e capítulos ou de livro.\footnote{Função
+A Tabela \ref{tab:idi} mostra o idioma detectado pela análise automática dos
+títulos dos artigos e capítulos ou livros.\footnote{Função
 \texttt{detect\_language} do pacote \texttt{cld2}.} O percentual de erros na
 identificação do idioma é relativamente elevado.
 
 <<idiomacld2>>=
-library("cld2")
 idi1 <- detect_language(p$producao, lang_code = FALSE)
 idi2 <- detect_language(p$livro.ou.periodico, lang_code = FALSE)
 idi1[is.na(idi1) | idi1 == "GALICIAN"] <- idi2[is.na(idi1) | idi1 == "GALICIAN"]
 til <- grepl("ã", tolower(p$producao))
-idi1[til & (is.na(idi1) | idi1 == "GALICIAN")] <- "PORTUGUESE"
+idi1[til & !is.na(idi1)] <- "PORTUGUESE"
+idi1[!is.na(idi1) & idi1 == "GALICIAN"] <- "PORTUGUESE"
 idi1[is.na(idi1)] <- "Não identificado"
 tab <- sort(tapply(rep(1, length(idi1)), idi1, sum), decreasing = TRUE)
 tab <- data.frame(Idioma = names(tab), Frequência = unname(tab))
+tab$Idioma <- sapply(sapply(strsplit(tab$Idioma, ""), function(x) c(x[1], sapply(x[2:length(x)], tolower))), paste0, collapse = "")
 Tabela(tab, lbl = "tab:idi", cap = "Frequência do idioma da produção bibliográfica")
 @
-
 
 \clearpage
 
 A Tabela~\ref{tab:nsjr} mostra o percentual de artigos publicados em
 periódicos com SJR por professor e a Tabela~\ref{tab:sjr} mostra a pontuação
-calculada como a soma do índice SJR de cada publicação.
+calculada como a soma do índice SJR \Sexpr{SJR_SNIP_version["SJR"]} de cada
+publicação.
 
 <<nSjr>>=
 Tabela(nSJR, lbl = "tab:nsjr", hline = nrow(nSJR) - 1,
@@ -757,8 +760,9 @@ Tabela(tab, lbl = "tab:sjrcat", alin = "lrr",
 \clearpage
 
 A Tabela~\ref{tab:nSnip} mostra o percentual de artigos publicados em
-periódicos com SNIP por professor e a Tabela~\ref{tab:snip} mostra a pontuação
-calculada como a soma do índice SNIP de cada publicação:
+periódicos com SNIP (\Sexpr{SJR_SNIP_version["SNIP"]}) por professor e a
+Tabela~\ref{tab:snip} mostra a pontuação calculada como a soma do índice SNIP
+de cada publicação:
 
 <<nSnip>>=
 Tabela(nSnip, lbl = "tab:nSnip", hline = nrow(nSnip) -1,
@@ -831,6 +835,8 @@ if(length(tab) > 0){
 Tabela(tab, lbl = "tab:snipcat", alin = "lrr",
        cap = paste0("Classificação dos periódicos com Snip (N = ", sum(!is.na(p$ASJC.field.IDs)), ")"))
 @
+
+\newpage
 
 \subsection{Média móvel}
 

@@ -113,16 +113,16 @@ nlist <- list()
 obter.producao <- function(arquivo)
 {
     if(grepl("zip", arquivo)){
-        if(file.info(paste0("lattes_xml/", arquivo))[["size"]] == 0)
+        if(file.info(paste0("curriculos/", arquivo))[["size"]] == 0)
             stop(paste("Arquivo vazio:", arquivo), call. = FALSE)
-        z <- unzip(paste0("lattes_xml/", arquivo), exdir = "/tmp/")
+        z <- unzip(paste0("curriculos/", arquivo), exdir = "/tmp/")
         if(length(z) == 1 && grepl("curriculo\\.xml", z)){
             xl <- xmlTreeParse("/tmp/curriculo.xml", encoding = "latin1")
         } else {
             stop(paste("Currículo não encontrado em:", arquivo), call. = FALSE)
         }
     } else {
-        xl <- xmlTreeParse(paste0("lattes_xml/", arquivo), encoding = "latin1")
+        xl <- xmlTreeParse(paste0("curriculos/", arquivo), encoding = "latin1")
     }
     if("ERRO" %in% names(xl$doc$children))
         stop(paste0('O currículo do arquivo "', arquivo, '" contém ERRO. Verifique se usou o link correto para baixar o arquivo.'), call. = FALSE)
@@ -340,9 +340,9 @@ obter.producao <- function(arquivo)
     b
 }
 
-lsxml <- c(dir("lattes_xml", pattern = "*.zip"), dir("lattes_xml", pattern = "*.xml"))
+lsxml <- c(dir("curriculos", pattern = "*.zip"), dir("curriculos", pattern = "*.xml"))
 if(length(lsxml) == 0){
-    cat("Nenhum currículo encontrado na pasta 'lattes_xml'\n", file = stderr())
+    cat("Nenhum currículo encontrado na pasta 'curriculos'\n", file = stderr())
     if(!interactive())
         quit(save = "no", status = 1)
 }
@@ -1258,7 +1258,7 @@ save(datacv, quando, doutor, nSJR, nSnip, oriconcTab, oriandTab, posdoc,
      file = "tabs.RData")
 
 cnpqId <- datacv[order(datacv$Professor), ]
-sink("lattes_xml/links_para_Lattes_XML.html")
+sink("curriculos/links_para_Lattes_XML.html")
 cat('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n')
 cat('<html xmlns="http://www.w3.org/1999/xhtml">\n')
 cat('<head>\n')
