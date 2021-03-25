@@ -8,16 +8,9 @@ siglas <- read.delim("siglas_univ.txt", comment.char = "#", stringsAsFactors = F
 issn <- read.delim("scielo_issn.tsv", stringsAsFactors = FALSE)
 issn <- issn[!is.na(issn$issn2), c("issn1", "issn2")]
 
-# Carregar o SJR
-sjrl <- readLines("scimagojr 2018.csv")
-sjrl <- gsub("&#x00..;", "X", sjrl)
-sjrl <- gsub(";;", "\t\t", sjrl)
-sjrl <- gsub("(\\S);(\\S)", "\\1\t\\2", sjrl)
-sjrl <- gsub("(\\S);(\\S)", "\\1\t\\2", sjrl)
-sjrl <- gsub("(\\S);(\\S)", "\\1\t\\2", sjrl)
-sjrl <- gsub('\t"\t', '"\t"', sjrl)
-sjrl <- gsub('"', "", sjrl)
-writeLines(sjrl, "/tmp/scimagojrTAB")
+# Carregar o SJR convertido por aspas_scimago.py
+# porque a função read.csv2 não consegue ler arquivo em aspas são usadas
+# somente em alguns campos e em que o delimitador é usado entre aspas.
 sjr <- read.delim2("/tmp/scimagojrTAB", sep = "\t", fill = FALSE,
                    stringsAsFactors = FALSE)
 sjr <- sjr[!is.na(sjr$SJR), ]
@@ -66,22 +59,23 @@ for(i in 1:nrow(issn)){
 }
 sjr <- rbind(sjr, ss2)
 
+SJR_SNIP_version <- c("SJR" = "2019", "SNIP" = "Abril de 2020")
 
 # Dados do SNIP
 # Obter SNIP de http://www.journalindicators.com/methodology#sthash.FN5cRgxb.dpuf%20
-if(!file.exists("CWTS Journal Indicators May 2018.xlsx")){
+if(!file.exists("CWTS Journal Indicators April 2020.xlsx")){
     cat("Baixando o CWTS Journal Indicators\n")
-    download.file("http://www.journalindicators.com/Content/CWTS%20Journal%20Indicators%20May%202018.xlsx",
-                  destfile = "CWTS Journal Indicators May 2018.xlsx")
+    download.file("http://www.journalindicators.com/Content/CWTS%20Journal%20Indicators%20April%202020.xlsx",
+                  destfile = "CWTS Journal Indicators Abril 2020.xlsx")
 }
 
 library("openxlsx")
-snip.cat <- read.xlsx("CWTS Journal Indicators May 2018.xlsx", 2)
+snip.cat <- read.xlsx("CWTS Journal Indicators April 2020.xlsx", 2)
 names(snip.cat) <- c("id", "Categoria")
 snip.cat$Peso <- 1.0
 
-snip1 <- read.xlsx("CWTS Journal Indicators May 2018.xlsx", 1)
-snip1 <- snip1[snip1$Year == 2017,
+snip1 <- read.xlsx("CWTS Journal Indicators April 2020.xlsx", 1)
+snip1 <- snip1[snip1$Year == 2019,
                c("Source.title", "Source.type", "Print.ISSN",
                  "Electronic.ISSN", "ASJC.field.IDs", "Year", "SNIP")]
 snip1$Print.ISSN <- sub("-", "", snip1$Print.ISSN)
@@ -108,10 +102,6 @@ snip <- snip[snip$isxn != "", c("Source.title", "isxn", "SNIP", "ASJC.field.IDs"
 
 # Remover ISSNs duplicados
 snip <- snip[!duplicated(snip$isxn), ]
-
-SubId <- function(x){
-
-}
 
 ss2 <- list()
 for(i in 1:nrow(issn)){
@@ -144,4 +134,4 @@ if(sum(duplicated(sjrsnip$isxn))){
     cat("ISSN duplicado no SJR/SNIP\n", file = stderr())
 }
 
-save(sjrsnip, sjr.cat, snip.cat, issn, siglas, file = "../SJR_SNIP.RData")
+save(sjrsnip, sjr.cat, snip.cat, SJR_SNIP_version, issn, siglas, file = "../SJR_SNIP.RData")
