@@ -1,14 +1,12 @@
 source("str_title_case.R")
 
 # Novo Qualis (arquivo não oficial)
-QualisXLS <- "Qualis_2017-2018.xlsx"
-names(QualisXLS) <- "Todas as áreas"
 
 q17 <- read.delim("Qualis_2017-2018.tsv", stringsAsFactors = FALSE)
 
 # Usar issn1 e issn2 do Scielo, do SJR e do SNIP para fazer equivalência na
 # tabela Qualis
-load("../SJR_SNIP.RData")
+load("../auxiliar/SJR_SNIP.RData")
 issn <- issn[issn$issn1 != "", ]
 issn <- issn[issn$issn2 != "", ]
 issn <- issn[issn$issn1 != issn$issn2, ]
@@ -42,4 +40,4 @@ if(sum(duplicated(q17$isxn))){
     dup[order(dup$isxn), ]
 }
 
-save(q17, QualisXLS, file = "qualis_2017_2020.RData")
+save(q17, file = "qualis_2017_2020.RData")

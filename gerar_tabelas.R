@@ -1,46 +1,12 @@
 library("XML")
 
-# Variáveis cujos valores devem ser substituídos no info.R:
-NomeProg <- "Ciência Política e Relações Internacionais"
-TituloDoc <- "Produção dos Professores do PPG em Ciência Política e Relações Internacionais"
-NomeComite <- "Ciência Política e Relações Internacionais"
-Autor <- "PPG"
-PontosQualis10 <- data.frame(qualis = c("A1", "A2", "B1", "B2", "B3", "B4", "B5",
-                                        "C", "SQ", "OD", "Lvr", "Org", "Cap"),
-                             pontos = c(100, 85, 70, 30, 20, 15, 10, 0, 0, 0,
-                                        60, 30, 15))
-
-PontosQualis13 <- PontosQualis10
-
-PontosQualis17 <- data.frame(qualis = c("A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4",
-                                        "C", "SQ", "OD", "Lvr", "Org", "Cap"),
-                             pontos = c(100, 85, 70, 55, 20, 15, 10, 5, 0, 0, 10,
-                                        100, 55, 30))
-
-# Pesos para cálculo da média ponderada,
-PesoArtigos <- 0.7
-PesoLivros <- 0.3
-# Período do relatório
-Inicio <- 2017
-Fim <- 2019
-QualisPorTitulo <- FALSE
-OrdenarOrientacaoPorNome <- FALSE
-
-QualQualis <- rbind("Q10" = c("ini" = 1900, "fim" = 2012),
-                    "Q13" = c(2013, 2016),
-                    "Q17" = c(2017, 2099))
-
 # Carregar dados do SJR e SNIP
-load("SJR_SNIP.RData")
+load("bases_dados.RData")
 
 # A leitura do info.R fica aqui para possibilitar a alteração dos pesos das
 # diferentes categorias do SJR e SNIP.
 if(file.exists("info.R"))
     source("info.R")
-
-load("qualis/qualis_2010_2012.RData")
-load("qualis/qualis_2013_2016.RData")
-load("qualis/qualis_2017_2020.RData")
 
 if(NomeComite %in% names(q13)){
     q10 <- q10[[NomeComite]]
@@ -78,6 +44,7 @@ html2tex <- function(x) {
     x
 }
 
+# Substituir nomes de institições por suas siglas
 NomeSigla <- function(x)
 {
     for(i in 1:nrow(siglas))
@@ -85,6 +52,7 @@ NomeSigla <- function(x)
     x
 }
 
+# Abreviar nomes cujas siglas não foram encontradas
 AbreviarInstituicao <- function(x)
 {
     x <- sub("Universidade", "U.", x, ignore.case = TRUE)
@@ -352,9 +320,7 @@ p <- as.data.frame(xx, stringsAsFactors = FALSE)
 p <- p[!is.na(p$ano) & p$ano != "", ] # Garantir que o ano esteja especificado
 rm(xx, obter.producao)
 
-
 datacv <- as.data.frame(datacv)
-load("pq.RData")
 pq <- pq[pq$inicio <= Sys.Date() & pq$termino >= Sys.Date(), ]
 
 # Somente uns 4 casos de nomes realmente repetidos:
@@ -532,20 +498,17 @@ pontos <- as.data.frame(rbind(c(Tipo = "Artigo Qualis A1", Código = "A1"),
                                   c("Livro organizado", "Org"),
                                   c("Capítulo de livro", "Cap")), stringsAsFactors = FALSE)
 if(nrow(p10)){
-    colnames(PontosQualis10) <- c("Código", "q10")
+    colnames(PontosQualis10) <- c("Código", "2010--2012")
     pontos <- merge(pontos, PontosQualis10, all.x = TRUE)
 }
 if(nrow(p13)){
-    colnames(PontosQualis13) <- c("Código", "q13")
+    colnames(PontosQualis13) <- c("Código", "2013--16")
     pontos <- merge(pontos, PontosQualis13, all.x = TRUE)
 }
 if(nrow(p17)){
-    colnames(PontosQualis17) <- c("Código", "q17")
+    colnames(PontosQualis17) <- c("Código", "2017--20")
     pontos <- merge(pontos, PontosQualis17, all.x = TRUE)
 }
-colnames(pontos) <- sub("q10", "2010--12", colnames(pontos))
-colnames(pontos) <- sub("q13", "2013--16", colnames(pontos))
-colnames(pontos) <- sub("q17", "2017--20", colnames(pontos))
 
 pcompleto <- p
 
@@ -658,56 +621,10 @@ TabProd <- function(d, v)
     tab
 }
 
-# p$SJR.pond <- p$SJR
-# if(min(sjr.cat$Peso) != max(sjr.cat$Peso)){
-#     p$SJR.pond <- p$SJR * min(sjr.cat$Peso)
-#     SJRPond <- sjr.cat[sjr.cat$Peso > min(sjr.cat$Peso), ]
-#     SJRPond <- SJRPond[order(SJRPond$Peso), ]
-#     SJRPond$Categoria <- as.character(SJRPond$Categoria)
-#     for(i in 1:nrow(SJRPond)){
-#         idx <- grep(paste0("^", SJRPond$Categoria[i], " \\(Q"), p$cat.sjr)
-#         p$SJR.pond[idx] <- SJRPond$Peso[i] * p$SJR[idx]
-#         idx <- grep(paste0("; ", SJRPond$Categoria[i], " \\(Q"), p$cat.sjr)
-#         p$SJR.pond[idx] <- SJRPond$Peso[i] * p$SJR[idx]
-#     }
-#     SJRPond <- SJRPond[order(SJRPond$Peso, decreasing = TRUE), ]
-#     SJRPond <- rbind(SJRPond,
-#                      data.frame("Categoria" = "Outras categorias",
-#                                 "Peso" = min(sjr.cat$Peso),
-#                                 stringsAsFactors = FALSE))
-# } else {
-#     SJRPond <- data.frame("Categoria" = "Todas as categorias", "Peso" = max(sjr.cat$Peso))
-# }
-#
-# p$SNIP.pond <- p$SNIP
-# if(min(snip.cat$Peso) != max(snip.cat$Peso)){
-#     p$SNIP.pond <- p$SNIP * min(snip.cat$Peso)
-#     SNIPPond <- snip.cat[snip.cat$Peso > min(snip.cat$Peso), ]
-#     SNIPPond <- SNIPPond[order(SNIPPond$Peso), ]
-#     for(i in 1:nrow(SNIPPond)){
-#         idx <- grep(paste0("^", SNIPPond$id[i]), p$ASJC.field.IDs)
-#         p$SNIP.pond[idx] <- SNIPPond$Peso[i] * p$SNIP[idx]
-#         idx <- grep(paste0("; ", SNIPPond$id[i]),  p$ASJC.field.IDs)
-#         p$SNIP.pond[idx] <- SNIPPond$Peso[i] * p$SNIP[idx]
-#     }
-#     SNIPPond <- SNIPPond[order(SNIPPond$Peso, decreasing = TRUE), ]
-#     SNIPPond <- rbind(SNIPPond,
-#                      data.frame("id" = "",
-#                                 "Categoria" = "Outras categorias",
-#                                 "Peso" = min(snip.cat$Peso),
-#                                 stringsAsFactors = FALSE))
-# } else {
-#     SNIPPond <- data.frame("id" = "",
-#                            "Categoria" = "Todas as categorias",
-#                            "Peso" = max(snip.cat$Peso))
-# }
-
 pontuacaoLvr  <- TabProd(p[p$tipo %in% c("Lvr", "Cap", "Org"), ], "pontos")
 pontuacaoArt  <- TabProd(p[p$tipo == "Artigo", ], "pontos")
 pontuacaoSNIP <- TabProd(p[p$tipo == "Artigo", ], "SNIP")
 pontuacaoSJR  <- TabProd(p[p$tipo == "Artigo", ], "SJR")
-# pontuacaoSJRPond  <- TabProd(p[p$tipo == "Artigo", ], "SJR.pond")
-# pontuacaoSNIPPond  <- TabProd(p[p$tipo == "Artigo", ], "SNIP.pond")
 
 nSJR <- cbind("Não" = tapply(p$SJR[p$tipo == "Artigo"], p$prof[p$tipo == "Artigo"],
                               function(x) sum(is.na(x))),
@@ -1268,12 +1185,9 @@ cat('</head>\n')
 cat('<body>\n')
 cat('<p><strong>Lista dos currículos incluídos no relatório gerado mais recentemente (links para Lattes no formato XML):</strong></p>\n')
 cat('<ol>\n')
-for(i in 1:nrow(cnpqId)){
-    cat('  <li><a href="http://buscatextual.cnpq.br/buscatextual/download.do?metodo=apresentar&idcnpq=',
-        cnpqId$cnpqId[i], '">', cnpqId$Professor[i], '</a></li>\n', sep = "")
-}
+cat(paste0('  <li><a href="http://buscatextual.cnpq.br/buscatextual/download.do?metodo=apresentar&idcnpq=',
+           cnpqId$cnpqId, '">', cnpqId$Professor, '</a></li>\n', sep = "", collapse = ""))
 cat('</ol>\n')
 cat('</body>\n')
 cat('</html>\n')
 sink()
-

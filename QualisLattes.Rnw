@@ -111,8 +111,6 @@ pontuacaoLvr  <- MMG(pontuacaoLvr)
 pontuacaoArt  <- MMG(pontuacaoArt)
 pontuacaoSNIP <- MMG(pontuacaoSNIP, 3, g = TRUE)
 pontuacaoSJR  <- MMG(pontuacaoSJR, 3, g = TRUE)
-# pontuacaoSJRPond  <- MMG(pontuacaoSJRPond, g = TRUE)
-# pontuacaoSNIPPond  <- MMG(pontuacaoSNIPPond, g = TRUE)
 
 if(ncol(oriconcTab) > 2 && nrow(oriconcTab) > 3){
     oriconcTab <- cbind(oriconcTab, "Total" = apply(oriconcTab[, 2:ncol(oriconcTab)], 1, sum, na.rm = TRUE))
@@ -693,35 +691,6 @@ Tabela(pontuacaoSJR, lbl = "tab:sjr", hline = nrow(pontuacaoSJR) - 2,
 
 \clearpage
 
-%A base de dados do SJR inclui uma coluna com as áreas de conhecimento em que o
-%periódico se classifica. A Tabela~\ref{tab:sjrpesos} mostra os pesos
-%atribuídos a cada categoria e a Tabela~\ref{tab:sjrpond} mostra a pontuação
-%obtida pelos professores considerando o escopo dos periódicos em que
-%publicaram.
-%
-%<<sjrsempeso>>=
-%if(min(sjr.cat$Peso) == max(sjr.cat$Peso) && max(sjr.cat$Peso) == 1)
-%    cat("Entretanto, como todos os pesos tem o mesmo valor (1,0), a Tabela \\ref{tab:sjr} é identica à Tabela \\ref{tab:sjrpond}.")
-%@
-%
-%
-%<<sjrpesos>>=
-%print(xtable(SJRPond, label = "tab:sjrpesos",
-%             caption = "Ponderação dos periódicos por categoria"),
-%      include.rownames = FALSE)
-%@
-%
-%\clearpage
-%
-%<<ppg_pontos_sjrpond>>=
-%print(xtable(pontuacaoSJRPond, digits = 3, label = "tab:sjrpond",
-%             align = paste0("l", paste0(rep("r", ncol(pontuacaoSJRPond)), collapse = "")),
-%             caption = "Professores classificados por pontuação ponderada pelo escopo do periódico (Artigos, SJRPond)"),
-%      hline.after = c(-1, 0, nrow(pontuacaoSJRPond) - 3, nrow(pontuacaoSJRPond)))
-%@
-%
-\clearpage
-
 A Tabela~\ref{tab:pais} usa dados do SJR para identificar os locais de
 publicação dos artigos.
 
@@ -781,36 +750,6 @@ Tabela(pontuacaoSNIP, lbl = "tab:snip", hline = nrow(pontuacaoSNIP) - 2,
 
 \clearpage
 
-%Assim como a base do SJR, a base de dados do SNIP também inclui uma coluna com
-%as áreas de conhecimento em que o periódico se classifica. A
-%Tabela~\ref{tab:snippesos} mostra os pesos atribuídos a cada categoria e a
-%Tabela~\ref{tab:snippond} mostra a pontuação obtida pelos professores
-%considerando o escopo dos periódicos em que publicaram.
-%
-%<<snipsempeso>>=
-%if(min(snip.cat$Peso) == max(snip.cat$Peso) && max(snip.cat$Peso) == 1)
-%    cat("Entretanto, como todos os pesos tem o mesmo valor (1,0), a Tabela \\ref{tab:snip} é identica à Tabela \\ref{tab:snippond}.")
-%@
-%
-%
-%<<snippesos>>=
-%print(xtable(SNIPPond, label = "tab:snippesos",
-%             caption = "Ponderação dos periódicos por categoria"),
-%      include.rownames = FALSE)
-%@
-%
-%\clearpage
-%
-%<<ppg_pontos_snippond>>=
-%print(xtable(pontuacaoSNIPPond, digits = 3, label = "tab:snippond",
-%             align = paste0("l", paste0(rep("r", ncol(pontuacaoSNIPPond)), collapse = "")),
-%             caption = "Professores classificados por pontuação ponderada pelo escopo do periódico (Artigos, SNIPPond)"),
-%      hline.after = c(-1, 0, nrow(pontuacaoSNIPPond) - 3, nrow(pontuacaoSNIPPond)))
-%@
-%
-
-\clearpage
-
 Assim como o SJR, o SNIP também classifica seus periódicos por área temática.
 Um mesmo periódico pode ser classificado em mais de uma categoria, e a Tabela
 \ref{tab:snipcat} mostra a frequência das categorias atribuídas aos periódicos
@@ -861,6 +800,8 @@ tab$Referência <- sub("Q13", paste0("Qualis 2013--2016 (", NomeComite, ")"), ta
 tab$Referência <- sub("Q17", "Qualis 2017--2020 (Qualis único, não oficial e proviśorio)", tab$Referência)
 amin <- min(sapply(mm, function(x) min(as.numeric(names(x)))))
 amax <- max(sapply(mm, function(x) max(as.numeric(names(x)))))
+tab <- tab[tab$De <= amax, ]
+tab <- tab[tab$Até >= amin, ]
 tab$De[tab$De < amin] <- amin
 tab$De[tab$De > amax] <- amax
 tab$Até[tab$Até < amin] <- amin

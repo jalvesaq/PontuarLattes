@@ -1,0 +1,6 @@
+load("bpq/pq.RData")
+load("SJR_SNIP.RData")
+load("../qualis/qualis_2010_2012.RData")
+load("../qualis/qualis_2013_2016.RData")
+load("../qualis/qualis_2017_2020.RData")
+save(list = ls(all.names = FALSE), file = "../bases_dados.RData")

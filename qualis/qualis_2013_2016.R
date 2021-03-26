@@ -1,14 +1,14 @@
 source("str_title_case.R")
 
 # Ler arquivo baixado da Plataforma Sucupira:
-QualisXLS <- "classificacoes_publicadas_todas_as_areas_avaliacao1522078273541.xls"
-q13 <- read.delim(QualisXLS, fileEncoding = "Latin1", stringsAsFactors = FALSE)
+q13 <- read.delim("classificacoes_publicadas_todas_as_areas_avaliacao1522078273541.xls",
+                  fileEncoding = "Latin1", stringsAsFactors = FALSE)
 
 q13$Área.de.Avaliação <- str_title_case(q13$Área.de.Avaliação)
 q13$Título <- str_title_case(q13$Título)
 names(q13) <- c("isxn", "titulo13", "area", "q13")
 
-load("../SJR_SNIP.RData")
+load("../auxiliar/SJR_SNIP.RData")
 issn <- issn[issn$issn1 != "", ]
 issn <- issn[issn$issn2 != "", ]
 issn <- issn[issn$issn1 != issn$issn2, ]
@@ -58,4 +58,4 @@ if(sum(duplicated(q13$isxn))){
     dup[order(dup$isxn), ]
 }
 
-save(QualisXLS, q13, file = "qualis_2013_2016.RData")
+save(q13, file = "qualis_2013_2016.RData")
