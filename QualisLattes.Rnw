@@ -236,7 +236,10 @@ if(!exists("MainFont")){
 
 Este relatório foi produzido com scripts desenvolvidos por Jakson Alves de
 Aquino\footnote{Professor do Departamento de Ciências Sociais da Universidade
-Federal do Ceará. E-mail: jaa@ufc.br} e disponibilizados em
+Federal do Ceará (e-mail: jaa@ufc.br). Dalson Britto Figueiredo Filho, Adriano
+Nervo Codato e Andréa Marcondes de Freitas contribuíram com várias sugestões
+de melhorias, mas não têm nenhuma responsabilidade por eventais limitações ou
+erros do software.} e disponibilizados em
 \url{https://github.com/jalvesaq/PontuarLattes}.
 
 O relatório ajuda a identificar problema no preenchimento do Lattes pelos
