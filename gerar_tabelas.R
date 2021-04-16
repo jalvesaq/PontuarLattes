@@ -14,7 +14,8 @@ if(NomeComite %in% names(q13)){
 } else {
     writeLines(names(q13), "nomes_validos.txt")
     cat(paste0("Variável 'NomeComite' inválida: '", NomeComite,
-               "'.\nVeja o arquivo 'nomes_validos.txt'.\n"), file = stderr())
+               "'.\nNomes válidos:\n"), file = stderr())
+    cat(paste0('  "', paste0(names(q13), collapse = '"\n  "'), '"\n'))
     if(!interactive())
         quit(save = "no", status = 1)
 }
@@ -575,6 +576,8 @@ if(length(doutorado) > 1){
     doutor <- doutor[notdup, ]
     doutor <- as.data.frame(doutor, stringsAsFactors = FALSE)
     doutor$Ano <- as.numeric(doutor$Ano)
+    doutor[["Instituição doutorado"]] <- NomeSigla(sapply(doutor[["Instituição doutorado"]], html2tex))
+    doutor[["Nome do curso"]] <- sapply(doutor[["Nome do curso"]], html2tex)
 } else {
     doutor <- NULL
 }
