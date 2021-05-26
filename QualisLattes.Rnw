@@ -4,6 +4,8 @@
 \usepackage{geometry}
 \geometry{a4paper,landscape,left=2cm,right=2cm,top=2cm,bottom=2cm}
 
+\newcounter{tabela}
+
 <<loadlibraries, echo=FALSE, cache=FALSE, message=FALSE, warning=FALSE, error=FALSE>>=
 if(grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
     Sys.setenv(LANGUAGE = "pt_BR.UTF-8")
@@ -40,15 +42,14 @@ Tabela <- function(tab, cap = "Sem título", alin, lbl, hline)
     for(n in 1:ncol(tab))
         tab[[n]] <- CharSemNA(tab[[n]])
 
+    cat("\\phantomsection\\stepcounter{tabela}\\addcontentsline{lot}{table}{Tabela \\thetabela: ", cap, "}\n", sep = "")
+    if (!missing(lbl))
+        cat("\\label{", lbl,"}\n")
     if(grepl("L", alin))
         cat("\\begin{ltabulary}{", alin, "}\n", sep = "")
     else
         cat("\\begin{longtable}{", alin, "}\n", sep = "")
-    if(missing(lbl)){
-        cat("\\caption{", cap, "} \\\\\n", sep = "")
-    } else {
-        cat("\\caption{", cap, "\\label{", lbl, "}}\\\\\n", sep = "")
-    }
+    cat("\\multicolumn{", ncol(tab), "}{c}{\\textbf{Tabela \\thetabela: ", cap, "}} \\\\\n", sep = "")
     cat("  \\toprule\n")
     cat(paste(Bold(colnames(tab)), collapse = " & "), "\\\\\n")
     cat("\\midrule\n")
@@ -166,7 +167,6 @@ if(!exists("MainFont")){
 
 \usepackage{fontspec}
 \setmainfont{\Sexpr{MainFont}}
-\usepackage[font=bf]{caption5}
 \usepackage{float}
 \usepackage{longtable}
 \usepackage{colortbl}
@@ -312,8 +312,10 @@ deste relatório. Os dados das bolsas foram extraídos do site do
 CNPq.\footnote{\url{http://plsql1.cnpq.br/divulg/RESULTADO_PQ_102003.curso},
 acesso em 11 de março de 2021.}
 
+
+\phantomsection\stepcounter{tabela}\addcontentsline{lot}{table}{Tabela \thetabela: Links para ORCID e Lattes, atualização do Currículo Lattes e bolsa PQ}
 \begin{longtable}{cclrll}
-\caption{Links para ORCID e Lattes, atualização do Currículo Lattes e bolsa PQ} \\
+    \multicolumn{6}{c}{\textbf{Tabela \thetabela: Links para ORCID e Lattes, atualização do Currículo Lattes e bolsa PQ}} \\
   \toprule
     \multicolumn{2}{c}{\textbf{Links}} & \textbf{Professor} & \textbf{Dias} &
     \multicolumn{2}{c}{\textbf{Bolsa PQ (Área)}} \\
@@ -351,8 +353,9 @@ if(!is.null(doutor)){
     cap <- "Curso de doutorado"
     alin <- "LLLcc"
 
+    cat("\\phantomsection\\stepcounter{tabela}\\addcontentsline{lot}{table}{Tabela \\thetabela: ", cap, "}\n", sep = "")
     cat("\\begin{ltabulary}{", alin, "}\n", sep = "")
-    cat("\\caption{", cap, "} \\\\\n", sep = "")
+    cat("\\multicolumn{", ncol(tab), "}{c}{\\textbf{Tabela \\thetabela: ", cap, "}} \\\\\n", sep = "")
     cat("  \\toprule\n")
     cat(paste(Bold(colnames(tab)), collapse = " & "), "\\\\\n")
     cat("\\midrule\n")
@@ -403,7 +406,7 @@ Tabela(tab, cap = "Instituição doutorado", hline = nrow(tab))
 
 \clearpage
 
-Como pode ser visto na Tabela~\ref{tab:posdoc}, dos \Sexpr{nrow(doutor)}
+Como pode ser visto na tabela seguinte, dos \Sexpr{nrow(doutor)}
 professores do programa, \Sexpr{length(levels(factor(posdoc$Professor)))}
 (\Sexpr{round(100*length(levels(factor(posdoc$Professor)))/nrow(doutor))}\%)
 realizaram pós-doutorado pelo menos uma vez.
@@ -432,7 +435,7 @@ if(length(premios) == 0){
 
 \section{Orientações}
 
-Nas tabelas \ref{tab:oriconc}, \ref{tab:detoriconc}, \ref{tab:oriand} e \ref{tab:oriandDet},
+Nas tabelas seguintes,
 M = Mestrado,
 O = Outros,
 IC = Iniciação científica,
@@ -499,7 +502,7 @@ Tabela(tab, cap = "Detalhamento das orientações em andamento", alin = "LclLL",
 
 \section{Ensino}
 
-A Tabela \ref{tab:ensino} mostra o número de vezes que o item ``Ensino'' foi
+A tabela seguinte mostra o número de vezes que o item ``Ensino'' foi
 registrado no Lattes como iniciado e concluído no período \Sexpr{Inicio}--\Sexpr{Fim}.
 <<notaEns>>=
 if(exists("PeriodoProf"))
@@ -516,7 +519,7 @@ Tabela(ensinoTab, lbl = "tab:ensino",
 
 \section{Extensão}
 
-A Tabela \ref{tab:extensao} mostra o número de vezes que o item ``Atividades
+A tabela seguinte mostra o número de vezes que o item ``Atividades
 de Extensão'' foi registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
 <<notaExt>>=
 if(exists("PeriodoProf"))
@@ -537,7 +540,7 @@ if((nrow(extensaoTab) + nrow(projextTab)) > 10)
     cat("\n\n\\newpage\n\n")
 @
 
-A Tabela \ref{tab:projext} mostra o número de vezes que o item ``Projeto de Extensão'' foi
+A tabela seguinte mostra o número de vezes que o item ``Projeto de Extensão'' foi
 registrado no Lattes no período \Sexpr{Inicio}--\Sexpr{Fim}.
 
 <<tabProjExt, warning=FALSE>>=
@@ -556,7 +559,7 @@ if(ncol(projextTab) == 1){
 
 \subsection{Produção no período \Sexpr{Inicio}--\Sexpr{Fim}}
 
-A Tabela \ref{tab:pontos} mostra os valores atribuídos aos diferentes níveis
+A tabela seguinte mostra os valores atribuídos aos diferentes níveis
 de classificação Qualis dos periódicos. Não temos os dados dos Qualis Livros
 e, por isso, livros e capítulos de livros estão recebendo pontuação
 independente da sua classificação no Qualis Livros.
@@ -574,8 +577,8 @@ pmediapon <- round(PesoLivros * as.numeric(sub(",", ".", pmediaL)) +
     PesoArtigos * as.numeric(sub(",", ".", pmediaA)), 1)
 @
 
-Seguindo os valores da Tabela \ref{tab:pontos} (nos períodos definidos na
-Tabela~\ref{tab:qQmm}), a pontuação total média dos professores do
+Seguindo os valores da Tabela anterior (nos períodos definidos na
+tabela com a lista dos Qualis utilizados (~\pageref{tab:qQmm}), a pontuação total média dos professores do
 \emph{\Sexpr{NomeProg}} no período \Sexpr{Inicio}--\Sexpr{Fim} na produção de
 livros e capítulos foi de \textbf{\Sexpr{pmediaL}} pontos e a mediana de
 \textbf{\Sexpr{pmedianaL}} pontos e na produção de artigos foi de
@@ -608,7 +611,7 @@ Tabela(pontuacaoArt,
 
 \clearpage
 
-A Tabela~\ref{tab:pond} apresenta a classificação dos professores quando sua
+A tabela seguinte apresenta a classificação dos professores quando sua
 produção é ponderada de acordo com os pesos já mencionados. Além da média e da
 mediana, uma linha adicional, indicadora da concentração da produção,
 apresenta o índice de Gini para livros, artigos e para a média ponderada dos
@@ -651,7 +654,7 @@ Tabela(tab, alin = paste(c("L", rep("r", ncol(producao))), collapse = "|"),
 
 \clearpage
 
-A Tabela \ref{tab:idi} mostra o idioma detectado pela análise automática dos
+A tabela seguinte mostra o idioma detectado pela análise automática dos
 títulos dos artigos e capítulos ou livros.\footnote{Função
 \texttt{detect\_language} do pacote \texttt{cld2}.} O percentual de erros na
 identificação do idioma é relativamente elevado.
@@ -672,10 +675,9 @@ Tabela(tab, lbl = "tab:idi", cap = "Frequência do idioma da produção bibliogr
 
 \clearpage
 
-A Tabela~\ref{tab:nsjr} mostra o percentual de artigos publicados em
-periódicos com SJR por professor e a Tabela~\ref{tab:sjr} mostra a pontuação
-calculada como a soma do índice SJR \Sexpr{SJR_SNIP_version["SJR"]} de cada
-publicação.
+As tabelas mostram o percentual de artigos publicados em periódicos com SJR
+por professor e a pontuação calculada como a soma do índice SJR
+\Sexpr{SJR_SNIP_version["SJR"]} de cada publicação.
 
 <<nSjr>>=
 Tabela(nSJR, lbl = "tab:nsjr", hline = nrow(nSJR) - 1,
@@ -694,7 +696,7 @@ Tabela(pontuacaoSJR, lbl = "tab:sjr", hline = nrow(pontuacaoSJR) - 2,
 
 \clearpage
 
-A Tabela~\ref{tab:pais} usa dados do SJR para identificar os locais de
+A tabela seguinte usa dados do SJR para identificar os locais de
 publicação dos artigos.
 
 <<paises>>=
@@ -707,7 +709,7 @@ Tabela(pais, alin = "Lr", lbl = "tab:pais", cap = "País da editora do periódic
 \clearpage
 
 O SJR classifica seus periódicos por área temática. Um mesmo periódico pode
-ser classificado em mais de uma categoria, e a Tabela \ref{tab:sjrcat} mostra
+ser classificado em mais de uma categoria, e a tabela seguinte mostra
 a frequência das categorias atribuídas aos periódicos publicados pelos
 professores.
 
@@ -731,10 +733,9 @@ Tabela(tab, lbl = "tab:sjrcat", alin = "lrr",
 
 \clearpage
 
-A Tabela~\ref{tab:nSnip} mostra o percentual de artigos publicados em
-periódicos com SNIP (\Sexpr{SJR_SNIP_version["SNIP"]}) por professor e a
-Tabela~\ref{tab:snip} mostra a pontuação calculada como a soma do índice SNIP
-de cada publicação:
+As tabelas seguintes mostram o percentual de artigos publicados em periódicos
+com SNIP (\Sexpr{SJR_SNIP_version["SNIP"]}) por professor e a pontuação
+calculada como a soma do índice SNIP de cada publicação:
 
 <<nSnip>>=
 Tabela(nSnip, lbl = "tab:nSnip", hline = nrow(nSnip) -1,
@@ -754,8 +755,8 @@ Tabela(pontuacaoSNIP, lbl = "tab:snip", hline = nrow(pontuacaoSNIP) - 2,
 \clearpage
 
 Assim como o SJR, o SNIP também classifica seus periódicos por área temática.
-Um mesmo periódico pode ser classificado em mais de uma categoria, e a Tabela
-\ref{tab:snipcat} mostra a frequência das categorias atribuídas aos periódicos
+Um mesmo periódico pode ser classificado em mais de uma categoria, e a tabela
+seguinte mostra a frequência das categorias atribuídas aos periódicos
 publicados pelos professores.
 
 <<catSnip>>=
@@ -792,8 +793,9 @@ representa a média móvel da produção média de todos os professores,
 correspondendo à media dos professores permanentes do programa somente nos
 anos mais recentes, em que a composição do corpo docente for a mesma da atual.
 No cálculo da pontuação dos artigos, foram utilizados os Qualis indicados na
-Tabela~\ref{tab:qQmm}.
+tabela seguinte.
 
+\label{tab:qQmm}
 <<qQmm>>=
 tab <- data.frame(Referência = rownames(QualQualis),
                   De = QualQualis[, "ini"],
@@ -837,7 +839,7 @@ if(length(mm)){
 
 \section{Apêndices}
 
-A Tabela \ref{tab:ncoaut} lista a produção com coautoria entre professores do
+A tabela seguinte lista a produção com coautoria entre professores do
 programa e, nas três últimas colunas, mostra o número de autores, sendo a
 coautoria identificada de acordo com três métodos:
 
@@ -849,8 +851,9 @@ coautoria identificada de acordo com três métodos:
  ~~~~~~~~~ &  \textbf{V} & Coincidência de ISSN/ISBN, ano, tipo de produção (livro, artigo ou capítulo), volume, número e página inicial. \\
 \end{tabular}
 
+\phantomsection\stepcounter{tabela}\addcontentsline{lot}{table}{Tabela \thetabela: Trabalhos produzidos em coautoria}
 \begin{longtable}{|E{3cm}|E{6cm}|c|E{5cm}|r|r|r|r|}
-    \caption{Trabalhos produzidos em coautoria}\label{tab:ncoaut} \\
+    \multicolumn{8}{c}{\textbf{Tabela \thetabela: Trabalhos produzidos em coautoria}} \\
     \hline
     \multirow{2}{*}{\textbf{Professor}} & \multirow{2}{*}{\textbf{Produção}} &
     \multirow{2}{*}{\textbf{Ano}} & \multirow{2}{*}{\textbf{Livro ou periódico}} &
@@ -883,7 +886,7 @@ if(nrow(coaut) > 0){
 
 <<printerros, warning=FALSE>>=
 if(sum(proddet$erro == "coautr") > 0){
-    cat("\\textbf{Legenda de informação adicional indicada na Tabela \\ref{tab:proddet}}:\n\n")
+    cat("\\textbf{Legenda de informação adicional indicada na tabela seguinte}:\n\n")
     cat("\\begin{tabular}{E{23.5cm}}\n")
     cat("\\rowcolor{coautr}Produção realizada em coautoria por mais de um professor do programa.\\\\\n")
     cat("\\end{tabular}\n\n\n")
@@ -891,7 +894,7 @@ if(sum(proddet$erro == "coautr") > 0){
 }
 
 if(sum(c("capdup", "ncarac", "ninval", "duplic") %in% proddet$erro)){
-    cat("\\textbf{Legenda de erros de preenchimento do Lattes indicados na Tabela \\ref{tab:proddet}}:\n\n")
+    cat("\\textbf{Legenda de erros de preenchimento do Lattes indicados na tabela seguinte}:\n\n")
     cat("\\begin{tabular}{E{23.5cm}}\n")
 
     if(sum(grepl("capdup", proddet$erro)) > 0){
@@ -915,6 +918,7 @@ if(sum(c("capdup", "ncarac", "ninval", "duplic") %in% proddet$erro)){
 @
 
 \small
+\label{tab:proddet}
 <<printTabProdDet>>=
 prddt <- proddet
 prddt$erro <- NULL
@@ -924,7 +928,7 @@ Tabela(prddt, alin = "lllrrllrr", lbl = "tab:proddet", cap = "Produção detalha
 
 \clearpage
 
-A Tabela \ref{tab:ttldif} tem o objetivo de ajudar a identificar erros de
+A tabela seguinte tem o objetivo de ajudar a identificar erros de
 digitação nos títulos dos periódicos, podendo ser uma diferença tão pequena
 quanto uma vogal sem acento. Constam da tabela os títulos com pelo menos uma
 letra diferente do título de mesmo ISSN na planilha Qualis. Adicionalmente,
@@ -941,7 +945,7 @@ Tabela(ttldif, alin = "LL", lbl = "tab:ttldif", hline = 2:nrow(ttldif),
 Periódicos podem estar sem Qualis porque não foram ainda classificados pelo
 comitê da área ou porque o professor errou a digitação do ISSN no currículo
 Lattes. Para descobrir se foi um erro de digitação, veja na
-Tabela~\ref{tab:proddet} quem foi o professor que publicou no periódico,
+tabela da produção detalhada (página~\pageref{tab:proddet}) quem foi o professor que publicou no periódico,
 descubra qual o ISSN correto do periódico e verifique no currículo Lattes do
 professor se os dados foram digitados corretamente.
 
