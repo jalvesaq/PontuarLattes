@@ -78,6 +78,8 @@ source("gerar_tabelas.R")
 
 # Formatar data.frames para exibição no relatório QualisLattes.pdf
 MMG <- function(tab, r, g = FALSE) {
+    if (ncol(tab) < 3)
+        return(tab)
     tab <- tab[, 2:ncol(tab)]
     media <- apply(tab, 2, mean, na.rm = TRUE)
     mediana <- apply(tab, 2, median, na.rm = TRUE)

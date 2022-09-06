@@ -929,10 +929,10 @@ if (length(projext)) {
 }
 
 # Produção bibliográfica (Livros e Artigos)
-pLvr <- pontuacaoLvr[, c("Professor", "Total")]
-pArt <- pontuacaoArt[, c("Professor", "Total")]
-pLvr$Total <- pLvr$Total / max(pLvr$Total)
-pArt$Total <- pArt$Total / max(pArt$Total)
+pLvr <- pontuacaoLvr[, c(1, ncol(pontuacaoLvr))]
+pArt <- pontuacaoArt[, c(1, ncol(pontuacaoArt))]
+pLvr[, 2] <- pLvr[, 2] / max(pLvr[, 2])
+pArt[, 2] <- pArt[, 2] / max(pArt[, 2])
 colnames(pLvr) <- c("Professor", "Livros")
 colnames(pArt) <- c("Professor", "Artigos")
 
