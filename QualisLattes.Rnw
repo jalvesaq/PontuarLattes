@@ -578,7 +578,7 @@ pmediaL <- pontuacaoLvr[pontuacaoLvr$Professor == "Média", "Total"]
 pmedianaL <- pontuacaoLvr[pontuacaoLvr$Professor == "Mediana", "Total"]
 pmediaA <- pontuacaoArt[pontuacaoArt$Professor == "Média", "Total"]
 pmedianaA <- pontuacaoArt[pontuacaoArt$Professor == "Mediana", "Total"]
-pmediapon <- round(PesoLivros * as.numeric(sub(", ", ".", pmediaL)) +
+pmediapon <- round(PesoLivros * as.numeric(sub(",", ".", pmediaL)) +
     PesoArtigos * as.numeric(sub(",", ".", pmediaA)), 1)
 @
 
