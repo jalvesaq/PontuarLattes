@@ -3,6 +3,25 @@ library("XML")
 # Carregar dados do SJR e SNIP
 load("bases_dados.RData")
 
+# Valores a serem substituídos pelos dados de info.R
+NomeProg <- "Ciência Política e Relações Internacionais"
+TituloDoc <- "Produção dos Professores do PPG em XXXX da Universidade YYYY"
+NomeComite <- "Ciência Política e Relações Internacionais"
+Autor <- "Seu Nome"
+PontosQualis10 <- data.frame(qualis = c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C", "SQ", "OD", "Lvr", "Org", "Cap"),
+                             pontos = c(100,   90,   70,    0,    0,    0,    0,   0,    0,    0,    70,    70,    15))
+PontosQualis13 <- data.frame(qualis = c("A1", "A2", "B1", "B2", "B3", "B4", "B5", "C", "SQ", "OD", "Lvr", "Org", "Cap"),
+                             pontos = c(100,   90,   70,    0,    0,    0,    0,   0,    0,    0,    70,    70,    15))
+PontosQualis17 <- data.frame(qualis = c("A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C", "SQ", "OD", "Lvr", "Org", "Cap"),
+                             pontos = c(100,   90,   70,   60,    0,    0,    0,    0,    0,   0,    0,    70,    70,    15))
+QualQualis <- rbind("Q10" = c("ini" = 1900, "fim" = 2012), "Q13" = c(2013, 2016), "Q17" = c(2017, 2099))
+QualisPorTitulo <- FALSE
+OrdenarOrientacaoPorNome <- FALSE
+PesoArtigos <- 0.65
+PesoLivros <- 0.35
+Inicio <- 2017
+Fim <- 2020
+
 # A leitura do info.R fica aqui para possibilitar a alteração dos pesos das
 # diferentes categorias do SJR e SNIP.
 if (file.exists("info.R"))
@@ -33,7 +52,7 @@ if (sum(duplicated(qualis$isxn))) {
 # http://stackoverflow.com/questions/5060076/convert-html-character-entity-encoding-in-r
 # Convenience function to convert html codes
 html2tex <- function(x) {
-    if (is.na(x) | x == "")
+    if (is.na(x) || x == "")
         return(x)
     x <- xpathApply(htmlParse(x, asText = TRUE, encoding = "UTF-8"),
                     "//body//text()", xmlValue)[[1]]
@@ -92,10 +111,14 @@ obter.producao <- function(arquivo) {
         xl <- xmlTreeParse(paste0("curriculos/", arquivo), encoding = "latin1")
     }
     if ("ERRO" %in% names(xl$doc$children))
-        stop(paste0('O currículo do arquivo "', arquivo, '" contém ERRO. Verifique se usou o link correto para baixar o arquivo.'), call. = FALSE)
+        stop(paste0('O currículo do arquivo "', arquivo,
+                    '" contém ERRO. ",
+                    "Verifique se usou o link correto para baixar o arquivo.'),
+             call. = FALSE)
     xl <- xl$doc$children$`CURRICULO-VITAE`
     if (is.null(xl))
-        stop(paste0('O arquivo "', arquivo, '" não inclui um currículo Lattes.'), call. = FALSE)
+        stop(paste0('O arquivo "', arquivo,
+                    '" não inclui um currículo Lattes.'), call. = FALSE)
     prof <- xl$children$`DADOS-GERAIS`
     nomep <- prof$attributes[["NOME-COMPLETO"]]
     # Currículos não atualizados há muito tempo não têm o campo ORCID-ID
@@ -146,8 +169,8 @@ obter.producao <- function(arquivo) {
         for (ii in seq_along(oa)) {
             if (length(oa[[ii]]$children) > 1)
                 oriand[[length(oriand) + 1]] <<- c("Professor" = nomep,
-                                                 oa[[ii]]$children[[1]]$attributes[c("NATUREZA", "ANO")],
-                                                 oa[[ii]]$children[[2]]$attributes[c("NOME-DO-ORIENTANDO", "NOME-INSTITUICAO")])
+                                                   oa[[ii]]$children[[1]]$attributes[c("NATUREZA", "ANO")],
+                                                   oa[[ii]]$children[[2]]$attributes[c("NOME-DO-ORIENTANDO", "NOME-INSTITUICAO")])
         }
     }
 
@@ -179,11 +202,11 @@ obter.producao <- function(arquivo) {
         if ("ATIVIDADES-DE-EXTENSAO-UNIVERSITARIA" %in% names(yy))
             for (ens in yy$`ATIVIDADES-DE-EXTENSAO-UNIVERSITARIA`$children) {
                 extensao[[length(extensao) + 1]] <<- c("Professsor" = nomep,
-                                                 ens$attributes[c("ATIVIDADE-DE-EXTENSAO-REALIZADA",
-                                                                  "MES-INICIO",
-                                                                  "ANO-INICIO",
-                                                                  "MES-FIM",
-                                                                  "ANO-FIM")])
+                                                       ens$attributes[c("ATIVIDADE-DE-EXTENSAO-REALIZADA",
+                                                                        "MES-INICIO",
+                                                                        "ANO-INICIO",
+                                                                        "MES-FIM",
+                                                                        "ANO-FIM")])
             }
     }
 
@@ -196,11 +219,11 @@ obter.producao <- function(arquivo) {
                     if ("NATUREZA" %in% names(prj$attributes) &&
                        prj$attributes["NATUREZA"] == "EXTENSAO") {
                         projext[[length(projext) + 1]] <<- c("Professsor" = nomep,
-                                                           prj$attributes[c("NOME-DO-PROJETO",
-                                                                            "MES-INICIO",
-                                                                            "ANO-INICIO",
-                                                                            "MES-FIM",
-                                                                            "ANO-FIM")])
+                                                             prj$attributes[c("NOME-DO-PROJETO",
+                                                                              "MES-INICIO",
+                                                                              "ANO-INICIO",
+                                                                              "MES-FIM",
+                                                                              "ANO-FIM")])
                     }
                 }
             }
@@ -699,9 +722,8 @@ if (length(oriconc)) {
     oc$Natureza <- gsub("\\\\_",  "_", oc$Natureza)
     oc$Natureza <- sub("Dissertação de mestrado", "M", oc$Natureza)
     oc$Natureza <- sub("INICIACAO_CIENTIFICA", "IC", oc$Natureza)
-    oc$Natureza <-
-        sub("MONOGRAFIA_DE_CONCLUSAO_DE_CURSO_APERFEICOAMENTO_E_ESPECIALIZACAO", "E",
-            oc$Natureza)
+    oc$Natureza <- sub("MONOGRAFIA_DE_CONCLUSAO_DE_CURSO_APERFEICOAMENTO_E_ESPECIALIZACAO",
+                       "E", oc$Natureza)
     oc$Natureza <- sub("ORIENTACAO-DE-OUTRA-NATUREZA", "O", oc$Natureza)
     oc$Natureza <- sub("Supervisão de pós-doutorado", "PD", oc$Natureza)
     oc$Natureza <- sub("Tese de doutorado", "D", oc$Natureza)
@@ -730,11 +752,11 @@ if (length(oriconc)) {
         ro <- order(rownames(oriconcTab))
     } else {
         ro <- seq_len(nrow(oriconcTab))
-        if ("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem) {
+        if ("PD" %in% ordem && "D" %in% ordem && "M" %in% ordem) {
             ro <- order(oriconcTab[, "PD"], oriconcTab[, "D"], oriconcTab[, "M"],
                         decreasing = TRUE)
         } else {
-            if ("D" %in% ordem & "M" %in% ordem) {
+            if ("D" %in% ordem && "M" %in% ordem) {
                 ro <- order(oriconcTab[, "D"], oriconcTab[, "M"], decreasing = TRUE)
             } else {
                 if ("M" %in% ordem)
@@ -834,11 +856,11 @@ if (length(oriand)) {
         ro <- order(rownames(oriandTab))
     } else {
         ro <- seq_len(nrow(oriandTab))
-        if ("PD" %in% ordem & "D" %in% ordem & "M" %in% ordem) {
+        if ("PD" %in% ordem && "D" %in% ordem && "M" %in% ordem) {
             ro <- order(oriandTab[, "PD"], oriandTab[, "D"], oriandTab[, "M"],
                         decreasing = TRUE)
         } else {
-            if ("D" %in% ordem & "M" %in% ordem) {
+            if ("D" %in% ordem && "M" %in% ordem) {
                 ro <- order(oriandTab[, "D"], oriandTab[, "M"], decreasing = TRUE)
             } else {
                 if ("M" %in% ordem)
