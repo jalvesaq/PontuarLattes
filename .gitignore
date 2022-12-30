@@ -6,6 +6,7 @@ auxiliar/bpq/*.RData
 bases_dados.RData
 lattes_xml/*.*
 qualis/*.RData
+qualis/201720
 php
 nomes_validos.txt
 antigo
