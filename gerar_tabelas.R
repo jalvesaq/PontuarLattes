@@ -614,7 +614,7 @@ TabProd <- function(d, v) {
         tab <- rbind(tab, ftab)
     }
 
-    if (ncol(tab) > 2)
+    if (ncol(tab) > 1)
         tab <- cbind(tab, "Total" = apply(tab, 1, sum, na.rm = TRUE))
     tab[is.na(tab)] <- 0
     cn <- colnames(tab)

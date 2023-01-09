@@ -11,10 +11,11 @@ if (grepl("\\.UTF-8", Sys.getenv("LANGUAGE")))
     Sys.setenv(LANGUAGE = "pt_BR.UTF-8")
 options(OutDec = ",")
 
-opts_chunk$set(echo = FALSE, cache = FALSE,  fig.width = 6, fig.height = 3, fig.align = "center", results = "asis")
-
 library("ineq")
 library("cld2")
+library("knitr")
+
+opts_chunk$set(echo = FALSE, cache = FALSE,  fig.width = 6, fig.height = 3, fig.align = "center", results = "asis")
 
 SPRINTF <- function(fmt, x) {
     sub("\\.", ",", sprintf(fmt, x))
