@@ -455,12 +455,14 @@ PD = Supervisão de pós-doutorado.
 Tabela(oriconcTab, lbl = "tab:oriconc", hline = nrow(oriconcTab) - 2,
              cap = paste0("Orientações concluídas no período ", Inicio, "--", Fim))
 
-ocGini <- do.call("c", oriconcTab[oriconcTab$Orientador %in% datacv$Professor,
-                  colnames(oriconcTab) %in% c("M", "D")])
-if (length(ocGini)) {
-    ocGini <- round(Gini(as.numeric(ocGini)), 2)
-    cat("Considerando apenas orientações de mestrado e doutorado, o índice de Gini do número de orientações concluídas por professor é de ",
-        ocGini, ".\n\n", sep = "")
+if (sum(c("M", "D") %in% colnames(oriconcTab)) == 2) {
+    ocGini <- do.call("c", oriconcTab[oriconcTab$Orientador %in% datacv$Professor,
+                      colnames(oriconcTab) %in% c("M", "D")])
+    if (length(ocGini)) {
+        ocGini <- round(Gini(as.numeric(ocGini)), 2)
+        cat("Considerando apenas orientações de mestrado e doutorado, o índice de Gini do número de orientações concluídas por professor é de ",
+            ocGini, ".\n\n", sep = "")
+    }
 }
 @
 
@@ -479,7 +481,8 @@ Tabela(tab, alin = "LclLLL", lbl = "tab:detoriconc",
 aln <- paste0("ll", paste0(rep("r", ncol(oriandTab) - 1), collapse = ""))
     Tabela(oriandTab, lbl = "tab:oriand", hline = nrow(oriandTab) - 2,
            cap = "Orientações em andamento na data de atualização do currículo")
-if (nrow(oriandTab) > 3) {
+
+if (sum(c("M", "D") %in% colnames(oriandTab)) == 2 && nrow(oriandTab) > 3) {
     oaGini <- do.call("c", oriandTab[oriandTab$Orientador %in% datacv$Professor,
                       colnames(oriandTab) %in% c("M", "D")])
     if (length(oaGini)) {
