@@ -1,5 +1,10 @@
 # PontuarLattes
 
+> [!Note]
+> A Plataforma Lattes não disponibiliza mais o link para download da versão
+> XML do currículo e o PontuarLattes não foi programado para extrair
+> informações da página HTML.
+
 O processamento do arquivo `QualisLattes.Rnw` gera um PDF com tabelas com
 informações sobre os professores de um programa de pós-graduação, incluindo a
 produção bibliográfica extraída de currículos Lattes selecionados. Artigos
